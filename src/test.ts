@@ -4,10 +4,10 @@ import { Actor } from '@dfinity/agent';
 import { config } from 'dotenv';
 
 import { createAccountCredentials } from './utils/account';
-import { createAgent } from './utils/agent';
-import canisterIDLFactory from './canister.did';
+import { createAgent } from './utils/dfx';
+import canisterIDLFactory from './idls/canister.did';
 
-config();
+if (process.env.NODE_ENV !== 'production') config();
 
 const { mnemonic, publicKey, secretKey } = createAccountCredentials();
 

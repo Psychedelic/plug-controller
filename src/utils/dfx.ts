@@ -3,7 +3,7 @@ import { Ed25519KeyIdentity } from "@dfinity/identity";
 import fetch from "cross-fetch";
 import { config } from 'dotenv';
 
-config();
+if (process.env.NODE_ENV !== 'production') config();
 
 export const createAgent = async (secretKey: Uint8Array) => {
     const identity = secretKey 
