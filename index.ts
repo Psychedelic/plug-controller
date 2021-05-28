@@ -1,20 +1,21 @@
-import canisterIDLFactory from "./canister.did";
-import nacl from 'tweetnacl';
-import { createAccount } from './utils/account';
+import { sign } from 'tweetnacl';
 import { TextDecoder } from 'text-encoding';
 import { Actor } from '@dfinity/agent';
-import { createAgent } from './utils/agent';
 import { config } from 'dotenv';
+
+import { createAccountCredentials } from './utils/account';
+import { createAgent } from './utils/agent';
+import canisterIDLFactory from './canister.did';
 
 config();
 
-const { mnemonic, publicKey, secretKey } = createAccount();
+const { mnemonic, publicKey, secretKey } = createAccountCredentials();
 
 const signTest = (message: string) => {
-  const signed = nacl.sign(Buffer.from(message, 'utf8'), secretKey);
+  const signed = sign(Buffer.from(message, 'utf8'), secretKey);
   console.log(`SIGNED: ${signed}`);
   
-  const opened = nacl.sign.open(signed, publicKey);
+  const opened = sign.open(signed, publicKey);
   console.log(`Opened: ${ opened ? new TextDecoder().decode(opened) : 'Invalid public key'}`);
 }
 

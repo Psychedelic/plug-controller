@@ -7,7 +7,7 @@ const nacl  = require('tweetnacl');
 
 const seedFromMnemonic = (mnemonic: String) => pbkdf2.pbkdf2Sync(mnemonic.replace(' ', ''), 'Salt', 2048, 64, 'sha512')
 
-export const createAccount = () : { mnemonic: string, secretKey: Uint8Array, publicKey: Uint8Array } => {
+export const createAccountCredentials = () : { mnemonic: string, secretKey: Uint8Array, publicKey: Uint8Array } => {
     const mnemonic = bip39.generateMnemonic();
     const hexSeed = seedFromMnemonic(mnemonic);
     // const { key: masterKey, chainCode } = getMasterKeyFromSeed(hexSeed);
