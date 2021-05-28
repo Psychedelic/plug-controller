@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@dfinity/agent": "^0.8.9",
+    "bip39": "^3.0.4",
+    "ed25519-hd-key": "^1.2.0",
+    "node-fetch": "^2.6.1",
+    "pbkdf2": "^3.1.2",
+    "text-encoding": "^0.7.0",
+    "tweetnacl": "^1.0.3"
+  }
+}
