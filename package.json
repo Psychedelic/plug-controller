@@ -14,5 +14,28 @@
     "@types/node-fetch": "^2.5.10",
     "@types/text-encoding": "^0.0.35",
     "dotenv": "^10.0.0"
-  }
+  },
+  "name": "@fleekhq/plug-wallet-controller",
+  "version": "1.0.0",
+  "description": "Internet Computer Plug wallet's controller",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FleekHQ/plug-wallet-controller.git"
+  },
+  "keywords": [
+    "ic",
+    "dfinity",
+    "plug",
+    "fleek"
+  ],
+  "author": "FleekHQ",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FleekHQ/plug-wallet-controller/issues"
+  },
+  "homepage": "https://github.com/FleekHQ/plug-wallet-controller#readme"
 }
