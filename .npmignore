@@ -1,4 +1,4 @@
 /jest.config.js
 /tsconfig.json
 /.env
-/src/test.ts
+/src
