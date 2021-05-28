@@ -3,7 +3,7 @@ import nacl from 'tweetnacl';
 import { createAccount } from './utils/account';
 import { TextDecoder } from 'text-encoding';
 import { Actor } from '@dfinity/agent';
-import dfxAgent from './utils/agent';
+import { createAgent } from './utils/agent';
 import { config } from 'dotenv';
 
 config();
@@ -19,7 +19,7 @@ const signTest = (message: string) => {
 }
 
 const dfxConnect = async () => {
-    const agent = await dfxAgent;
+    const agent = await createAgent(secretKey);
     const actor = Actor.createActor(canisterIDLFactory, { agent, canisterId: process.env.CANISTER_ID || '' });
     const greeting = await actor.greet(mnemonic);
     return greeting;

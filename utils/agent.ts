@@ -5,14 +5,15 @@ import { config } from 'dotenv';
 
 config();
 
-const identity = Ed25519KeyIdentity.generate();
-
-const agent = Promise.resolve(
-    new HttpAgent({ host: process.env.DFX_HOST || 'https://ic0.app', fetch })
-  ).then(async (agent) => {
-    await agent.fetchRootKey();
+export const createAgent = async (secretKey: Uint8Array) => {
+    const identity = secretKey 
+        ? Ed25519KeyIdentity.fromSecretKey(secretKey) 
+        : Ed25519KeyIdentity.generate();
+    const agent = await Promise.resolve(
+        new HttpAgent({ host: process.env.DFX_HOST || 'https://ic0.app', fetch, identity })
+        ).then(async (agent) => {
+        await agent.fetchRootKey();
+        return agent;
+        });
     return agent;
-  });
-
-export const principal = identity.getPrincipal();
-export default agent;
+}
