@@ -13,15 +13,19 @@ const deriveSeed = (mnemonic: string, index?: number) => {
 const getAccountCredentials = (mnemonic: string, accountId?: number): AccountCredentials => {
     const { key } = deriveSeed(mnemonic, accountId);
     const { secretKey, publicKey } = nacl.sign.keyPair.fromSeed(key);
-    return { mnemonic, secretKey, publicKey }
+    return { 
+        mnemonic,
+        secretKey: { hex: secretKey.toString('hex'), binary: secretKey },
+        publicKey: { hex: publicKey.toString('hex'), binary: publicKey }
+    }
 }
 
-export const createAccount = () : { mnemonic: string, secretKey: Uint8Array, publicKey: Uint8Array } => {
+export const createAccount = () : AccountCredentials => {
     const mnemonic = bip39.generateMnemonic();
     return getAccountCredentials(mnemonic);
 }
 
-export const createAccountFromMnemonic = (mnemonic: string, accountId: number) => {
+export const createAccountFromMnemonic = (mnemonic: string, accountId: number) : AccountCredentials => {
     if (!mnemonic || !bip39.validateMnemonic(mnemonic)) {
         throw new Error(ERRORS.INVALID_MNEMONIC);
     }

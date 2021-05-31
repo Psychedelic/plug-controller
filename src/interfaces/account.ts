@@ -1,4 +1,7 @@
-export type Key = Uint8Array;
+export type Key = {
+    hex: string;
+    binary: Uint8Array
+}
 
 export interface KeyPair {
     secretKey: Key;
