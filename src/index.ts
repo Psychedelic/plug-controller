@@ -1,8 +1,8 @@
-import { createAccountCredentials, createKeysFromMnemonic } from './utils/account';
+import { createAccount, createAccountFromMnemonic } from './utils/account';
 import { createAgent } from './utils/dfx';
 
 module.exports = {
-    createAccountCredentials,
-    createKeysFromMnemonic,
+    createAccount,
+    createAccountFromMnemonic,
     createAgent
 }

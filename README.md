@@ -19,7 +19,7 @@ Plug Wallet Controller is a package intended to provide utility to Plug Wallet's
 **Create account credentials**
 - Generate a new mnemonic and associated key pair
 ```
-const { secretKey, publicKey, mnemonic } = createAccountCredentials();
+const { secretKey, publicKey, mnemonic } = createAccount();
 ```
 
 **Generate Keys from Mnemonic**
