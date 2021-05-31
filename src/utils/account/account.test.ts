@@ -1,5 +1,6 @@
-import { AccountCredentials } from "../interfaces/account";
-import { createAccount, createAccountFromMnemonic } from "./account";
+import { ERRORS } from "../../constants";
+import { AccountCredentials } from "../../interfaces/account";
+import { createAccount, createAccountFromMnemonic } from "./index";
 
 describe('Account utils', () => {
     let globalAccount: AccountCredentials;
@@ -62,25 +63,23 @@ describe('Account utils', () => {
             }
         });
 
-        xit('should fail if provided an invalid mnemonic', async () => {
+        it('should fail if provided an invalid mnemonic', async () => {
             const invalidMnemonic = 'Some invalid Mnemonic'
-            expect(() => createAccountFromMnemonic(invalidMnemonic)).toThrow('The provided mnemonic is invalid');
+            expect(() => createAccountFromMnemonic(invalidMnemonic, 1)).toThrow(ERRORS.INVALID_MNEMONIC);
         });
 
-        xit('should fail if provided an invalid account id', async () => {
+        it('should fail if provided an invalid account id', async () => {
             const stringId = '1';
             const negativeId = -1;
-            const nonIntegerId = 1.1;
-            expect(() => createAccountFromMnemonic(globalAccount.mnemonic, stringId as any)).toThrow('The account ID should be a positive integer');
-            expect(() => createAccountFromMnemonic(globalAccount.mnemonic, negativeId)).toThrow('The account ID should be a positive integer');
-            expect(() => createAccountFromMnemonic(globalAccount.mnemonic, nonIntegerId)).toThrow('The account ID should be a positive integer');
+            expect(() => createAccountFromMnemonic(globalAccount.mnemonic, stringId as any)).toThrow(ERRORS.INVALID_ACC_ID);
+            expect(() => createAccountFromMnemonic(globalAccount.mnemonic, negativeId)).toThrow(ERRORS.INVALID_ACC_ID);
         });
 
         // This checks that this works on .js files as well as TS which auto-checks these things
-        xit('should fail if provided an empty mnemonic', async () => {
-            expect(() => createAccountFromMnemonic('')).toThrow('No mnemonic was provided');
-            expect(() => createAccountFromMnemonic(undefined as any)).toThrow('No mnemonic was provided');
-            expect(() => createAccountFromMnemonic(null as any)).toThrow('No mnemonic was provided');
+        it('should fail if provided an empty mnemonic', async () => {
+            expect(() => createAccountFromMnemonic('', 1)).toThrow(ERRORS.INVALID_MNEMONIC);
+            expect(() => createAccountFromMnemonic(undefined as any, 1)).toThrow(ERRORS.INVALID_MNEMONIC);
+            expect(() => createAccountFromMnemonic(null as any, 1)).toThrow(ERRORS.INVALID_MNEMONIC);
         });
     })
   
