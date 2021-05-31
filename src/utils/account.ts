@@ -10,15 +10,14 @@ const deriveSeed = (mnemonic: string, index?: number) => {
     return derivePath(DERIVATION_PATH, hexSeed, index);
 }
 
-const getAccountCredentials = (mnemonic: string, index?: number): AccountCredentials => {
-    const { key } = deriveSeed(mnemonic, index);
+export const createAccountFromMnemonic = (mnemonic: string, accountId?: number): AccountCredentials => {
+    const { key } = deriveSeed(mnemonic, accountId);
     const { secretKey, publicKey } = nacl.sign.keyPair.fromSeed(key);
     return { mnemonic, secretKey, publicKey }
 }
 
 export const createAccount = () : { mnemonic: string, secretKey: Uint8Array, publicKey: Uint8Array } => {
     const mnemonic = bip39.generateMnemonic();
-    return getAccountCredentials(mnemonic);
+    return createAccountFromMnemonic(mnemonic);
 }
 
-export const createAccountFromMnemonic = (mnemonic: string, accountNumber: number) => getAccountCredentials(mnemonic, accountNumber);
