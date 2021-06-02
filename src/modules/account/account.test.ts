@@ -1,3 +1,4 @@
+import { KeyPair } from "@dfinity/agent";
 import { ERRORS } from "../../errors";
 import { AccountCredentials } from "../../interfaces/account";
 import { open, sign } from "../signature";
@@ -5,10 +6,12 @@ import { createAccount, createAccountFromMnemonic } from "./index";
 
 describe('Account utils', () => {
     let globalAccount: AccountCredentials;
+    let globalKeys: KeyPair;
     const MAX_ACCOUNTS = 5;
 
     beforeAll(() => {
         globalAccount = createAccount();
+        globalKeys = globalAccount.identity.getKeyPair();
     });
 
     describe('credentials creation', () => {
@@ -16,8 +19,10 @@ describe('Account utils', () => {
         const account = createAccount();
     
         expect(account).toHaveProperty('mnemonic');
-        expect(account).toHaveProperty('secretKey');
-        expect(account).toHaveProperty('publicKey');
+        expect(account).toHaveProperty('identity');
+        expect(account).toHaveProperty('accountId');
+        expect(account.identity.getKeyPair()).toHaveProperty('secretKey');
+        expect(account.identity.getKeyPair()).toHaveProperty('publicKey');
         });
     
         it('should always create different new accounts', () => {
@@ -25,14 +30,15 @@ describe('Account utils', () => {
             const secretKeys: string[] = [];
             const publicKeys: string[] = [];
             for(let i = 1; i < MAX_ACCOUNTS; i++) {
-                const { mnemonic, secretKey, publicKey } = createAccount();
+                const { mnemonic, identity } = createAccount();
+                const { publicKey, secretKey } = identity.getKeyPair();
                 expect(mnemonics).not.toContain(mnemonic);
                 expect(secretKeys).not.toContain(secretKey);
                 expect(publicKeys).not.toContain(publicKey);
 
                 mnemonics.push(mnemonic);
-                secretKeys.push(secretKey.hex);
-                publicKeys.push(publicKey.hex);
+                secretKeys.push(secretKey.toString());
+                publicKeys.push(publicKey.toDer().toString());
                 
             }
         });
@@ -41,23 +47,33 @@ describe('Account utils', () => {
             const account = createAccountFromMnemonic(globalAccount.mnemonic, 1);
         
             expect(account).toHaveProperty('mnemonic');
-            expect(account).toHaveProperty('secretKey');
-            expect(account).toHaveProperty('publicKey');
+            expect(account).toHaveProperty('identity');
+            expect(account).toHaveProperty('accountId');
+
+            expect(account.identity.getKeyPair()).toHaveProperty('secretKey');
+            expect(account.identity.getKeyPair()).toHaveProperty('publicKey');
     
-            const { mnemonic, secretKey, publicKey } = account;
+            const { mnemonic, identity, accountId } = account;
+            const { publicKey, secretKey } = identity.getKeyPair();
+
+            // Mnemonic should be the same but keys and accountId shouldn't
             expect(mnemonic).toEqual(globalAccount.mnemonic);
-            expect(secretKey).not.toEqual(globalAccount.secretKey);
-            expect(publicKey).not.toEqual(globalAccount.publicKey);
+            expect(accountId).not.toEqual(globalAccount.accountId);
+            expect(secretKey).not.toEqual(globalKeys.secretKey.toString());
+            expect(publicKey).not.toEqual(globalKeys.publicKey.toDer().toString());
         });
     
         it('should always derive the same account given the same mnemonic and account ID', () => {
             for(let i = 1; i < MAX_ACCOUNTS; i++) {
                 const account = createAccountFromMnemonic(globalAccount.mnemonic, i);
                 const newAccount = createAccountFromMnemonic(globalAccount.mnemonic, i);
-            
+                const { secretKey, publicKey } = account.identity.getKeyPair();
+                const { secretKey: newSecret, publicKey: newPublic } = newAccount.identity.getKeyPair();
+                
                 expect(account.mnemonic).toEqual(newAccount.mnemonic);
-                expect(account.secretKey).toEqual(newAccount.secretKey);
-                expect(account.publicKey).toEqual(newAccount.publicKey);
+                expect(account.accountId).toEqual(newAccount.accountId);
+                expect(secretKey).toEqual(newSecret);
+                expect(publicKey).toEqual(newPublic);
             }
         });
 
@@ -83,10 +99,13 @@ describe('Account utils', () => {
   
     describe('credentials utility', () => {
         it('should sign a message into an unreadable state and recover it using its keys', () => {
-            const { secretKey, publicKey } = globalAccount;
+            const { secretKey, publicKey } = globalKeys;
+            
+            // Binary (raw) public key is not in the interface but it comes with the obj. TODO: Create wrapper interface
+            const pk = publicKey as any;
             const message = 'This is a secret message!';
             const signed = sign(message, secretKey);
-            const opened = open(signed, publicKey);
+            const opened = open(signed, pk.rawKey);
             expect(opened).toEqual(message);
         });
     });

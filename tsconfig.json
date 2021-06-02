@@ -25,7 +25,7 @@
       "node_modules",
       "dist",
       "tests",
-      "jest.config.js",
+      "jest.config.cjs",
       ".vscode"
   ]
 }

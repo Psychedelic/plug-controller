@@ -1,35 +1,37 @@
-import { Principal } from "@dfinity/agent";
 const { derivePath }  = require('ed25519-hd-key');
 const bip39  = require('bip39');
-const nacl  = require('tweetnacl');
 const CryptoJS = require('crypto-js');
+const { Ed25519KeyIdentity } = require("@dfinity/identity");
 
 import { ERRORS } from "../../errors";
 import { AccountCredentials } from "../../interfaces/account";
-import { DERIVATION_PATH, ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO  } from "./constants";
+import { DERIVATION_PATH, ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO, SELF_AUTH_TYPE  } from "./constants";
+import { Principal } from '@dfinity/agent';
 
 const deriveSeed = (mnemonic: string, index?: number) => {
     const hexSeed = bip39.mnemonicToSeedSync(mnemonic);
-    return derivePath(DERIVATION_PATH, hexSeed, index);
+    return derivePath(DERIVATION_PATH, hexSeed.toString('hex'), index);
 }
 
 // TODO: Missing tests
-export const createAccountId = (principalId: Principal, subAccount: string) => {
+const createAccountId = (principalId: Principal, subAccount?: number) => {
     const sha = CryptoJS.algo.SHA224.create();
-    sha.update(Buffer.from(ACCOUNT_DOMAIN_SEPERATOR));
-    sha.update(Buffer.from(principalId));
-    sha.update(subAccount ? Buffer.from(subAccount) : SUB_ACCOUNT_ZERO);
+    sha.update(ACCOUNT_DOMAIN_SEPERATOR);
+    sha.update(principalId.toString());
+    sha.update(subAccount?.toString() || SUB_ACCOUNT_ZERO);
     const hash = sha.finalize();
-    return hash;
+    return hash.toString();
 }
 
-const getAccountCredentials = (mnemonic: string, accountId?: number): AccountCredentials => {
-    const { key } = deriveSeed(mnemonic, accountId);
-    const { secretKey, publicKey } = nacl.sign.keyPair.fromSeed(key);
+const getAccountCredentials = (mnemonic: string, subAccount?: number): AccountCredentials => {
+    const { key } = deriveSeed(mnemonic, subAccount);
+    // Identity has boths keys via getKeyPair and PID via getPrincipal
+    const identity = Ed25519KeyIdentity.generate(key);
+    const accountId = createAccountId(identity.getPrincipal(), subAccount);
     return { 
         mnemonic,
-        secretKey: { hex: secretKey.toString('hex'), binary: secretKey },
-        publicKey: { hex: publicKey.toString('hex'), binary: publicKey }
+        identity,
+        accountId
     }
 }
 
