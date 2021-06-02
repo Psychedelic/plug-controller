@@ -1,4 +1,4 @@
-import { ERRORS } from "../../constants";
+import { ERRORS } from "../../errors";
 import { AccountCredentials } from "../../interfaces/account";
 import { open, sign } from "../signature";
 import { createAccount, createAccountFromMnemonic } from "./index";

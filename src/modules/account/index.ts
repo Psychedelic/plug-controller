@@ -1,13 +1,26 @@
-import { DERIVATION_PATH, ERRORS } from "../../constants";
-import { AccountCredentials } from "../../interfaces/account";
-
+import { Principal } from "@dfinity/agent";
 const { derivePath }  = require('ed25519-hd-key');
 const bip39  = require('bip39');
 const nacl  = require('tweetnacl');
+const CryptoJS = require('crypto-js');
+
+import { ERRORS } from "../../errors";
+import { AccountCredentials } from "../../interfaces/account";
+import { DERIVATION_PATH, ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO  } from "./constants";
 
 const deriveSeed = (mnemonic: string, index?: number) => {
     const hexSeed = bip39.mnemonicToSeedSync(mnemonic);
     return derivePath(DERIVATION_PATH, hexSeed, index);
+}
+
+// TODO: Missing tests
+export const createAccountId = (principalId: Principal, subAccount: string) => {
+    const sha = CryptoJS.algo.SHA224.create();
+    sha.update(Buffer.from(ACCOUNT_DOMAIN_SEPERATOR));
+    sha.update(Buffer.from(principalId));
+    sha.update(subAccount ? Buffer.from(subAccount) : SUB_ACCOUNT_ZERO);
+    const hash = sha.finalize();
+    return hash;
 }
 
 const getAccountCredentials = (mnemonic: string, accountId?: number): AccountCredentials => {

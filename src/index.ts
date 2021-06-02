@@ -1,8 +1,9 @@
-import { createAccount, createAccountFromMnemonic } from './utils/account';
-import { createAgent } from './utils/dfx';
+import { createAccount, createAccountFromMnemonic } from './modules/account';
+import { createAgent, getLedgerActor } from './modules/dfx';
 
-module.exports = {
+export default {
     createAccount,
     createAccountFromMnemonic,
-    createAgent
+    createAgent,
+    getLedgerActor
 }
