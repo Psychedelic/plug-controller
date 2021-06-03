@@ -12,22 +12,22 @@ Plug Wallet Controller is a package intended to provide utility to Plug Wallet's
 ## Installation & usage
 
 - Installation: `npm install @fleekhq/plug-wallet-controller`
-- Usage: `import plugWalletController from '@fleekhq/plug-wallet-controller'`
+- Usage: `import plugWalletController from '@fleekhq/plug-wallet-controller'` or `import { account, dfx } from '@fleekhq/plug-wallet-controller';`
 ## Available functions
 
 ### Account utilities
 **Create account credentials**
-- Generate a new mnemonic and associated key pair
+- Generate a new mnemonic and associated IC identity
 ```
-const { secretKey, publicKey, mnemonic } = createAccount();
+const { identity, mnemonic } = createAccount();
 ```
 
-**Generate Keys from Mnemonic**
-- Generates a key pair from a mnemonic `string`.
+**Generate SubAccount from Mnemonic**
+- Generates an account from a mnemonic `string` and an account ID `number`. The sub-account with id 0 corresponds to the main account.
 ```
 mnemonic = 'pulp similar wink spice stove stem height attack swear chest meadow quality'
 
-const { secretKey, publicKey } = createKeysFromMnemonic(mnemonic);
+const { identity } = createAccountFromMnemonic(mnemonic, 1);
 ```
 
 
@@ -36,4 +36,18 @@ const { secretKey, publicKey } = createKeysFromMnemonic(mnemonic);
 - Creates a Dfinity Agent with a provided privateKey `string` used to create an identity in the network.
 ```
 const agent = await createAgent(secretKey);
+```
+
+
+**Get Ledger Actor**
+- Generates an actor to interact with the NNS Ledger with a provided privateKey `string`.
+```
+const agent = await getLedgerActor(secretKey);
+```
+
+
+**Get Wallet Actor**
+- Generates an actor to interact with a wallet on the network with a provided canisterId `string` and the user's privateKey `string`.
+```
+const agent = await getWalletActor(secretKey);
 ```

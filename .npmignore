@@ -7,3 +7,4 @@
 /dist/jest/*.js
 /dist/**/*.spec.js
 /dist/**/*.mock.js
+/manual.ts

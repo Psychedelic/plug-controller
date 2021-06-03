@@ -107,3 +107,5 @@ dist
 oclif.manifest.json
 
 .idea
+
+manual.ts

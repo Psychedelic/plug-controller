@@ -5,6 +5,9 @@ import { config } from 'dotenv';
 
 import LedgerService from '../../interfaces/ledger';
 import ledgerIDLFactory from '../../idls/ledger.did';
+import walletIDLFactory from "../../idls/walltet";
+import WalletService from "../../interfaces/wallet";
+import { IC_HOST, LEDGER_CANISTER_ID } from "./constants";
 
 if (process.env.NODE_ENV !== 'production') config();
 
@@ -21,7 +24,7 @@ export const createIdentity = (secretKey?: Uint8Array) =>
 export const createAgent = async ({ secretKey, defaultIdentity }: CreateAgentArgs) => {
     const identity = defaultIdentity || createIdentity(secretKey);
     const agent = await Promise.resolve(
-        new HttpAgent({ host: process.env.DFX_HOST || 'https://ic0.app', fetch, identity })
+        new HttpAgent({ host: process.env.DFX_HOST || IC_HOST, fetch, identity })
         ).then(async (agent) => {
         await agent.fetchRootKey();
         return agent;
@@ -30,11 +33,19 @@ export const createAgent = async ({ secretKey, defaultIdentity }: CreateAgentArg
 }
 
 export const getLedgerActor = async (secretKey: Uint8Array) => {
-    const agent = await createAgent({ secretKey })
-
+    const agent = await createAgent({ secretKey });
     const actor = Actor.createActor<ActorSubclass<LedgerService>>(
       ledgerIDLFactory,
-      { agent, canisterId: process.env.LEDGER_CANISTER_ID! }
+      { agent, canisterId: LEDGER_CANISTER_ID }
     );
     return actor;
   };
+
+export const getWalletActor = async (canisterId: string, secretKey: Uint8Array) => {
+    const agent = await createAgent({ secretKey });
+    const actor = Actor.createActor<ActorSubclass<WalletService>>(
+      walletIDLFactory,
+      { agent, canisterId }
+    );
+    return actor;
+}
