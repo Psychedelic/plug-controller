@@ -30,7 +30,6 @@ export const createAccountId = (principalId: Principal, subAccount?: number) => 
     const byteArray = wordArrayToByteArray(hash, 28);
     const checksum = generateChecksum(byteArray);
     const val = checksum + hash.toString();
-    console.log(val, val.length, checksum.length, principalId.toHex(), subAccount);
     return val;
 }
 
