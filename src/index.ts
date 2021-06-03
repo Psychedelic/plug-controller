@@ -1,9 +1,10 @@
-const { createAccount, createAccountFromMnemonic } = require('./modules/account');
+const { createAccount, createAccountFromMnemonic, queryAccounts } = require('./modules/account');
 const { createAgent, getLedgerActor, getWalletActor } = require('./modules/dfx');
 
 export const account = {
     createAccount,
-    createAccountFromMnemonic
+    createAccountFromMnemonic,
+    queryAccounts
 }
 
 export const dfx = {

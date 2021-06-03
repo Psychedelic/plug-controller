@@ -64,7 +64,7 @@ describe('Account utils', () => {
         });
     
         it('should always derive the same account given the same mnemonic and account ID', () => {
-            for(let i = 1; i < MAX_ACCOUNTS; i++) {
+            for(let i = 0; i < MAX_ACCOUNTS; i++) {
                 const account = createAccountFromMnemonic(globalAccount.mnemonic, i);
                 const newAccount = createAccountFromMnemonic(globalAccount.mnemonic, i);
                 const { secretKey, publicKey } = account.identity.getKeyPair();

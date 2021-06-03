@@ -1,5 +1,3 @@
-const CryptoJS = require('crypto-js');
-
 const wordToByteArray = (word, length) => {
 	let ba: number[] = [];
 	const xFF = 0xFF;
