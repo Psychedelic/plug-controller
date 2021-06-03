@@ -62,7 +62,6 @@ export const createAccountFromMnemonic = (mnemonic: string, accountId: number) :
     if (!mnemonic || !bip39.validateMnemonic(mnemonic)) {
         throw new Error(ERRORS.INVALID_MNEMONIC);
     }
-    console.log(accountId);
     if (typeof accountId !== 'number' || accountId < 0) {
         throw new Error(ERRORS.INVALID_ACC_ID);
     }
