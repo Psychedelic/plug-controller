@@ -1,5 +1,6 @@
 const { createAccount, createAccountFromMnemonic, queryAccounts } = require('./modules/account');
 const { createAgent, getLedgerActor, getWalletActor } = require('./modules/dfx');
+const PlugKeyRing = require('./plugKeyRing');
 
 export const account = {
     createAccount,
@@ -15,5 +16,6 @@ export const dfx = {
 
 export default {
     account,
-    dfx
+    dfx,
+    PlugKeyRing
 }

@@ -20,7 +20,6 @@ import { generateChecksum } from "../../utils/crypto";
 /// easier to use from DFX.
 /// [ic/rs/rosetta-api/ledger_canister/src/account_identifier.rs]
 
-
 export const createAccountId = (principalId: Principal, subAccount?: number) => {
     const sha = CryptoJS.algo.SHA224.create();
     sha.update(ACCOUNT_DOMAIN_SEPERATOR);
@@ -33,13 +32,13 @@ export const createAccountId = (principalId: Principal, subAccount?: number) => 
     return val;
 }
 
-const deriveSeed = (mnemonic: string, index?: number) => {
-    const hexSeed = bip39.mnemonicToSeedSync(mnemonic);
+const deriveSeed = (mnemonic: string, index?: number, password?: string) => {
+    const hexSeed = bip39.mnemonicToSeedSync(mnemonic, password);
     return derivePath(DERIVATION_PATH, hexSeed.toString('hex'), index);
 }
 
-const getAccountCredentials = (mnemonic: string, subAccount?: number): AccountCredentials => {
-    const { key } = deriveSeed(mnemonic, subAccount || 0);
+const getAccountCredentials = (mnemonic: string, subAccount?: number, password?: string): AccountCredentials => {
+    const { key } = deriveSeed(mnemonic, subAccount || 0, password);
     // Identity has boths keys via getKeyPair and PID via getPrincipal
     const identity = Ed25519KeyIdentity.generate(key);
     const accountId = createAccountId(identity.getPrincipal(), subAccount);
@@ -50,19 +49,19 @@ const getAccountCredentials = (mnemonic: string, subAccount?: number): AccountCr
     }
 }
 
-export const createAccount = () : AccountCredentials => {
+export const createAccount = (password?: string) : AccountCredentials => {
     const mnemonic = bip39.generateMnemonic();
-    return getAccountCredentials(mnemonic, 0);
+    return getAccountCredentials(mnemonic, 0, password);
 }
 
-export const createAccountFromMnemonic = (mnemonic: string, accountId: number) : AccountCredentials => {
+export const createAccountFromMnemonic = (mnemonic: string, accountId: number, password?: string) : AccountCredentials => {
     if (!mnemonic || !bip39.validateMnemonic(mnemonic)) {
         throw new Error(ERRORS.INVALID_MNEMONIC);
     }
     if (typeof accountId !== 'number' || accountId < 0) {
         throw new Error(ERRORS.INVALID_ACC_ID);
     }
-    return getAccountCredentials(mnemonic, accountId);
+    return getAccountCredentials(mnemonic, accountId, password);
 }
 
 // Queries first 10 accounts for the provided key
