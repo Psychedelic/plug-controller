@@ -1,5 +1,5 @@
 import { Ed25519KeyIdentity } from "@dfinity/identity";
-import { createAccountFromMnemonic } from "./modules/account";
+import { createAccountFromMnemonic } from "../utils/account";
 
 interface PlugWalletArgs {
     name?: string;

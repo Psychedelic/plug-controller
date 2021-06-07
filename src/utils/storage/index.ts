@@ -18,7 +18,7 @@ export default class ExtensionStore {
      * Returns all of the keys currently saved
      * @returns {Promise<*>}
      */
-    async get() {
+    public async get() {
         if (!this.isSupported) {
             return undefined;
         }
@@ -36,7 +36,7 @@ export default class ExtensionStore {
      * @param {Object} state - The state to set
      * @returns {Promise<void>}
      */
-    async set(state) {
+    public async set(state) {
         return this._set(state);
     }
 
@@ -45,7 +45,7 @@ export default class ExtensionStore {
      * @private
      * @returns {Object} the key-value map from local storage
      */
-    _get() {
+    private _get() {
         const { local } = extension.storage;
         return new Promise((resolve, reject) => {
         local.get(null, (/** @type {any} */ result) => {
@@ -65,10 +65,23 @@ export default class ExtensionStore {
      * @returns {Promise<void>}
      * @private
      */
-    _set(obj) {
+    private _set(obj) {
         const { local } = extension.storage;
         return new Promise<void>((resolve, reject) => {
         local.set(obj, () => {
+            const err = checkForError();
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }});
+        });
+    }
+
+    public clear() {
+        const { local } = extension.storage;
+        return new Promise<void>((resolve, reject) => {
+        local.clear(() => {
             const err = checkForError();
             if (err) {
                 reject(err);

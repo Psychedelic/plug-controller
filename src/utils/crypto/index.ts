@@ -1,3 +1,5 @@
+const crc32 = require('buffer-crc32');
+
 const wordToByteArray = (word, length) => {
 	let ba: number[] = [];
 	const xFF = 0xFF;
@@ -32,3 +34,10 @@ export const wordArrayToByteArray = (wordArray, length) => {
 }
 
 export const intToHex = (val: number) => val < 0 ? (Number(val) >>> 0).toString(16) : Number(val).toString(16);
+
+// We generate a CRC32 checksum, and trnasform it into a hexString
+export const generateChecksum = (hash: Uint8Array) => {
+    const crc = crc32.unsigned(Buffer.from(hash));
+    const hex = intToHex(crc);
+    return hex.padStart(8, '0');
+}

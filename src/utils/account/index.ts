@@ -5,11 +5,10 @@ const { Ed25519KeyIdentity } = require("@dfinity/identity");
 
 import { ERRORS } from "../../errors";
 import { AccountCredentials } from "../../interfaces/account";
-import { DERIVATION_PATH, ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO, SELF_AUTH_TYPE  } from "./constants";
+import { DERIVATION_PATH, ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO  } from "./constants";
 import { Principal } from '@dfinity/agent';
-import { wordArrayToByteArray } from "../../utils/binary";
 import { getLedgerActor } from "../dfx";
-import { generateChecksum } from "../../utils/crypto";
+import { generateChecksum, wordArrayToByteArray } from "../crypto";
 
 /// While this is backed by an array of length 28, it's canonical representation
 /// is a hex string of length 64. The first 8 characters are the CRC-32 encoded
