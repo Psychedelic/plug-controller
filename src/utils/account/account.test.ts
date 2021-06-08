@@ -1,8 +1,8 @@
-import { KeyPair } from "@dfinity/agent";
+import { KeyPair, Principal } from "@dfinity/agent";
 import { ERRORS } from "../../errors";
 import { AccountCredentials } from "../../interfaces/account";
 import { open, sign } from "../signature";
-import { createAccount, createAccountFromMnemonic } from "./index";
+import { createAccount, createAccountFromMnemonic, createAccountId } from "./index";
 
 describe('Account utils', () => {
     let globalAccount: AccountCredentials;
@@ -96,6 +96,17 @@ describe('Account utils', () => {
             expect(() => createAccountFromMnemonic(null as any, 1)).toThrow(ERRORS.INVALID_MNEMONIC);
         });
     })
+
+    describe('account id generation', () => {
+        it('should generate the correct account id', () => {
+            const mnemonic =  'easily drift crazy brother trash green cricket peasant unhappy fruit behind pudding';
+            const accountId = '1f77688a6a9b2b85640d753d487209344cc9c9675c409bbef5e061710c7220ab';
+            const { identity } = createAccountFromMnemonic(mnemonic, 0);
+            expect(identity.getPrincipal().toText()).toEqual('gkuhp-3onv2-yuitx-msib3-z4kyb-uw5ua-fehux-6ontl-47u47-iwuul-rae');
+            const id = createAccountId(identity.getPrincipal());
+            expect(id).toEqual(accountId);
+        });
+    });
   
     describe('credentials utility', () => {
         it('should sign a message into an unreadable state and recover it using its keys', () => {

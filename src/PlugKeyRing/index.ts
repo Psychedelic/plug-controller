@@ -32,7 +32,6 @@ class PlugKeyRing {
         return defaultWallet;
     }
 
-
     // CHECK WITH JANISON: What if they import the mnemonic in another place and put a different password? wouldn't that create a different account? (check seed derivation)
     public importMnemonic = async ({ mnemonic, password } : {mnemonic: string, password: string}) => await this.createAndPersistWallet({ mnemonic, password });
 

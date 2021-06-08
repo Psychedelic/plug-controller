@@ -1,6 +1,7 @@
 import bip39  = require('bip39');
 
 import PlugKeyRing from ".";
+import { ERRORS } from '../errors';
 import PlugWallet from "../PlugWallet";
 import StorageMock from "../utils/storage/mock";
 
@@ -24,18 +25,18 @@ describe('Plug KeyRing', () => {
 
     describe('initialization', () => {
         it('should be empty if not initialized', async () => {
-            expect(() => keyRing.unlock(TEST_PASSWORD)).toThrow('Plug must be initialized');
-            expect(() => keyRing.setCurrentPrincipal(testWallet)).toThrow('Plug must be initialized');
-            expect(() => keyRing.setCurrentPrincipal(testWallet)).toThrow('Plug must be initialized');
-            await expect(() => keyRing.createPrincipal()).rejects.toEqual(Error('Plug must be initialized'));
-            await expect(() => keyRing.getState()).rejects.toEqual(Error('The state is locked'));
+            expect(() => keyRing.unlock(TEST_PASSWORD)).toThrow(ERRORS.NOT_INITIALIZED);
+            expect(() => keyRing.setCurrentPrincipal(testWallet)).toThrow(ERRORS.NOT_INITIALIZED);
+            expect(() => keyRing.setCurrentPrincipal(testWallet)).toThrow(ERRORS.NOT_INITIALIZED);
+            await expect(() => keyRing.createPrincipal()).rejects.toEqual(Error(ERRORS.NOT_INITIALIZED));
+            await expect(() => keyRing.getState()).rejects.toEqual(Error(ERRORS.STATE_LOCKED));
         });
     })
 
     describe('creation', () => {
         it('should create a new keyring and be locked by default', async () => {
             await keyRing.create({ password: TEST_PASSWORD });
-            await expect(() => keyRing.getState()).rejects.toEqual(Error('The state is locked'));
+            await expect(() => keyRing.getState()).rejects.toEqual(Error(ERRORS.STATE_LOCKED));
         });
         it('should create a new keyring and expose state correctly', async () => {
             const wallet = await keyRing.create({ password: TEST_PASSWORD });
@@ -49,14 +50,14 @@ describe('Plug KeyRing', () => {
             expect(bip39.validateMnemonic(state.mnemonic)).toEqual(true);
         });
         it('should fail if not password was provided', async () => {
-            await expect(() => keyRing.create({ password: '' })).rejects.toEqual(Error('A password is required'));
+            await expect(() => keyRing.create({ password: '' })).rejects.toEqual(Error(ERRORS.PASSWORD_REQUIRED));
         });
     });
 
     describe('import', () => {
         it('should import a keyring and be locked by default', async () => {
             await keyRing.importMnemonic({ password: TEST_PASSWORD, mnemonic: TEST_MNEMONIC });
-            await expect(() => keyRing.getState()).rejects.toEqual(Error('The state is locked'));
+            await expect(() => keyRing.getState()).rejects.toEqual(Error(ERRORS.STATE_LOCKED));
         });
         it('should import a keyring and expose state correctly', async () => {
             const wallet = await keyRing.importMnemonic({ password: TEST_PASSWORD, mnemonic: TEST_MNEMONIC });
@@ -71,12 +72,26 @@ describe('Plug KeyRing', () => {
             expect(bip39.validateMnemonic(state.mnemonic)).toEqual(true);
         });
         it('should fail if not password or mnemonic were provided', async () => {
-            await expect(() => keyRing.importMnemonic({ password: '', mnemonic: TEST_MNEMONIC })).rejects.toEqual(Error('A password is required'));
-            await expect(() => keyRing.importMnemonic({ password: TEST_PASSWORD, mnemonic: '' })).rejects.toEqual(Error('The provided mnemonic is invalid'));
+            await expect(() => keyRing.importMnemonic({ password: '', mnemonic: TEST_MNEMONIC })).rejects.toEqual(Error(ERRORS.PASSWORD_REQUIRED));
+            await expect(() => keyRing.importMnemonic({ password: TEST_PASSWORD, mnemonic: '' })).rejects.toEqual(Error(ERRORS.INVALID_MNEMONIC));
         });
         it('should fail if the mnemonic is invalid', async () => {
-            await expect(() => keyRing.importMnemonic({ password: TEST_PASSWORD, mnemonic: 'some test mnemonic' })).rejects.toEqual(Error('The provided mnemonic is invalid'));
+            await expect(() => keyRing.importMnemonic({ password: TEST_PASSWORD, mnemonic: 'some test mnemonic' })).rejects.toEqual(Error(ERRORS.INVALID_MNEMONIC));
         });
     });
+    
+
+    // TODO: ADD ENCRYPTION AND CHECK THAT STORAGE IS UNREADABLE
+    // describe('new principal creation', () => {
+    //     it('should ')
+    // })
+
+    // TODO: ADD ENCRYPTION AND CHECK THAT STORAGE IS UNREADABLE
+    describe('lock', () => {
+        it('should import a keyring and be locked by default', async () => {
+            await keyRing.importMnemonic({ password: TEST_PASSWORD, mnemonic: TEST_MNEMONIC });
+            await expect(() => keyRing.getState()).rejects.toEqual(Error(ERRORS.STATE_LOCKED));
+        });
+    })
   });
   

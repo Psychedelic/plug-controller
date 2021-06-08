@@ -7,6 +7,7 @@
     "babel-jest": "^25.5.1",
     "bip39": "^3.0.4",
     "buffer-crc32": "^0.2.13",
+    "create-hmac": "^1.1.7",
     "cross-fetch": "^3.1.4",
     "crypto-js": "^4.0.0",
     "ed25519-hd-key": "^1.2.0",
