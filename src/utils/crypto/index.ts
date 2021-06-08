@@ -1,18 +1,30 @@
 const crc32 = require('buffer-crc32');
+const CryptoJS = require('crypto-js');
 
-const wordToByteArray = (word, length) => {
-	let ba: number[] = [];
+export const byteArrayToWordArray = (byteArray: Uint8Array) => {
+	let wordArray = [] as any;
+	let i;
+	for (i = 0; i < byteArray.length; i++) {
+		wordArray[(i / 4) | 0] |= byteArray[i] << (24 - 8 * i);
+	}
+	const { init, $super, ...ret } = CryptoJS.lib.WordArray.create(wordArray, byteArray.length);
+	console.log(ret);
+	return ret
+}
+
+export const wordToByteArray = (word, length) => {
+	let byteArray: number[] = [];
 	const xFF = 0xFF;
 	if (length > 0)
-		ba.push(word >>> 24);
+		byteArray.push(word >>> 24);
 	if (length > 1)
-		ba.push((word >>> 16) & xFF);
+		byteArray.push((word >>> 16) & xFF);
 	if (length > 2)
-		ba.push((word >>> 8) & xFF);
+		byteArray.push((word >>> 8) & xFF);
 	if (length > 3)
-		ba.push(word & xFF);
+		byteArray.push(word & xFF);
 
-	return ba;
+	return byteArray;
 }
 
 export const wordArrayToByteArray = (wordArray, length) => {

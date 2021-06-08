@@ -99,11 +99,10 @@ describe('Account utils', () => {
 
     describe('account id generation', () => {
         it('should generate the correct account id', () => {
-            const mnemonic =  'easily drift crazy brother trash green cricket peasant unhappy fruit behind pudding';
+            const principal =  Principal.fromText('gkuhp-3onv2-yuitx-msib3-z4kyb-uw5ua-fehux-6ontl-47u47-iwuul-rae');
             const accountId = '1f77688a6a9b2b85640d753d487209344cc9c9675c409bbef5e061710c7220ab';
-            const { identity } = createAccountFromMnemonic(mnemonic, 0);
-            expect(identity.getPrincipal().toText()).toEqual('gkuhp-3onv2-yuitx-msib3-z4kyb-uw5ua-fehux-6ontl-47u47-iwuul-rae');
-            const id = createAccountId(identity.getPrincipal());
+            // expect(identity.getPrincipal().toText()).toEqual('gkuhp-3onv2-yuitx-msib3-z4kyb-uw5ua-fehux-6ontl-47u47-iwuul-rae');
+            const id = createAccountId(principal);
             expect(id).toEqual(accountId);
         });
     });

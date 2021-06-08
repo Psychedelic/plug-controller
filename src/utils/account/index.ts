@@ -9,7 +9,7 @@ import { AccountCredentials } from "../../interfaces/account";
 import { DERIVATION_PATH, ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO, HARDENED_OFFSET  } from "./constants";
 import { Principal } from '@dfinity/agent';
 import { getLedgerActor } from "../dfx";
-import { generateChecksum, wordArrayToByteArray } from "../crypto";
+import { byteArrayToWordArray, generateChecksum, wordArrayToByteArray } from "../crypto";
 
 
 export const deriveKey = ({ key, chainCode }, index) => {
@@ -27,25 +27,26 @@ export const deriveKey = ({ key, chainCode }, index) => {
     };
 };
 
-
-/// While this is backed by an array of length 28, it's canonical representation
-/// is a hex string of length 64. The first 8 characters are the CRC-32 encoded
-/// hash of the following 56 characters of hex. Both, upper and lower case
-/// characters are valid in the input string and can even be mixed.
-///
-/// When it is encoded or decoded it will always be as a string to make it
-/// easier to use from DFX.
-/// [ic/rs/rosetta-api/ledger_canister/src/account_identifier.rs]
-
+/*
+    Used dfinity/keysmith/account/account.go as a base for the ID generation
+*/
 export const createAccountId = (principal: Principal, subAccount?: number) => {
+    console.log(principal.toText(), principal.toString(), principal.toHash(), principal.toHex(), subAccount);
     const sha = CryptoJS.algo.SHA224.create();
-    sha.update(ACCOUNT_DOMAIN_SEPERATOR);
-    sha.update(principal.toHex());
-    sha.update(subAccount?.toString() || 0 );
+    sha.update(ACCOUNT_DOMAIN_SEPERATOR);  // Internally parsed with UTF-8, like go does
+    sha.update(byteArrayToWordArray(Uint8Array.from(principal.toBlob())));
+    sha.update(byteArrayToWordArray(SUB_ACCOUNT_ZERO));
     const hash = sha.finalize();
+
+    /// While this is backed by an array of length 28, it's canonical representation
+    /// is a hex string of length 64. The first 8 characters are the CRC-32 encoded
+    /// hash of the following 56 characters of hex. Both, upper and lower case
+    /// characters are valid in the input string and can even be mixed.
+    /// [ic/rs/rosetta-api/ledger_canister/src/account_identifier.rs]
     const byteArray = wordArrayToByteArray(hash, 28);
     const checksum = generateChecksum(byteArray);
     const val = checksum + hash.toString();
+
     return val;
 }
 
