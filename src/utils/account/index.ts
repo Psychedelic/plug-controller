@@ -1,4 +1,3 @@
-const { derivePath }  = require('ed25519-hd-key');
 const bip39  = require('bip39');
 const CryptoJS = require('crypto-js');
 const { Ed25519KeyIdentity } = require("@dfinity/identity");
@@ -10,11 +9,11 @@ import { DERIVATION_PATH, ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO, HARDENED_O
 import { Principal } from '@dfinity/agent';
 import { getLedgerActor } from "../dfx";
 import { byteArrayToWordArray, generateChecksum, wordArrayToByteArray } from "../crypto";
+import { derivePath, getPublicKey } from "../crypto/hdKeyManager";
 
-
-export const deriveKey = ({ key, chainCode }, index) => {
+export const extendKey = ({ key, chainCode }, index) => {
     const indexBuffer = Buffer.allocUnsafe(4);
-    indexBuffer.writeUInt32BE(index, 0);
+    indexBuffer.writeUInt32BE(HARDENED_OFFSET + index, 0);
     const data = Buffer.concat([Buffer.alloc(1, 0), key, indexBuffer]);
     const I = createHmac('sha512', chainCode)
         .update(data)
@@ -31,11 +30,14 @@ export const deriveKey = ({ key, chainCode }, index) => {
     Used dfinity/keysmith/account/account.go as a base for the ID generation
 */
 export const createAccountId = (principal: Principal, subAccount?: number) => {
-    console.log(principal.toText(), principal.toString(), principal.toHash(), principal.toHex(), subAccount);
     const sha = CryptoJS.algo.SHA224.create();
     sha.update(ACCOUNT_DOMAIN_SEPERATOR);  // Internally parsed with UTF-8, like go does
     sha.update(byteArrayToWordArray(Uint8Array.from(principal.toBlob())));
-    sha.update(byteArrayToWordArray(SUB_ACCOUNT_ZERO));
+    const subBuffer = Buffer.from(SUB_ACCOUNT_ZERO);
+    if (!!subAccount) {
+        subBuffer.writeUInt32BE(subAccount || 0);
+    }
+    sha.update(byteArrayToWordArray(subBuffer));
     const hash = sha.finalize();
 
     /// While this is backed by an array of length 28, it's canonical representation
@@ -50,17 +52,19 @@ export const createAccountId = (principal: Principal, subAccount?: number) => {
     return val;
 }
 
-const deriveSeed = (mnemonic: string, index = 0, password?: string) => {
+const deriveKey = (mnemonic: string, index = 0, password?: string) => {
+    console.log(index);
     const hexSeed = bip39.mnemonicToSeedSync(mnemonic, password);
-    const masterKey = derivePath(DERIVATION_PATH, hexSeed, HARDENED_OFFSET);
-    const childKey = deriveKey(masterKey, 0);
-    const grandchildKey = deriveKey(childKey, index);
-    return grandchildKey;
+    const masterXKey = derivePath(DERIVATION_PATH, hexSeed, HARDENED_OFFSET + index);
+    const childXKey = extendKey(masterXKey, 0);
+    const grandchildXKey = extendKey(childXKey, index);
+    
+    return grandchildXKey;
 
 }
 
 const getAccountCredentials = (mnemonic: string, subAccount?: number, password?: string): AccountCredentials => {
-    const { key } = deriveSeed(mnemonic, subAccount || 0, password);
+    const { key } = deriveKey(mnemonic, subAccount || 0, password);
     // Identity has boths keys via getKeyPair and PID via getPrincipal
     const identity = Ed25519KeyIdentity.generate(key);
     const accountId = createAccountId(identity.getPrincipal(), subAccount);

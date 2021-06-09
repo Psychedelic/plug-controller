@@ -8,7 +8,6 @@ export const byteArrayToWordArray = (byteArray: Uint8Array) => {
 		wordArray[(i / 4) | 0] |= byteArray[i] << (24 - 8 * i);
 	}
 	const { init, $super, ...ret } = CryptoJS.lib.WordArray.create(wordArray, byteArray.length);
-	console.log(ret);
 	return ret
 }
 
