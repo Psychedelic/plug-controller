@@ -14,7 +14,8 @@
     "extensionizer": "^1.0.1",
     "reflect-metadata": "^0.1.13",
     "text-encoding": "^0.7.0",
-    "tweetnacl": "^1.0.3"
+    "tweetnacl": "^1.0.3",
+    "webpack-dotenv": "^0.0.2"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.13.0",
@@ -33,7 +34,6 @@
     "@types/text-encoding": "^0.0.35",
     "@typescript-eslint/eslint-plugin": "^2.27.0",
     "@typescript-eslint/parser": "^2.27.0",
-    "dotenv": "^10.0.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb": "^18.0.1",
     "eslint-config-prettier": "^6.7.0",
