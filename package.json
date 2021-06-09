@@ -27,7 +27,7 @@
     "@types/fs-extra": "^8.1.0",
     "@types/jest": "^25.2.3",
     "@types/js-yaml": "^3.12.3",
-    "@types/node": "^13.9.8",
+    "@types/node": "^13.13.52",
     "@types/node-fetch": "^2.5.10",
     "@types/parse-github-url": "^1.0.0",
     "@types/request-promise": "^4.1.46",
@@ -58,7 +58,7 @@
     "test": "jest",
     "lint": "eslint --ext ts,js ./src",
     "watch": "tsc --watch",
-    "publish-cli": "npm run build && npm publish --access public"
+    "publish": "npm run build && npm publish"
   },
   "repository": {
     "type": "git",
@@ -68,9 +68,12 @@
     "ic",
     "dfinity",
     "plug",
-    "fleek"
+    "fleek",
+    "psychedelic",
+    "crypto",
+    "wallet"
   ],
-  "author": "FleekHQ",
+  "author": "Psychedelic",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Psychedelic/plug-controller/issues"
