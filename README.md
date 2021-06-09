@@ -1,4 +1,5 @@
-![](https://fleek-team-bucket.storage.fleek.co/Blog%20Inline/fleekcli.png)
+![](https://storageapi.fleek.co/rocky-fleek-team-bucket/plug-npm.png)
+
 
 # Plug Wallet Controller - Controller functions for Plug Wallet Extension
 [![Fleek](https://img.shields.io/badge/Made%20by-Fleek-blue)](https://fleek.co/)
@@ -9,45 +10,29 @@
 
 Plug Wallet Controller is a package intended to provide utility to Plug Wallet's Chrome Extension for the Internet Computer.
 
-## Installation & usage
+## Installation
 
-- Installation: `npm install @fleekhq/plug-wallet-controller`
-- Usage: `import plugWalletController from '@fleekhq/plug-wallet-controller'` or `import { account, dfx } from '@fleekhq/plug-wallet-controller';`
-## Available functions
+`npm install @psychedelic/plug-controller`
 
-### Account utilities
-**Create account credentials**
-- Generate a new mnemonic and associated IC identity
+## Plug KeyRing
+A Plug Keyring is a class that manages the user's accounts and allow you to create/import a mnemonic and its keypair. 
 ```
-const { identity, mnemonic } = createAccount();
-```
+import { PlugKeyRing } from '@psychedelic/plug-controller';
 
-**Generate SubAccount from Mnemonic**
-- Generates an account from a mnemonic `string` and an account ID `number`. The sub-account with id 0 corresponds to the main account.
-```
-mnemonic = 'pulp similar wink spice stove stem height attack swear chest meadow quality'
+const keyRing = new PlugKeyRing();
 
-const { identity } = createAccountFromMnemonic(mnemonic, 1);
+// Initialize keyring and load state from extension storage
+await keyRing.init();
 ```
 
-
-### DFX utilities
-**Create DFX Agent**
-- Creates a Dfinity Agent with a provided privateKey `string` used to create an identity in the network.
+### Keyring Creation
 ```
-const agent = await createAgent(secretKey);
+// Creates the keyring and returns the default wallet
+const wallet: PlugWallet = keyRing.create(password);
 ```
 
-
-**Get Ledger Actor**
-- Generates an actor to interact with the NNS Ledger with a provided privateKey `string`.
+### Mnemonic Import
 ```
-const agent = await getLedgerActor(secretKey);
-```
-
-
-**Get Wallet Actor**
-- Generates an actor to interact with a wallet on the network with a provided canisterId `string` and the user's privateKey `string`.
-```
-const agent = await getWalletActor(secretKey);
+// Creates the keyring using the provided mnemonic and returns the default wallet
+const wallet: PlugWallet = keyRing.importFromMnemonic(mnemonic, password);
 ```
