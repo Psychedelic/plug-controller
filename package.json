@@ -47,7 +47,7 @@
     "ts-node": "^9.1.1",
     "typescript": "^3.8.3"
   },
-  "name": "@fleekhq/plug-wallet-controller",
+  "name": "@psychedelic/plug-controller",
   "version": "1.0.1",
   "description": "Internet Computer Plug wallet's controller",
   "main": "dist/index.js",
@@ -62,7 +62,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FleekHQ/plug-wallet-controller.git"
+    "url": "git+https://github.com/Psychedelic/plug-controller.git"
   },
   "keywords": [
     "ic",
@@ -73,7 +73,7 @@
   "author": "FleekHQ",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/FleekHQ/plug-wallet-controller/issues"
+    "url": "https://github.com/Psychedelic/plug-controller/issues"
   },
-  "homepage": "https://github.com/FleekHQ/plug-wallet-controller#readme"
+  "homepage": "https://github.com/Psychedelic/plug-controller#readme"
 }
