@@ -27,6 +27,13 @@ class PlugWallet {
     get principal() {
         return this._identity.getPrincipal();
     }
+
+    public toJSON = ()  => ({
+        name: this.name,
+        walletNumber: this.walletNumber,
+        identity: this._identity.toJSON(),
+        accountId: this._accountId
+    });
 }
 
 export default PlugWallet;

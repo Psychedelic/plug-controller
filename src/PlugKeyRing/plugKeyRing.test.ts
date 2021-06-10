@@ -44,10 +44,12 @@ describe('Plug KeyRing', () => {
 
             const state = await keyRing.getState();
             expect(state.wallets.length).toEqual(1);
-            expect(state.wallets[0]).toEqual(wallet);
+            
+            const stateWallet = state.wallets[0] as PlugWallet;
+            expect(stateWallet.toJSON()).toEqual(wallet.toJSON());
             expect(state.currentWalletId).toEqual(0);
             expect(state.password).toEqual(TEST_PASSWORD);  // Should I expose this? 
-            expect(bip39.validateMnemonic(state.mnemonic)).toEqual(true);
+            expect(bip39.validateMnemonic(state.mnemonic!)).toEqual(true);
         });
         it('should fail if not password was provided', async () => {
             await expect(() => keyRing.create({ password: '' })).rejects.toEqual(Error(ERRORS.PASSWORD_REQUIRED));
@@ -65,11 +67,12 @@ describe('Plug KeyRing', () => {
 
             const state = await keyRing.getState();
             expect(state.wallets.length).toEqual(1);
-            expect(state.wallets[0]).toEqual(wallet);
+            const stateWallet = state.wallets[0] as PlugWallet;
+            expect(stateWallet.toJSON()).toEqual(wallet.toJSON());
             expect(state.currentWalletId).toEqual(0);
             expect(state.mnemonic).toEqual(TEST_MNEMONIC); 
             expect(state.password).toEqual(TEST_PASSWORD);  // Should I expose this? 
-            expect(bip39.validateMnemonic(state.mnemonic)).toEqual(true);
+            expect(bip39.validateMnemonic(state.mnemonic!)).toEqual(true);
         });
         it('should fail if not password or mnemonic were provided', async () => {
             await expect(() => keyRing.importMnemonic({ password: '', mnemonic: TEST_MNEMONIC })).rejects.toEqual(Error(ERRORS.PASSWORD_REQUIRED));

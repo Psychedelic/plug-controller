@@ -4,7 +4,7 @@ import Storage from '../utils/storage';
 import StorageMock from "../utils/storage/mock";
 
 interface PlugState {
-    wallets: Array<PlugWallet>,
+    wallets: Array<PlugWallet> | string,
     currentWalletId?: number,
     password?: string,
     mnemonic?: string,
@@ -21,25 +21,30 @@ class PlugKeyRing {
         this.isUnlocked = false;
     }
 
-    public init = async () => {
+    public load = async () => {
         const state = await store.get() as PlugState;
-        if (state) this.state = state;
+        if (state) {
+            const jsonWallets = JSON.parse(state.wallets as string);
+            const wallets = jsonWallets.map(wallet => new PlugWallet({ ...wallet, mnemonic: state.mnemonic, password: state.password }));
+            this.state = { ...state, wallets };
+        }
     }
 
     public create = async ({ password = '' }: { password: string }) => {
         const { mnemonic } = createAccount(password);
-        const defaultWallet = await this.createAndPersistWallet({ mnemonic, password });
+        const defaultWallet = await this.createAndPersistKeyRing({ mnemonic, password });
         return defaultWallet;
     }
 
     // CHECK WITH JANISON: What if they import the mnemonic in another place and put a different password? wouldn't that create a different account? (check seed derivation)
-    public importMnemonic = async ({ mnemonic, password } : {mnemonic: string, password: string}) => await this.createAndPersistWallet({ mnemonic, password });
+    public importMnemonic = async ({ mnemonic, password } : {mnemonic: string, password: string}) => await this.createAndPersistKeyRing({ mnemonic, password });
 
     // Assumes the state is already initialized
     public createPrincipal = async () => {
         this.checkInitialized();
         const wallet = new PlugWallet({ mnemonic: this.state.mnemonic!, walletNumber: this.state.wallets.length, password: this.state.password! });
-        await store.set({ ...this.state, wallets: [...this.state.wallets, wallet]});
+        const wallets = JSON.stringify([...this.state.wallets, wallet]);
+        await store.set({ ...this.state, wallets });
         return wallet;
     }
 
@@ -52,7 +57,7 @@ class PlugKeyRing {
         if(!this.isUnlocked) {
             throw new Error('The state is locked');
         }
-        return await store.get();
+        return this.state;
     }
 
     public unlock = (password: string) => {
@@ -72,17 +77,17 @@ class PlugKeyRing {
         }
     }
 
-    private createAndPersistWallet = async ({ mnemonic, password }) => {
+    private createAndPersistKeyRing = async ({ mnemonic, password }) => {
         if (!password) throw new Error('A password is required');
         const wallet = new PlugWallet({ mnemonic, walletNumber: 0, password });
         const data = {
-            wallets: [wallet],
+            wallets: JSON.stringify([wallet.toJSON()]),
             currentWalletId: 0,
             password,
             mnemonic
         }
         await store.set(data);
-        await this.init();
+        await this.load();
         return wallet;
     }
 }

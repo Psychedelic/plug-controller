@@ -53,7 +53,6 @@ export const createAccountId = (principal: Principal, subAccount?: number) => {
 }
 
 const deriveKey = (mnemonic: string, index = 0, password?: string) => {
-    console.log(index);
     const hexSeed = bip39.mnemonicToSeedSync(mnemonic, password);
     const masterXKey = derivePath(DERIVATION_PATH, hexSeed, HARDENED_OFFSET + index);
     const childXKey = extendKey(masterXKey, 0);
