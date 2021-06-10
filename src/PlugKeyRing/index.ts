@@ -32,8 +32,8 @@ class PlugKeyRing {
 
     public create = async ({ password = '' }: { password: string }) => {
         const { mnemonic } = createAccount(password);
-        const defaultWallet = await this.createAndPersistKeyRing({ mnemonic, password });
-        return defaultWallet;
+        const wallet = await this.createAndPersistKeyRing({ mnemonic, password });
+        return { wallet, mnemonic };
     }
 
     // CHECK WITH JANISON: What if they import the mnemonic in another place and put a different password? wouldn't that create a different account? (check seed derivation)
@@ -57,6 +57,7 @@ class PlugKeyRing {
         if(!this.isUnlocked) {
             throw new Error('The state is locked');
         }
+        await this.load();
         return this.state;
     }
 

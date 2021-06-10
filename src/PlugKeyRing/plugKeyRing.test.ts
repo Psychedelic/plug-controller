@@ -39,7 +39,7 @@ describe('Plug KeyRing', () => {
             await expect(() => keyRing.getState()).rejects.toEqual(Error(ERRORS.STATE_LOCKED));
         });
         it('should create a new keyring and expose state correctly', async () => {
-            const wallet = await keyRing.create({ password: TEST_PASSWORD });
+            const { wallet } = await keyRing.create({ password: TEST_PASSWORD });
             expect(keyRing.unlock(TEST_PASSWORD)).toEqual(true);
 
             const state = await keyRing.getState();
