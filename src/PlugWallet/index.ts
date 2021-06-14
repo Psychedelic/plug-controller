@@ -5,21 +5,20 @@ interface PlugWalletArgs {
     name?: string;
     walletNumber: number;
     mnemonic: string;
-    password: string;
 }
 
 class PlugWallet {
     name: string;
     walletNumber: number;
+    accountId: string;
     private _identity: Ed25519KeyIdentity;
-    private _accountId: string;
     
-    constructor ({ name, walletNumber, mnemonic, password }: PlugWalletArgs) {
+    constructor ({ name, walletNumber, mnemonic }: PlugWalletArgs) {
         this.name = name || 'Main IC Wallet'
         this.walletNumber = walletNumber;
-        const { identity, accountId } = createAccountFromMnemonic(mnemonic, walletNumber, password);
+        const { identity, accountId } = createAccountFromMnemonic(mnemonic, walletNumber);
         this._identity = identity;
-        this._accountId = accountId;
+        this.accountId = accountId;
     }
     get keys() {
         return this._identity.getKeyPair();
@@ -28,11 +27,15 @@ class PlugWallet {
         return this._identity.getPrincipal();
     }
 
+    set setName(val: string) {
+        this.name = val;
+    }
+
     public toJSON = ()  => ({
         name: this.name,
         walletNumber: this.walletNumber,
         identity: this._identity.toJSON(),
-        accountId: this._accountId
+        accountId: this.accountId
     });
 }
 

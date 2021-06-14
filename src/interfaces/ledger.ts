@@ -31,8 +31,8 @@ export interface SendArgs {
   'to' : AccountIdentifier,
   'fee' : ICPTs,
   'memo' : Memo,
-  'from_subaccount' : [] | [SubAccount],
-  'created_at_time' : [] | [TimeStamp],
+  'from_subaccount': [] | [SubAccount],
+  'created_at_time': [] | [TimeStamp],
   'amount' : ICPTs,
 };
 export type SubAccount = Array<number>;

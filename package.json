@@ -11,6 +11,7 @@
     "crypto-js": "^4.0.0",
     "ed25519-hd-key": "^1.2.0",
     "extensionizer": "^1.0.1",
+    "random-bigint": "^0.0.1",
     "reflect-metadata": "^0.1.13",
     "text-encoding": "^0.7.0",
     "tweetnacl": "^1.0.3",

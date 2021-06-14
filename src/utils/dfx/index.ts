@@ -2,8 +2,9 @@ import { HttpAgent, Actor, ActorSubclass, Principal } from "@dfinity/agent";
 import { Ed25519KeyIdentity } from "@dfinity/identity";
 import fetch from "cross-fetch";
 import { config } from 'dotenv';
+import RandomBigInt from 'random-bigint';
 
-import LedgerService from '../../interfaces/ledger';
+import LedgerService, { ICPTs, TimeStamp } from '../../interfaces/ledger';
 import ledgerIDLFactory from '../../idls/ledger.did';
 import walletIDLFactory from "../../idls/walltet";
 import WalletService from "../../interfaces/wallet";
@@ -41,11 +42,37 @@ export const getLedgerActor = async (secretKey: Uint8Array) => {
     return actor;
   };
 
-export const getWalletActor = async (canisterId: string, secretKey: Uint8Array) => {
+export const getCyclesWalletActor = async (canisterId: string, secretKey: Uint8Array) => {
     const agent = await createAgent({ secretKey });
     const actor = Actor.createActor<ActorSubclass<WalletService>>(
       walletIDLFactory,
       { agent, canisterId }
     );
     return actor;
+}
+
+interface SendOpts {
+  fee?: bigint;
+  memo?: bigint;
+  from_subaccount?: number;
+  created_at_time?: TimeStamp; // TODO: create js Date to TimeStamp function
+}
+
+const defaultArgs = {
+  fee: BigInt(10000),
+  memo:  RandomBigInt(32),
+}
+
+export const sendICP = async (secretKey: Uint8Array, to: string, amount: bigint, opts?: SendOpts) => {
+  const ledger = await getLedgerActor(secretKey);
+  ledger.send_dfx({ 
+        to,
+        fee: { e8s: opts?.fee || defaultArgs.fee },
+        amount: { e8s: amount },
+        memo: opts?.memo || defaultArgs.memo,
+        from_subaccount: [],   // For now, using default subaccount to handle ICP
+        created_at_time: []
+    }).then((res) => {
+        console.log( res);
+    }).catch(err => console.log("ERROR: ", err)); 
 }

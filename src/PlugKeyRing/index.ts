@@ -1,7 +1,10 @@
+const CryptoJS = require('crypto-js');
+
+import { Console } from "console";
 import PlugWallet from "../PlugWallet";
 import { createAccount } from "../utils/account";
-import Storage from '../utils/storage';
-import StorageMock from "../utils/storage/mock";
+import Storage from "../utils/storage";
+import mockStore from "../utils/storage/mock";
 
 interface PlugState {
     wallets: Array<PlugWallet> | string,
@@ -10,7 +13,7 @@ interface PlugState {
     mnemonic?: string,
 }
 
-const store = process.env.NODE_ENV === 'test' ? new StorageMock() : new Storage();
+const store = process.env.NODE_ENV === 'test' ? mockStore : new Storage();
 
 class PlugKeyRing {
     private state: PlugState;
@@ -21,12 +24,15 @@ class PlugKeyRing {
         this.isUnlocked = false;
     }
 
-    public load = async () => {
+    public loadFromPersistance = async (password: string) => {
         const state = await store.get() as PlugState;
         if (state) {
-            const jsonWallets = JSON.parse(state.wallets as string);
-            const wallets = jsonWallets.map(wallet => new PlugWallet({ ...wallet, mnemonic: state.mnemonic, password: state.password }));
-            this.state = { ...state, wallets };
+            const decrypted = this.decryptState(state, password);
+            const passwordsMatch = decrypted.password === password;
+            if (passwordsMatch) {
+                const wallets = decrypted.wallets.map(wallet => new PlugWallet({ ...wallet, mnemonic: decrypted.mnemonic, password }));
+                this.state = { ...decrypted, wallets };
+            } 
         }
     }
 
@@ -42,9 +48,9 @@ class PlugKeyRing {
     // Assumes the state is already initialized
     public createPrincipal = async () => {
         this.checkInitialized();
-        const wallet = new PlugWallet({ mnemonic: this.state.mnemonic!, walletNumber: this.state.wallets.length, password: this.state.password! });
-        const wallets = JSON.stringify([...this.state.wallets, wallet]);
-        await store.set({ ...this.state, wallets });
+        const wallet = new PlugWallet({ mnemonic: this.state.mnemonic!, walletNumber: this.state.wallets.length });
+        const wallets = [...this.state.wallets, wallet];
+        await this.storeState({ wallets }, this.state.password);
         return wallet;
     }
 
@@ -57,19 +63,20 @@ class PlugKeyRing {
         if(!this.isUnlocked) {
             throw new Error('The state is locked');
         }
-        await this.load();
+        await this.loadFromPersistance(this.state.password!);
         return this.state;
     }
 
-    public unlock = (password: string) => {
+    public unlock = async (password: string) => {
         this.checkInitialized();
-        const passwordsMatch = this.state.password === password;
-        this.isUnlocked = passwordsMatch;
-        return passwordsMatch;
+        await this.loadFromPersistance(password);
+        this.isUnlocked = this.state?.password === password;
+        return this.isUnlocked;
     };
 
     public lock = () => {
         this.isUnlocked = false;
+        this.state = { wallets: [] };
     }
 
     private checkInitialized = () => {
@@ -80,17 +87,25 @@ class PlugKeyRing {
 
     private createAndPersistKeyRing = async ({ mnemonic, password }) => {
         if (!password) throw new Error('A password is required');
-        const wallet = new PlugWallet({ mnemonic, walletNumber: 0, password });
+        const wallet = new PlugWallet({ mnemonic, walletNumber: 0 });
         const data = {
-            wallets: JSON.stringify([wallet.toJSON()]),
+            wallets: [wallet.toJSON()],
             currentWalletId: 0,
             password,
             mnemonic
         }
-        await store.set(data);
-        await this.load();
+        await this.storeState(data, password);
+        await this.loadFromPersistance(password);
         return wallet;
     }
+
+    private storeState = async (newState, password) => {
+        const stringData = JSON.stringify({...this.state, ...newState });
+        const encrypted = CryptoJS.AES.encrypt(stringData, password);
+        await store.set(encrypted)
+    }
+
+    private decryptState = (state, password) => JSON.parse(CryptoJS.AES.decrypt(state, password).toString(CryptoJS.enc.Utf8));
 }
 
 export default PlugKeyRing;

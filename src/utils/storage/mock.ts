@@ -1,4 +1,4 @@
-export default class StorageMock {
+class StorageMock {
     private store: any;
     public local: {
         get: () => any;
@@ -30,3 +30,7 @@ export default class StorageMock {
     }
   }
   
+
+  const store = new StorageMock();
+
+  export default store;
