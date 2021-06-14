@@ -3,20 +3,20 @@ import { createAccountFromMnemonic } from "../utils/account";
 
 interface PlugWalletArgs {
     name?: string;
-    walletNumber: number;
+    walletId: number;
     mnemonic: string;
 }
 
 class PlugWallet {
     name: string;
-    walletNumber: number;
+    walletId: number;
     accountId: string;
     private _identity: Ed25519KeyIdentity;
     
-    constructor ({ name, walletNumber, mnemonic }: PlugWalletArgs) {
+    constructor ({ name, walletId, mnemonic }: PlugWalletArgs) {
         this.name = name || 'Main IC Wallet'
-        this.walletNumber = walletNumber;
-        const { identity, accountId } = createAccountFromMnemonic(mnemonic, walletNumber);
+        this.walletId = walletId;
+        const { identity, accountId } = createAccountFromMnemonic(mnemonic, walletId);
         this._identity = identity;
         this.accountId = accountId;
     }
@@ -27,13 +27,13 @@ class PlugWallet {
         return this._identity.getPrincipal();
     }
 
-    set setName(val: string) {
+    public setName(val: string) {
         this.name = val;
     }
 
     public toJSON = ()  => ({
         name: this.name,
-        walletNumber: this.walletNumber,
+        walletId: this.walletId,
         identity: this._identity.toJSON(),
         accountId: this.accountId
     });

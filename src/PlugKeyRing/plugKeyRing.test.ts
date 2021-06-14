@@ -11,7 +11,7 @@ const TEST_PASSWORD = 'Somepassword1234';
 const TEST_MNEMONIC =  bip39.generateMnemonic();
 
 describe('Plug KeyRing', () => {
-    const testWallet = new PlugWallet({ name: 'test', mnemonic: TEST_MNEMONIC, walletNumber: 0 });
+    const testWallet = new PlugWallet({ name: 'test', mnemonic: TEST_MNEMONIC, walletId: 0 });
     let keyRing: PlugKeyRing;
 
     beforeAll(async () => {
@@ -25,7 +25,7 @@ describe('Plug KeyRing', () => {
     });
 
     describe('initialization', () => {
-        it('should be empty if not initialized', async () => {
+        it('should be empty and locked if not initialized', async () => {
             expect(() => keyRing.setCurrentPrincipal(testWallet)).toThrow(ERRORS.NOT_INITIALIZED);
             expect(() => keyRing.setCurrentPrincipal(testWallet)).toThrow(ERRORS.NOT_INITIALIZED);
             await expect(() => keyRing.unlock(TEST_PASSWORD)).rejects.toEqual(Error(ERRORS.NOT_INITIALIZED));
@@ -46,7 +46,7 @@ describe('Plug KeyRing', () => {
             const state = await keyRing.getState();
             expect(state.wallets.length).toEqual(1);
             
-            const stateWallet = state.wallets[0] as PlugWallet;
+            const stateWallet = state.wallets[0];
             expect(stateWallet.toJSON()).toEqual(wallet.toJSON());
             expect(state.currentWalletId).toEqual(0);
             expect(state.password).toEqual(TEST_PASSWORD);  // Should I expose this? 
@@ -65,7 +65,7 @@ describe('Plug KeyRing', () => {
 
             const state = await keyRing.getState();
             expect(state.wallets.length).toEqual(1);
-            const stateWallet = state.wallets[0] as PlugWallet;
+            const stateWallet = state.wallets[0];
             expect(stateWallet.toJSON()).toEqual(wallet.toJSON());
             expect(state.currentWalletId).toEqual(0);
             expect(state.mnemonic).toEqual(TEST_MNEMONIC); 
@@ -134,8 +134,8 @@ describe('Plug KeyRing', () => {
         });
         it('should persist data encypted correctly after creating a new principal', async () => {
             await keyRing.create({ password: TEST_PASSWORD });
-            await keyRing.createPrincipal();
             await keyRing.unlock(TEST_PASSWORD);
+            await keyRing.createPrincipal();
             const state = await keyRing.getState();
             const encryptedState = CryptoJS.AES.encrypt(JSON.stringify(state), TEST_PASSWORD);
             const stored = store.get();
@@ -143,8 +143,59 @@ describe('Plug KeyRing', () => {
                   .toEqual(CryptoJS.AES.decrypt(stored, TEST_PASSWORD).toString(CryptoJS.enc.Utf8));
         });
     });
-    describe('name management', () => {
-        // TODO
+    describe('principal management', () => {
+        it('should create new principals correctly when unlocked', async () => {
+            await keyRing.create({ password: TEST_PASSWORD });
+            await keyRing.unlock(TEST_PASSWORD);
+            await keyRing.createPrincipal();
+            let state = await keyRing.getState()
+            expect(state.wallets.length).toEqual(2);
+            await keyRing.createPrincipal();
+            state = await keyRing.getState();
+            expect(state.wallets.length).toEqual(3);
+        });
+        it('should fail to create new principals when locked', async () => {
+            await keyRing.create({ password: TEST_PASSWORD });
+            await expect(() => keyRing.createPrincipal()).rejects.toEqual(Error(ERRORS.STATE_LOCKED));
+        });
+        it('should set the current principal correctly', async () => {
+            await keyRing.create({ password: TEST_PASSWORD });
+            await keyRing.unlock(TEST_PASSWORD);
+            await keyRing.createPrincipal();
+            const wallet = await keyRing.createPrincipal();
+            const state = await keyRing.getState();
+            expect(state.currentWalletId).toEqual(0);
+            keyRing.setCurrentPrincipal(wallet);
+            expect(state.currentWalletId).toEqual(wallet.walletId);
+
+        });
+        it('should create new wallets with a default name', async () => {
+            const { wallet } = await keyRing.create({ password: TEST_PASSWORD });
+            expect(wallet.name).toEqual('Main IC Wallet');
+            const newWallet = await keyRing.importMnemonic({ mnemonic: TEST_MNEMONIC, password: TEST_PASSWORD });
+            expect(newWallet.name).toEqual('Main IC Wallet');
+        });
+        it('should change the wallets name correctly', async () => {
+            await keyRing.create({ password: TEST_PASSWORD });
+            await keyRing.unlock(TEST_PASSWORD);
+            await keyRing.createPrincipal();
+            await keyRing.createPrincipal();
+            await keyRing.renamePrincipal(0, 'New name1');
+            await keyRing.renamePrincipal(1, 'New name2');
+            await keyRing.renamePrincipal(2, 'New name3');
+
+            const { wallets } = await keyRing.getState();
+            expect(wallets[0].name).toEqual('New name1');
+            expect(wallets[1].name).toEqual('New name2');
+            expect(wallets[2].name).toEqual('New name3');
+        });
+        it('should fail to change and invalid wallet', async () => {
+            await keyRing.create({ password: TEST_PASSWORD });
+            await keyRing.unlock(TEST_PASSWORD);
+            expect(() => keyRing.renamePrincipal(10, 'New name')).toThrow(ERRORS.INVALID_WALLET_NUMBER);
+            expect(() => keyRing.renamePrincipal(-1, 'New name')).toThrow(ERRORS.INVALID_WALLET_NUMBER);
+            expect(() => keyRing.renamePrincipal(1.231, 'New name')).toThrow(ERRORS.INVALID_WALLET_NUMBER);
+        });
     });
   });
   
