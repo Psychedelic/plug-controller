@@ -6,7 +6,7 @@ const createHmac = require("create-hmac");
 import { ERRORS } from "../../errors";
 import { AccountCredentials } from "../../interfaces/account";
 import { DERIVATION_PATH, ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO, HARDENED_OFFSET  } from "./constants";
-import { Principal } from '@dfinity/agent';
+import { Principal } from '@dfinity/agent/lib/cjs';
 import { getLedgerActor } from "../dfx";
 import { byteArrayToWordArray, generateChecksum, wordArrayToByteArray } from "../crypto";
 import { derivePath, getPublicKey } from "../crypto/hdKeyManager";

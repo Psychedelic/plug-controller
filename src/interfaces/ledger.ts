@@ -1,4 +1,4 @@
-import type { Principal } from '@dfinity/agent';
+import type { Principal } from '@dfinity/agent/lib/cjs';
 export interface AccountBalanceArgs {
   'account' : AccountIdentifier,
 };

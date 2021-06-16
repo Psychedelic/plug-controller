@@ -1,4 +1,4 @@
-import type { Principal } from '@dfinity/agent';
+import type { Principal } from '@dfinity/agent/lib/cjs';
 export interface AddressEntry {
   id: Principal;
   kind: Kind;

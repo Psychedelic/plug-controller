@@ -1,4 +1,4 @@
-import { IDL } from '@dfinity/agent';
+import { IDL } from '@dfinity/agent/lib/cjs';
 
 const walletIDLFactory: IDL.InterfaceFactory = ({ IDL }) => {
   const Kind = IDL.Variant({
