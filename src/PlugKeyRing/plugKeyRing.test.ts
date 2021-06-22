@@ -65,7 +65,7 @@ describe('Plug KeyRing', () => {
       expect(stateWallet.toJSON()).toEqual(wallet.toJSON());
       expect(state.currentWalletId).toEqual(0);
       expect(state.password).toEqual(TEST_PASSWORD); // Should I expose this?
-      expect(bip39.validateMnemonic(state.mnemonic!)).toEqual(true);
+      expect(bip39.validateMnemonic(state.mnemonic)).toEqual(true);
     });
     it('should fail if not password was provided', async () => {
       await expect(() => keyRing.create({ password: '' })).rejects.toEqual(
@@ -255,27 +255,41 @@ describe('Plug KeyRing', () => {
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.createPrincipal();
       await keyRing.createPrincipal();
-      await keyRing.renamePrincipal(0, 'New name1');
-      await keyRing.renamePrincipal(1, 'New name2');
-      await keyRing.renamePrincipal(2, 'New name3');
+      await keyRing.editPrincipal(0, { name: 'New name1' });
+      await keyRing.editPrincipal(1, { name: 'New name2' });
+      await keyRing.editPrincipal(2, { name: 'New name3' });
 
       const { wallets } = await keyRing.getState();
       expect(wallets[0].name).toEqual('New name1');
       expect(wallets[1].name).toEqual('New name2');
       expect(wallets[2].name).toEqual('New name3');
     });
-    it('should fail to change and invalid wallet', async () => {
+    it('should fail to change an invalid wallet', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      expect(() => keyRing.renamePrincipal(10, 'New name')).toThrow(
-        ERRORS.INVALID_WALLET_NUMBER
-      );
-      expect(() => keyRing.renamePrincipal(-1, 'New name')).toThrow(
-        ERRORS.INVALID_WALLET_NUMBER
-      );
-      expect(() => keyRing.renamePrincipal(1.231, 'New name')).toThrow(
-        ERRORS.INVALID_WALLET_NUMBER
-      );
+      expect(() =>
+        keyRing.editPrincipal(10, { name: 'New name', emoji: 'test' })
+      ).toThrow(ERRORS.INVALID_WALLET_NUMBER);
+      expect(() =>
+        keyRing.editPrincipal(-1, { name: 'New name', emoji: 'test' })
+      ).toThrow(ERRORS.INVALID_WALLET_NUMBER);
+      expect(() =>
+        keyRing.editPrincipal(1.231, { name: 'New name', emoji: 'test' })
+      ).toThrow(ERRORS.INVALID_WALLET_NUMBER);
+    });
+    it('should change the wallet icon correctly', async () => {
+      await keyRing.create({ password: TEST_PASSWORD });
+      await keyRing.unlock(TEST_PASSWORD);
+      await keyRing.createPrincipal();
+      await keyRing.createPrincipal();
+      await keyRing.editPrincipal(0, { emoji: '123' });
+      await keyRing.editPrincipal(1, { emoji: 'New emoji2' });
+      await keyRing.editPrincipal(2, { emoji: 'New name3' });
+
+      const { wallets } = await keyRing.getState();
+      expect(wallets[0].icon).toEqual('123');
+      expect(wallets[1].icon).toEqual('New emoji2');
+      expect(wallets[2].icon).toEqual('New name3');
     });
   });
 });

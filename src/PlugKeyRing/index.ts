@@ -100,7 +100,10 @@ class PlugKeyRing {
     this.state = { wallets: [] };
   };
 
-  public renamePrincipal = (walletNumber: number, name: string): void => {
+  public editPrincipal = (
+    walletNumber: number,
+    { name, emoji }: { name?: string; emoji?: string }
+  ): void => {
     this.checkInitialized();
     this.checkUnlocked();
     if (
@@ -111,7 +114,8 @@ class PlugKeyRing {
       throw new Error(ERRORS.INVALID_WALLET_NUMBER);
     }
     const wallet = this.state.wallets[walletNumber];
-    wallet.setName(name);
+    if (name) wallet.setName(name);
+    if (emoji) wallet.setIcon(emoji);
     const { wallets } = this.state;
     wallets.splice(walletNumber, 1, wallet);
 
