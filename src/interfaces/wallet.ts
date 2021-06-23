@@ -1,4 +1,8 @@
-import type { Principal } from '@dfinity/agent/lib/cjs';
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/camelcase */
+import type { Principal } from '@dfinity/agent';
+
 export interface AddressEntry {
   id: Principal;
   kind: Kind;
