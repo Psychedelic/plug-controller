@@ -1,0 +1,10 @@
+/jest.config.js
+/tsconfig.json
+/.env
+/src
+/mock-files
+/coverage
+/dist/jest/*.js
+/dist/**/*.spec.js
+/dist/**/*.mock.js
+/manual.ts

@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+      "outDir": "./dist",
+      "rootDir": "./src",
+      "declaration": true,
+      "noImplicitAny": false,
+      "esModuleInterop": true,
+      "strictNullChecks": true,
+      "module": "commonjs",
+      "target": "es6",
+      "lib": [
+          "es6"
+      ],
+      "resolveJsonModule": true,
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true,
+      "noUnusedParameters": true,
+      "noFallthroughCasesInSwitch": true,
+      "noImplicitReturns": true,
+      "skipLibCheck": true,
+      "types": ["node", "jest"]
+  },
+  "compileOnSave": true,
+  "exclude": [
+      "node_modules",
+      "dist",
+      "tests",
+      "jest.config.cjs",
+      ".vscode"
+  ]
+}

@@ -1,11 +1,85 @@
 {
   "dependencies": {
+    "@babel/core": "^7.14.3",
+    "@babel/preset-env": "^7.14.4",
     "@dfinity/agent": "^0.8.9",
+    "@dfinity/identity": "^0.8.9",
+    "babel-jest": "^25.5.1",
     "bip39": "^3.0.4",
+    "buffer-crc32": "^0.2.13",
+    "create-hmac": "^1.1.7",
+    "cross-fetch": "^3.1.4",
+    "crypto-js": "^4.0.0",
     "ed25519-hd-key": "^1.2.0",
-    "node-fetch": "^2.6.1",
-    "pbkdf2": "^3.1.2",
+    "extensionizer": "^1.0.1",
+    "reflect-metadata": "^0.1.13",
     "text-encoding": "^0.7.0",
-    "tweetnacl": "^1.0.3"
-  }
+    "tweetnacl": "^1.0.3",
+    "webpack-dotenv": "^0.0.2"
+  },
+  "devDependencies": {
+    "@babel/preset-typescript": "^7.13.0",
+    "@oclif/dev-cli": "^1.26.0",
+    "@oclif/test": "^1.2.8",
+    "@types/cli-progress": "^3.9.1",
+    "@types/crypto-js": "^4.0.1",
+    "@types/dotenv": "^8.2.0",
+    "@types/fs-extra": "^8.1.0",
+    "@types/jest": "^25.2.3",
+    "@types/js-yaml": "^3.12.3",
+    "@types/node": "^13.13.52",
+    "@types/node-fetch": "^2.5.10",
+    "@types/parse-github-url": "^1.0.0",
+    "@types/request-promise": "^4.1.46",
+    "@types/text-encoding": "^0.0.35",
+    "@typescript-eslint/eslint-plugin": "^2.27.0",
+    "@typescript-eslint/parser": "^2.27.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb": "^18.0.1",
+    "eslint-config-prettier": "^6.7.0",
+    "eslint-plugin-import": "^2.19.1",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-prettier": "^3.1.2",
+    "jest": "^25.5.4",
+    "prettier": "^1.19.1",
+    "test-console": "^1.1.0",
+    "ts-jest": "^25.5.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^3.8.3"
+  },
+  "name": "@psychedelic/plug-controller",
+  "version": "1.0.8",
+  "description": "Internet Computer Plug wallet's controller",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npm run clean && npm run compile",
+    "clean": "rm -rf ./dist && rm -rf tsconfig.tsbuildinfo",
+    "compile": "tsc -b tsconfig.json",
+    "test": "jest",
+    "lint": "eslint --ext ts,js ./src",
+    "watch": "tsc --watch",
+    "publish": "npm run build && npm publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Psychedelic/plug-controller.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@psychedelic"
+  },
+  "keywords": [
+    "ic",
+    "dfinity",
+    "plug",
+    "fleek",
+    "psychedelic",
+    "crypto",
+    "wallet"
+  ],
+  "author": "Psychedelic",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Psychedelic/plug-controller/issues"
+  },
+  "homepage": "https://github.com/Psychedelic/plug-controller#readme"
 }
