@@ -1,10 +1,10 @@
+import CryptoJS from 'crypto-js';
+
 import { ERRORS } from '../errors';
 import PlugWallet from '../PlugWallet';
 import { createAccount } from '../utils/account';
 import Storage from '../utils/storage';
 import mockStore from '../utils/storage/mock';
-
-const CryptoJS = require('crypto-js');
 
 interface PlugState {
   wallets: Array<PlugWallet>;
