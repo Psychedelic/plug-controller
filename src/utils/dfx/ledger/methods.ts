@@ -3,8 +3,9 @@
 /* eslint-disable camelcase */
 
 import RandomBigInt from 'random-bigint';
+import { ActorSubclass } from '@dfinity/agent';
 
-import { ICPTs, TimeStamp } from '../../../interfaces/ledger';
+import LedgerService, { ICPTs, TimeStamp } from '../../../interfaces/ledger';
 
 interface SendOpts {
   fee?: bigint;
@@ -13,13 +14,22 @@ interface SendOpts {
   created_at_time?: TimeStamp; // TODO: create js Date to TimeStamp function
 }
 
-// @params: to, amount, opts
-export const sendICP = async (
-  actor,
-  to: string,
-  amount: bigint,
-  opts: SendOpts
+interface SendICPArgs {
+  to: string;
+  amount: bigint;
+  opts?: SendOpts;
+}
+
+export interface LedgerServiceExtended extends LedgerService {
+  sendICP: (args_0: SendICPArgs) => Promise<void>;
+  getBalance: (accountId: string) => Promise<bigint>;
+}
+
+const sendICP = async (
+  actor: ActorSubclass<LedgerService>,
+  args: SendICPArgs
 ): Promise<void> => {
+  const { to, amount, opts } = args;
   const defaultArgs = {
     fee: BigInt(10000),
     memo: RandomBigInt(32),
@@ -39,14 +49,12 @@ export const sendICP = async (
     .catch(err => console.log('ERROR: ', err));
 };
 
-export const getBalances = async (
-  actor,
-  accountIds: string[]
-): Promise<ICPTs[]> => {
-  const balances = Promise.all(
-    accountIds.map(accountId => actor.account_balance_dfx(accountId))
-  );
-  return balances;
+const getBalance = async (
+  actor: ActorSubclass<LedgerService>,
+  accountId: string
+): Promise<bigint> => {
+  const balance = await actor.account_balance_dfx({ account: accountId });
+  return balance.e8s;
 };
 
-export default {};
+export default { sendICP, getBalance };
