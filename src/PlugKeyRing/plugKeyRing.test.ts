@@ -1,10 +1,10 @@
+import * as bip39 from 'bip39';
+import CryptoJS from 'crypto-js';
+
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
 import PlugWallet from '../PlugWallet';
 import store from '../utils/storage/mock';
-
-const bip39 = require('bip39');
-const CryptoJS = require('crypto-js');
 
 const TEST_PASSWORD = 'Somepassword1234';
 const TEST_MNEMONIC = bip39.generateMnemonic();
@@ -65,7 +65,7 @@ describe('Plug KeyRing', () => {
       expect(stateWallet.toJSON()).toEqual(wallet.toJSON());
       expect(state.currentWalletId).toEqual(0);
       expect(state.password).toEqual(TEST_PASSWORD); // Should I expose this?
-      expect(bip39.validateMnemonic(state.mnemonic)).toEqual(true);
+      expect(bip39.validateMnemonic(state.mnemonic as string)).toEqual(true);
     });
     it('should fail if not password was provided', async () => {
       await expect(() => keyRing.create({ password: '' })).rejects.toEqual(

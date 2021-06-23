@@ -1,5 +1,5 @@
-const createHmac = require('create-hmac');
-const nacl = require('tweetnacl');
+import createHmac from 'create-hmac';
+import nacl from 'tweetnacl';
 
 type Hex = string;
 type Path = string;

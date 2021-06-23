@@ -1,4 +1,4 @@
-const PlugKeyRing = require('./PlugKeyRing');
+import PlugKeyRing from './PlugKeyRing';
 
 export default {
   PlugKeyRing,

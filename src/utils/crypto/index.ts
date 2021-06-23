@@ -1,6 +1,6 @@
 /* eslint-disable no-bitwise */
-const crc32 = require('buffer-crc32');
-const CryptoJS = require('crypto-js');
+import crc32 from 'buffer-crc32';
+import CryptoJS from 'crypto-js';
 
 export const byteArrayToWordArray = (byteArray: Uint8Array) => {
   const wordArray = [] as any;
@@ -9,11 +9,11 @@ export const byteArrayToWordArray = (byteArray: Uint8Array) => {
     wordArray[(i / 4) | 0] |= byteArray[i] << (24 - 8 * i);
   }
   // eslint-disable-next-line
-  const { init, $super, ...ret } = CryptoJS.lib.WordArray.create(
+  const result = CryptoJS.lib.WordArray.create(
     wordArray,
     byteArray.length
   );
-  return ret;
+  return result;
 };
 
 export const wordToByteArray = (word, length): number[] => {
