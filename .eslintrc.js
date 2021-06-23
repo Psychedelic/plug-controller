@@ -36,6 +36,7 @@ module.exports = {
       node: true,
       commonjs: true,
       jest: true,
+      es2020: true,
   },
   settings: {
       'indent': ['error', 2],

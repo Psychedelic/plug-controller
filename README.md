@@ -38,7 +38,7 @@ import { PlugKeyRing } from '@psychedelic/plug-controller';
 const keyRing = new PlugKeyRing();
 
 // Initialize keyring and load state from extension storage
-await keyRing.init();
+await keyRing.load();
 ```
 
 ### Keyring Creation

@@ -1,5 +1,5 @@
-/* eslint-disable */
-export default class StorageMock {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+class StorageMock {
   private store: any;
 
   public local: {
@@ -15,19 +15,23 @@ export default class StorageMock {
     };
   }
 
-  public set = (obj = {}) => {
+  public set = (obj = {}): any => {
     this.store = {
       ...this.store,
       ...obj,
     };
   };
 
-  public get = () => {
+  public get = (): any => {
     return { ...this.store };
   };
 
-  public clear = () => {
+  public clear = (): {} => {
     this.set({});
     return {};
   };
 }
+
+const store = new StorageMock();
+
+export default store;

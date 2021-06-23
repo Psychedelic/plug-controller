@@ -7,7 +7,7 @@ import { isEmpty, checkForError } from './utils';
 /**
  * A wrapper around the extension's storage local API
  */
-export default class ExtensionStore {
+class ExtensionStore {
   isSupported: boolean;
 
   constructor() {
@@ -96,3 +96,5 @@ export default class ExtensionStore {
     });
   }
 }
+
+export default ExtensionStore;
