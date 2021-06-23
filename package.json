@@ -65,6 +65,9 @@
     "type": "git",
     "url": "git+https://github.com/Psychedelic/plug-controller.git"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@psychedelic"
+  },
   "keywords": [
     "ic",
     "dfinity",
