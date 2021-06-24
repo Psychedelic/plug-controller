@@ -1,12 +1,13 @@
+import CryptoJS from 'crypto-js';
+
+import { ERRORS } from '../errors';
 import PlugWallet from '../PlugWallet';
 import { createAccount } from '../utils/account';
 import Storage from '../utils/storage';
 import mockStore from '../utils/storage/mock';
 
-const CryptoJS = require('crypto-js');
-
 interface PlugState {
-  wallets: Array<PlugWallet> | string;
+  wallets: Array<PlugWallet>;
   currentWalletId?: number;
   password?: string;
   mnemonic?: string;
@@ -19,13 +20,18 @@ class PlugKeyRing {
 
   private isUnlocked = false;
 
+  public constructor() {
+    this.state = { wallets: [] };
+    this.isUnlocked = false;
+  }
+
   public loadFromPersistance = async (password: string): Promise<void> => {
     const state = (await store.get()) as PlugState;
     if (state) {
       const decrypted = this.decryptState(state, password);
       const passwordsMatch = decrypted.password === password;
       if (passwordsMatch) {
-        const wallets = (decrypted.wallets as PlugWallet[]).map(
+        const wallets = decrypted.wallets.map(
           wallet =>
             new PlugWallet({
               ...wallet,
@@ -60,26 +66,26 @@ class PlugKeyRing {
   // Assumes the state is already initialized
   public createPrincipal = async (): Promise<PlugWallet> => {
     this.checkInitialized();
+    this.checkUnlocked();
     const wallet = new PlugWallet({
       mnemonic: this.state.mnemonic as string,
       walletNumber: this.state.wallets.length,
     });
     const wallets = [...this.state.wallets, wallet];
     await this.storeState({ wallets }, this.state.password);
+    this.state.wallets = wallets;
     return wallet;
-  };
-
-  public getState = async (): Promise<PlugState> => {
-    if (!this.isUnlocked) {
-      throw new Error('The state is locked');
-    }
-    await this.loadFromPersistance(this.state.password as string);
-    return this.state;
   };
 
   public setCurrentPrincipal = (wallet: PlugWallet): void => {
     this.checkInitialized();
     this.state.currentWalletId = wallet.walletNumber;
+  };
+
+  public getState = async (): Promise<PlugState> => {
+    this.checkUnlocked();
+    await this.loadFromPersistance(this.state.password as string);
+    return this.state;
   };
 
   public unlock = async (password: string): Promise<boolean> => {
@@ -94,9 +100,38 @@ class PlugKeyRing {
     this.state = { wallets: [] };
   };
 
+  public editPrincipal = (
+    walletNumber: number,
+    { name, emoji }: { name?: string; emoji?: string }
+  ): void => {
+    this.checkInitialized();
+    this.checkUnlocked();
+    if (
+      walletNumber < 0 ||
+      !Number.isInteger(walletNumber) ||
+      walletNumber >= this.state.wallets.length
+    ) {
+      throw new Error(ERRORS.INVALID_WALLET_NUMBER);
+    }
+    const wallet = this.state.wallets[walletNumber];
+    if (name) wallet.setName(name);
+    if (emoji) wallet.setIcon(emoji);
+    const { wallets } = this.state;
+    wallets.splice(walletNumber, 1, wallet);
+
+    this.state.wallets = wallets;
+    this.storeState({ wallets }, this.state.password);
+  };
+
   private checkInitialized = (): void => {
-    if (!this.state?.wallets?.length) {
-      throw new Error('Plug must be initialized');
+    if (!this.state.wallets.length) {
+      throw new Error(ERRORS.NOT_INITIALIZED);
+    }
+  };
+
+  private checkUnlocked = (): void => {
+    if (!this.isUnlocked) {
+      throw new Error(ERRORS.STATE_LOCKED);
     }
   };
 
@@ -104,7 +139,7 @@ class PlugKeyRing {
     mnemonic,
     password,
   }): Promise<PlugWallet> => {
-    if (!password) throw new Error('A password is required');
+    if (!password) throw new Error(ERRORS.PASSWORD_REQUIRED);
     const wallet = new PlugWallet({ mnemonic, walletNumber: 0 });
     const data = {
       wallets: [wallet.toJSON()],

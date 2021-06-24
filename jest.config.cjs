@@ -8,7 +8,7 @@ module.exports = {
   collectCoverage: true,
   verbose: true,
   coverageReporters: ['html'],
-  coveragePathIgnorePatterns: ['<rootDir>/src/jest/*', '.mock.ts', '.idl'],
+  coveragePathIgnorePatterns: ['<rootDir>/src/jest/*', '.mock.ts', '.idl', '<rootDir>/src/utils/storage'],
   preset: 'ts-jest',
   testEnvironment: 'node'
 };

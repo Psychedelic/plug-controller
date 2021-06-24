@@ -1,3 +1,7 @@
+import * as bip39 from 'bip39';
+import CryptoJS from 'crypto-js';
+import { Ed25519KeyIdentity } from '@dfinity/identity';
+import createHmac from 'create-hmac';
 import { Principal } from '@dfinity/agent';
 import { ERRORS } from '../../errors';
 
@@ -15,11 +19,6 @@ import {
   wordArrayToByteArray,
 } from '../crypto';
 import { derivePath } from '../crypto/hdKeyManager';
-
-const bip39 = require('bip39');
-const CryptoJS = require('crypto-js');
-const { Ed25519KeyIdentity } = require('@dfinity/identity');
-const createHmac = require('create-hmac');
 
 interface DerivedKey {
   key: Buffer;
@@ -78,7 +77,7 @@ const deriveKey = (
   const hexSeed = bip39.mnemonicToSeedSync(mnemonic, password);
   const masterXKey = derivePath(
     DERIVATION_PATH,
-    hexSeed,
+    hexSeed.toString(),
     HARDENED_OFFSET + index
   );
   const childXKey = extendKey(masterXKey, 0);

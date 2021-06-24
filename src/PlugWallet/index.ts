@@ -7,6 +7,7 @@ interface PlugWalletArgs {
   name?: string;
   walletNumber: number;
   mnemonic: string;
+  icon?: string;
 }
 
 interface JSONWallet {
@@ -14,10 +15,13 @@ interface JSONWallet {
   walletNumber: number;
   identity: JsonnableEd25519KeyIdentity;
   accountId: string;
+  icon?: string;
 }
 
 class PlugWallet {
   name: string;
+
+  icon?: string;
 
   walletNumber: number;
 
@@ -25,8 +29,9 @@ class PlugWallet {
 
   private identity: Ed25519KeyIdentity;
 
-  constructor({ name, walletNumber, mnemonic }: PlugWalletArgs) {
+  constructor({ name, icon, walletNumber, mnemonic }: PlugWalletArgs) {
     this.name = name || 'Main IC Wallet';
+    this.icon = icon;
     this.walletNumber = walletNumber;
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
@@ -44,8 +49,12 @@ class PlugWallet {
     return this.identity.getPrincipal();
   }
 
-  set setName(val: string) {
+  public setName(val: string): void {
     this.name = val;
+  }
+
+  public setIcon(val: string): void {
+    this.icon = val;
   }
 
   public toJSON = (): JSONWallet => ({
@@ -53,6 +62,7 @@ class PlugWallet {
     walletNumber: this.walletNumber,
     identity: this.identity.toJSON(),
     accountId: this.accountId,
+    icon: this.icon,
   });
 }
 
