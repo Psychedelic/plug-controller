@@ -69,12 +69,8 @@ export const createAccountId = (
   return val;
 };
 
-const deriveKey = (
-  mnemonic: string,
-  index = 0,
-  password?: string
-): DerivedKey => {
-  const hexSeed = bip39.mnemonicToSeedSync(mnemonic, password);
+const deriveKey = (mnemonic: string, index = 0): DerivedKey => {
+  const hexSeed = bip39.mnemonicToSeedSync(mnemonic);
   const masterXKey = derivePath(
     DERIVATION_PATH,
     hexSeed.toString(),
@@ -88,10 +84,9 @@ const deriveKey = (
 
 const getAccountCredentials = (
   mnemonic: string,
-  subAccount?: number,
-  password?: string
+  subAccount?: number
 ): AccountCredentials => {
-  const { key } = deriveKey(mnemonic, subAccount || 0, password);
+  const { key } = deriveKey(mnemonic, subAccount || 0);
   // Identity has boths keys via getKeyPair and PID via getPrincipal
   const identity = Ed25519KeyIdentity.generate(key);
   const accountId = createAccountId(identity.getPrincipal(), subAccount);
@@ -102,15 +97,14 @@ const getAccountCredentials = (
   };
 };
 
-export const createAccount = (password?: string): AccountCredentials => {
+export const createAccount = (): AccountCredentials => {
   const mnemonic = bip39.generateMnemonic();
-  return getAccountCredentials(mnemonic, 0, password);
+  return getAccountCredentials(mnemonic, 0);
 };
 
 export const createAccountFromMnemonic = (
   mnemonic: string,
-  accountId: number,
-  password?: string
+  accountId: number
 ): AccountCredentials => {
   if (!mnemonic || !bip39.validateMnemonic(mnemonic)) {
     throw new Error(ERRORS.INVALID_MNEMONIC);
@@ -118,7 +112,7 @@ export const createAccountFromMnemonic = (
   if (typeof accountId !== 'number' || accountId < 0) {
     throw new Error(ERRORS.INVALID_ACC_ID);
   }
-  return getAccountCredentials(mnemonic, accountId, password);
+  return getAccountCredentials(mnemonic, accountId);
 };
 
 // Queries first 10 accounts for the provided key
