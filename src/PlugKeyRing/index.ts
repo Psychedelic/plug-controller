@@ -48,7 +48,7 @@ class PlugKeyRing {
   }: {
     password: string;
   }): Promise<{ wallet: PlugWallet; mnemonic: string }> => {
-    const { mnemonic } = createAccount(password);
+    const { mnemonic } = createAccount();
     const wallet = await this.createAndPersistKeyRing({ mnemonic, password });
     return { wallet, mnemonic };
   };
