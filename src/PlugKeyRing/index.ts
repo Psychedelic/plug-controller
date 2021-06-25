@@ -14,9 +14,6 @@ interface PlugState {
   mnemonic?: string;
 }
 
-interface Transactions {
-  [key: string]: GetTransactionsResponse;
-}
 const store = process.env.NODE_ENV === 'test' ? mockStore : new Storage();
 
 class PlugKeyRing {
@@ -128,32 +125,19 @@ class PlugKeyRing {
   };
 
   public getBalances = async (subAccount?: number): Promise<bigint> => {
-    const state = await this.getState();
-    if (typeof state.wallets === 'string') return Promise.resolve(BigInt(0));
-    if (subAccount !== undefined) {
-      return state.wallets[subAccount].getBalance();
-    }
-    const balances = await Promise.all(
-      state.wallets.map(wallet => wallet.getBalance())
-    );
-    return balances.reduce((a, b) => a + b);
+    const index = subAccount || 0;
+    if (index < 0 || index >= this.state.wallets.length)
+      throw new Error(ERRORS.INVALID_WALLET_NUMBER);
+    return this.state.wallets[index].getBalance();
   };
 
   public getTransactions = async (
     subAccount?: number
-  ): Promise<Transactions | undefined> => {
-    const state = await this.getState();
-    const transactions = {};
-    if (typeof state.wallets === 'string') return Promise.resolve(undefined);
-    if (subAccount !== undefined) {
-      transactions[subAccount] = state.wallets[subAccount].getTransactions();
-      return transactions;
-    }
-    state.wallets.forEach(async wallet => {
-      transactions[wallet.walletNumber] = await wallet.getTransactions();
-    });
-
-    return transactions;
+  ): Promise<GetTransactionsResponse> => {
+    const index = subAccount || 0;
+    if (index < 0 || index >= this.state.wallets.length)
+      throw new Error(ERRORS.INVALID_WALLET_NUMBER);
+    return this.state.wallets[index].getTransactions();
   };
 
   private checkInitialized = (): void => {
