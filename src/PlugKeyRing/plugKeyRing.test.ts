@@ -1,13 +1,37 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
+import RandomBigInt from 'random-bigint';
 
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
+import { GetTransactionsResponse } from '../interfaces/nns_uid';
 import PlugWallet from '../PlugWallet';
 import store from '../utils/storage/mock';
 
 const TEST_PASSWORD = 'Somepassword1234';
 const TEST_MNEMONIC = bip39.generateMnemonic();
+
+const createManyWallets = async (keyRing: PlugKeyRing): Promise<number> => {
+  const many = Math.round(Math.random() * 20) + 2;
+  for (let i = 1; i < many; i += 1) {
+    await keyRing.createPrincipal();
+  }
+  return many;
+};
+
+const createManyTransactions = (): GetTransactionsResponse => {
+  const many = Math.round(Math.random() * 20) + 2;
+  const transactions: GetTransactionsResponse = { total: 0, transactions: [] };
+  for (let i = 1; i < many; i += 1) {
+    transactions.transactions.push({
+      memo: RandomBigInt(32),
+      timestamp: { timestamp_nanos: RandomBigInt(32) },
+      block_height: RandomBigInt(32),
+      transfer: { Burn: { amount: RandomBigInt(32) } },
+    });
+  }
+  return transactions;
+};
 
 describe('Plug KeyRing', () => {
   const testWallet = new PlugWallet({
@@ -225,6 +249,16 @@ describe('Plug KeyRing', () => {
       state = await keyRing.getState();
       expect(state.wallets.length).toEqual(3);
     });
+    it('should create many new principals correctly', async () => {
+      await keyRing.create({ password: TEST_PASSWORD });
+      await keyRing.unlock(TEST_PASSWORD);
+      await keyRing.createPrincipal();
+      await keyRing.createPrincipal();
+      await keyRing.createPrincipal();
+      await keyRing.createPrincipal();
+      const state = await keyRing.getState();
+      expect(state.wallets.length).toEqual(5);
+    });
     it('should fail to create new principals when locked', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await expect(() => keyRing.createPrincipal()).rejects.toEqual(
@@ -290,6 +324,85 @@ describe('Plug KeyRing', () => {
       expect(wallets[0].icon).toEqual('123');
       expect(wallets[1].icon).toEqual('New emoji2');
       expect(wallets[2].icon).toEqual('New name3');
+    });
+  });
+
+  describe('get balance', () => {
+    const balances = {};
+    let walletsCreated = 0;
+    beforeEach(async () => {
+      keyRing = new PlugKeyRing();
+      await keyRing.create({ password: TEST_PASSWORD });
+      await keyRing.unlock(TEST_PASSWORD);
+      walletsCreated = await createManyWallets(keyRing);
+      const state = await keyRing.getState();
+      state.wallets.forEach(wallet => {
+        const randomBalance = RandomBigInt(32);
+        balances[wallet.walletNumber] = randomBalance;
+        jest.spyOn(wallet, 'getBalance').mockImplementation(
+          jest.fn(() => {
+            return Promise.resolve(randomBalance);
+          })
+        );
+      });
+    });
+
+    test('get default balance', async () => {
+      expect(await keyRing.getBalances()).toBe(balances[0]);
+    });
+
+    test('get specific balance', async () => {
+      const ind = Math.round(Math.random() * (walletsCreated - 1));
+
+      expect(await keyRing.getBalances(ind)).toBe(balances[ind]);
+    });
+
+    test('get error with invalid wallet numbers', async () => {
+      await expect(keyRing.getBalances(-2)).rejects.toThrow(
+        ERRORS.INVALID_WALLET_NUMBER
+      );
+      await expect(keyRing.getBalances(walletsCreated + 2)).rejects.toThrow(
+        ERRORS.INVALID_WALLET_NUMBER
+      );
+    });
+  });
+  describe('get transactions', () => {
+    const transactions = {};
+    let walletsCreated = 0;
+    beforeEach(async () => {
+      keyRing = new PlugKeyRing();
+      await keyRing.create({ password: TEST_PASSWORD });
+      await keyRing.unlock(TEST_PASSWORD);
+      walletsCreated = await createManyWallets(keyRing);
+      const state = await keyRing.getState();
+      state.wallets.forEach(wallet => {
+        const randomTransactions = createManyTransactions();
+        transactions[wallet.walletNumber] = randomTransactions;
+        jest.spyOn(wallet, 'getTransactions').mockImplementation(
+          jest.fn(() => {
+            return Promise.resolve(randomTransactions);
+          })
+        );
+      });
+    });
+
+    test('get default balance', async () => {
+      expect(await keyRing.getTransactions()).toBe(transactions[0]);
+    });
+
+    test('get specific balance', async () => {
+      const ind = Math.round(Math.random() * (walletsCreated - 1));
+
+      expect(await keyRing.getTransactions(ind)).toBe(transactions[ind]);
+    });
+
+    test('get error with invalid wallet numbers', async () => {
+      await expect(keyRing.getTransactions(-2)).rejects.toThrow(
+        ERRORS.INVALID_WALLET_NUMBER
+      );
+      await expect(keyRing.getTransactions(walletsCreated + 2)).rejects.toThrow(
+        ERRORS.INVALID_WALLET_NUMBER
+      );
     });
   });
 });
