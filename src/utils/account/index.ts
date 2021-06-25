@@ -73,7 +73,7 @@ const deriveKey = (mnemonic: string, index = 0): DerivedKey => {
   const hexSeed = bip39.mnemonicToSeedSync(mnemonic);
   const masterXKey = derivePath(
     DERIVATION_PATH,
-    hexSeed.toString(),
+    hexSeed.toString('hex'),
     HARDENED_OFFSET + index
   );
   const childXKey = extendKey(masterXKey, 0);

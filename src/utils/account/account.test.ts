@@ -33,7 +33,7 @@ describe('Account utils', () => {
       const mnemonics: string[] = [];
       const secretKeys: string[] = [];
       const publicKeys: string[] = [];
-      for (let i = 1; i < MAX_ACCOUNTS; i++) {
+      for (let i = 1; i < MAX_ACCOUNTS; i += 1) {
         const { mnemonic, identity } = createAccount();
         const { publicKey, secretKey } = identity.getKeyPair();
         expect(mnemonics).not.toContain(mnemonic);
@@ -67,7 +67,7 @@ describe('Account utils', () => {
     });
 
     it('should always derive the same account given the same mnemonic and account ID', () => {
-      for (let i = 0; i < MAX_ACCOUNTS; i++) {
+      for (let i = 0; i < MAX_ACCOUNTS; i += 1) {
         const account = createAccountFromMnemonic(globalAccount.mnemonic, i);
         const newAccount = createAccountFromMnemonic(globalAccount.mnemonic, i);
         const { secretKey, publicKey } = account.identity.getKeyPair();
