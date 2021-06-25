@@ -348,20 +348,20 @@ describe('Plug KeyRing', () => {
     });
 
     test('get default balance', async () => {
-      expect(await keyRing.getBalances()).toBe(balances[0]);
+      expect(await keyRing.getBalance()).toBe(balances[0]);
     });
 
     test('get specific balance', async () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
 
-      expect(await keyRing.getBalances(ind)).toBe(balances[ind]);
+      expect(await keyRing.getBalance(ind)).toBe(balances[ind]);
     });
 
     test('get error with invalid wallet numbers', async () => {
-      await expect(keyRing.getBalances(-2)).rejects.toThrow(
+      await expect(keyRing.getBalance(-2)).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
-      await expect(keyRing.getBalances(walletsCreated + 2)).rejects.toThrow(
+      await expect(keyRing.getBalance(walletsCreated + 2)).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
     });

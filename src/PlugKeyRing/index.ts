@@ -124,7 +124,7 @@ class PlugKeyRing {
     this.storeState({ wallets }, this.state.password);
   };
 
-  public getBalances = async (subAccount?: number): Promise<bigint> => {
+  public getBalance = async (subAccount?: number): Promise<bigint> => {
     const index = subAccount || 0;
     if (index < 0 || index >= this.state.wallets.length)
       throw new Error(ERRORS.INVALID_WALLET_NUMBER);
