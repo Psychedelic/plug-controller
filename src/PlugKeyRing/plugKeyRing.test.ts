@@ -29,12 +29,9 @@ describe('Plug KeyRing', () => {
 
   describe('initialization', () => {
     it('should be empty and locked if not initialized', async () => {
-      expect(() => keyRing.setCurrentPrincipal(testWallet)).toThrow(
-        ERRORS.NOT_INITIALIZED
-      );
-      expect(() => keyRing.setCurrentPrincipal(testWallet)).toThrow(
-        ERRORS.NOT_INITIALIZED
-      );
+      await expect(() =>
+        keyRing.setCurrentPrincipal(testWallet)
+      ).rejects.toEqual(Error(ERRORS.NOT_INITIALIZED));
       await expect(() => keyRing.unlock(TEST_PASSWORD)).rejects.toEqual(
         Error(ERRORS.NOT_INITIALIZED)
       );
@@ -166,7 +163,7 @@ describe('Plug KeyRing', () => {
         JSON.stringify(state),
         TEST_PASSWORD
       );
-      const stored = store.get();
+      const { vault: stored, isInitialized } = store.get();
       expect(
         CryptoJS.AES.decrypt(encryptedState, TEST_PASSWORD).toString(
           CryptoJS.enc.Utf8
@@ -174,6 +171,7 @@ describe('Plug KeyRing', () => {
       ).toEqual(
         CryptoJS.AES.decrypt(stored, TEST_PASSWORD).toString(CryptoJS.enc.Utf8)
       );
+      expect(isInitialized).toEqual(true);
     });
     it('should persist data encypted correctly after importing a keyring', async () => {
       await keyRing.importMnemonic({
@@ -186,7 +184,7 @@ describe('Plug KeyRing', () => {
         JSON.stringify(state),
         TEST_PASSWORD
       );
-      const stored = store.get();
+      const { vault: stored, isInitialized } = store.get();
       expect(
         CryptoJS.AES.decrypt(encryptedState, TEST_PASSWORD).toString(
           CryptoJS.enc.Utf8
@@ -194,6 +192,7 @@ describe('Plug KeyRing', () => {
       ).toEqual(
         CryptoJS.AES.decrypt(stored, TEST_PASSWORD).toString(CryptoJS.enc.Utf8)
       );
+      expect(isInitialized).toEqual(true);
     });
     it('should persist data encypted correctly after creating a new principal', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
@@ -204,7 +203,7 @@ describe('Plug KeyRing', () => {
         JSON.stringify(state),
         TEST_PASSWORD
       );
-      const stored = store.get();
+      const { vault: stored, isInitialized } = store.get();
       expect(
         CryptoJS.AES.decrypt(encryptedState, TEST_PASSWORD).toString(
           CryptoJS.enc.Utf8
@@ -212,6 +211,7 @@ describe('Plug KeyRing', () => {
       ).toEqual(
         CryptoJS.AES.decrypt(stored, TEST_PASSWORD).toString(CryptoJS.enc.Utf8)
       );
+      expect(isInitialized).toEqual(true);
     });
   });
   describe('principal management', () => {
@@ -238,7 +238,7 @@ describe('Plug KeyRing', () => {
       const wallet = await keyRing.createPrincipal();
       const state = await keyRing.getState();
       expect(state.currentWalletId).toEqual(0);
-      keyRing.setCurrentPrincipal(wallet);
+      await keyRing.setCurrentPrincipal(wallet);
       expect(state.currentWalletId).toEqual(wallet.walletNumber);
     });
     it('should create new wallets with a default name', async () => {
@@ -267,15 +267,15 @@ describe('Plug KeyRing', () => {
     it('should fail to change an invalid wallet', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      expect(() =>
+      await expect(() =>
         keyRing.editPrincipal(10, { name: 'New name', emoji: 'test' })
-      ).toThrow(ERRORS.INVALID_WALLET_NUMBER);
-      expect(() =>
+      ).rejects.toEqual(Error(ERRORS.INVALID_WALLET_NUMBER));
+      await expect(() =>
         keyRing.editPrincipal(-1, { name: 'New name', emoji: 'test' })
-      ).toThrow(ERRORS.INVALID_WALLET_NUMBER);
-      expect(() =>
+      ).rejects.toEqual(Error(ERRORS.INVALID_WALLET_NUMBER));
+      await expect(() =>
         keyRing.editPrincipal(1.231, { name: 'New name', emoji: 'test' })
-      ).toThrow(ERRORS.INVALID_WALLET_NUMBER);
+      ).rejects.toEqual(Error(ERRORS.INVALID_WALLET_NUMBER));
     });
     it('should change the wallet icon correctly', async () => {
       await keyRing.create({ password: TEST_PASSWORD });

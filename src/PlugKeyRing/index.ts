@@ -26,9 +26,14 @@ class PlugKeyRing {
   }
 
   public loadFromPersistance = async (password: string): Promise<void> => {
-    const state = (await store.get()) as PlugState;
-    if (state) {
-      const decrypted = this.decryptState(state, password);
+    interface StorageData {
+      vault: PlugState;
+      isInitialized: boolean;
+    }
+
+    const { vault, isInitialized } = ((await store.get()) || {}) as StorageData;
+    if (isInitialized) {
+      const decrypted = this.decryptState(vault, password);
       const passwordsMatch = decrypted.password === password;
       if (passwordsMatch) {
         const wallets = decrypted.wallets.map(
@@ -65,20 +70,20 @@ class PlugKeyRing {
 
   // Assumes the state is already initialized
   public createPrincipal = async (): Promise<PlugWallet> => {
-    this.checkInitialized();
+    await this.checkInitialized();
     this.checkUnlocked();
     const wallet = new PlugWallet({
       mnemonic: this.state.mnemonic as string,
       walletNumber: this.state.wallets.length,
     });
     const wallets = [...this.state.wallets, wallet];
-    await this.storeState({ wallets }, this.state.password);
+    await this.saveEncryptedState({ wallets }, this.state.password);
     this.state.wallets = wallets;
     return wallet;
   };
 
-  public setCurrentPrincipal = (wallet: PlugWallet): void => {
-    this.checkInitialized();
+  public setCurrentPrincipal = async (wallet: PlugWallet): Promise<void> => {
+    await this.checkInitialized();
     this.state.currentWalletId = wallet.walletNumber;
   };
 
@@ -89,7 +94,7 @@ class PlugKeyRing {
   };
 
   public unlock = async (password: string): Promise<boolean> => {
-    this.checkInitialized();
+    await this.checkInitialized();
     await this.loadFromPersistance(password);
     this.isUnlocked = this.state?.password === password;
     return this.isUnlocked;
@@ -100,11 +105,11 @@ class PlugKeyRing {
     this.state = { wallets: [] };
   };
 
-  public editPrincipal = (
+  public editPrincipal = async (
     walletNumber: number,
     { name, emoji }: { name?: string; emoji?: string }
-  ): void => {
-    this.checkInitialized();
+  ): Promise<void> => {
+    await this.checkInitialized();
     this.checkUnlocked();
     if (
       walletNumber < 0 ||
@@ -120,13 +125,12 @@ class PlugKeyRing {
     wallets.splice(walletNumber, 1, wallet);
 
     this.state.wallets = wallets;
-    this.storeState({ wallets }, this.state.password);
+    this.saveEncryptedState({ wallets }, this.state.password);
   };
 
-  private checkInitialized = (): void => {
-    if (!this.state.wallets.length) {
-      throw new Error(ERRORS.NOT_INITIALIZED);
-    }
+  private checkInitialized = async (): Promise<void> => {
+    const state = await store.get();
+    if (!state?.isInitialized) throw new Error(ERRORS.NOT_INITIALIZED);
   };
 
   private checkUnlocked = (): void => {
@@ -147,15 +151,16 @@ class PlugKeyRing {
       password,
       mnemonic,
     };
-    await this.storeState(data, password);
+    await store.set({ isInitialized: true });
+    await this.saveEncryptedState(data, password);
     await this.loadFromPersistance(password);
     return wallet;
   };
 
-  private storeState = async (newState, password): Promise<void> => {
+  private saveEncryptedState = async (newState, password): Promise<void> => {
     const stringData = JSON.stringify({ ...this.state, ...newState });
     const encrypted = CryptoJS.AES.encrypt(stringData, password);
-    await store.set(encrypted);
+    await store.set({ vault: encrypted });
   };
 
   private decryptState = (state, password): PlugState =>
