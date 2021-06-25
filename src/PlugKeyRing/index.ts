@@ -128,7 +128,7 @@ class PlugKeyRing {
     this.saveEncryptedState({ wallets }, this.state.password);
   };
 
-  private checkInitialized = async (): Promise<void> => {
+  public checkInitialized = async (): Promise<void> => {
     const state = await store.get();
     if (!state?.isInitialized) throw new Error(ERRORS.NOT_INITIALIZED);
   };
