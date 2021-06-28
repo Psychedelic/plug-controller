@@ -29,6 +29,11 @@ class PlugKeyRing {
     this.isInitialized = false;
   }
 
+  public init = async (): Promise<void> => {
+    const state = await store.get();
+    this.isInitialized = !!state?.isInitialized;
+  };
+
   private loadFromPersistance = async (password: string): Promise<void> => {
     interface StorageData {
       vault: PlugState;
@@ -152,9 +157,8 @@ class PlugKeyRing {
   };
 
   private checkInitialized = async (): Promise<void> => {
-    const state = await store.get();
-    if (!state?.isInitialized) throw new Error(ERRORS.NOT_INITIALIZED);
-    this.isInitialized = state?.isInitialized;
+    await this.init();
+    if (!this.isInitialized) throw new Error(ERRORS.NOT_INITIALIZED);
   };
 
   private checkUnlocked = (): void => {
