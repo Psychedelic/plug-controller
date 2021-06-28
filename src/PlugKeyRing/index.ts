@@ -28,26 +28,24 @@ class PlugKeyRing {
     this.isInitialized = false;
   }
 
-  public loadFromPersistance = async (password: string): Promise<void> => {
+  private loadFromPersistance = async (password: string): Promise<void> => {
     interface StorageData {
       vault: PlugState;
       isInitialized: boolean;
     }
 
     const { vault, isInitialized } = ((await store.get()) || {}) as StorageData;
-    if (isInitialized) {
+    if (isInitialized && vault) {
       const decrypted = this.decryptState(vault, password);
-      const passwordsMatch = decrypted.password === password;
-      if (passwordsMatch) {
-        const wallets = decrypted.wallets.map(
-          wallet =>
-            new PlugWallet({
-              ...wallet,
-              mnemonic: decrypted.mnemonic as string,
-            })
-        );
-        this.state = { ...decrypted, wallets };
-      }
+      const wallets = decrypted.wallets.map(
+        wallet =>
+          new PlugWallet({
+            ...wallet,
+            mnemonic: decrypted.mnemonic as string,
+          })
+      );
+      this.state = { ...decrypted, wallets };
+      this.isInitialized = isInitialized;
     }
   };
 
@@ -93,14 +91,13 @@ class PlugKeyRing {
   public getState = async (): Promise<PlugState> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    await this.loadFromPersistance(this.state.password as string);
     return this.state;
   };
 
   public unlock = async (password: string): Promise<boolean> => {
     await this.checkInitialized();
     await this.loadFromPersistance(password);
-    this.isUnlocked = this.state?.password === password;
+    this.isUnlocked = password === this.state.password;
     return this.isUnlocked;
   };
 
@@ -132,9 +129,10 @@ class PlugKeyRing {
     this.saveEncryptedState({ wallets }, this.state.password);
   };
 
-  public checkInitialized = async (): Promise<void> => {
+  private checkInitialized = async (): Promise<void> => {
     const state = await store.get();
     if (!state?.isInitialized) throw new Error(ERRORS.NOT_INITIALIZED);
+    this.isInitialized = state?.isInitialized;
   };
 
   private checkUnlocked = (): void => {
@@ -155,9 +153,9 @@ class PlugKeyRing {
       password,
       mnemonic,
     };
+    this.isInitialized = true;
     await store.set({ isInitialized: true });
     await this.saveEncryptedState(data, password);
-    await this.loadFromPersistance(password);
     return wallet;
   };
 

@@ -42,12 +42,15 @@ describe('Plug KeyRing', () => {
         Error(ERRORS.NOT_INITIALIZED)
       );
       expect(keyRing.isInitialized).toBe(false);
+      expect(keyRing.isUnlocked).toBe(false);
     });
   });
 
   describe('creation', () => {
     it('should create a new keyring and be locked by default', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
+      expect(keyRing.isInitialized).toBe(true);
+      expect(keyRing.isUnlocked).toBe(false);
       await expect(() => keyRing.getState()).rejects.toEqual(
         Error(ERRORS.STATE_LOCKED)
       );
@@ -55,6 +58,8 @@ describe('Plug KeyRing', () => {
     it('should create a new keyring and expose state correctly', async () => {
       const { wallet } = await keyRing.create({ password: TEST_PASSWORD });
       expect(await keyRing.unlock(TEST_PASSWORD)).toEqual(true);
+      expect(keyRing.isInitialized).toBe(true);
+      expect(keyRing.isUnlocked).toBe(true);
 
       const state = await keyRing.getState();
       expect(state.wallets.length).toEqual(1);
@@ -78,7 +83,10 @@ describe('Plug KeyRing', () => {
         password: TEST_PASSWORD,
         mnemonic: TEST_MNEMONIC,
       });
+      expect(keyRing.isInitialized).toBe(true);
       const unlocked = await keyRing.unlock(TEST_PASSWORD);
+
+      expect(keyRing.isUnlocked).toBe(true);
       expect(unlocked).toEqual(true);
 
       const state = await keyRing.getState();
@@ -97,6 +105,7 @@ describe('Plug KeyRing', () => {
       await expect(() =>
         keyRing.importMnemonic({ password: TEST_PASSWORD, mnemonic: '' })
       ).rejects.toEqual(Error(ERRORS.INVALID_MNEMONIC));
+      expect(keyRing.isInitialized).toBe(false);
     });
     it('should fail if the mnemonic is invalid', async () => {
       await expect(() =>
@@ -105,6 +114,7 @@ describe('Plug KeyRing', () => {
           mnemonic: 'some test mnemonic',
         })
       ).rejects.toEqual(Error(ERRORS.INVALID_MNEMONIC));
+      expect(keyRing.isInitialized).toBe(false);
     });
     it('should import the same wallet even with different passwords', async () => {
       const wallet = await keyRing.importMnemonic({
@@ -127,6 +137,8 @@ describe('Plug KeyRing', () => {
       await expect(() => keyRing.getState()).rejects.toEqual(
         Error(ERRORS.STATE_LOCKED)
       );
+      expect(keyRing.isInitialized).toBe(true);
+      expect(keyRing.isUnlocked).toBe(false);
     });
     it('should import a keyring and be locked by default', async () => {
       await keyRing.importMnemonic({
@@ -136,10 +148,12 @@ describe('Plug KeyRing', () => {
       await expect(() => keyRing.getState()).rejects.toEqual(
         Error(ERRORS.STATE_LOCKED)
       );
+      expect(keyRing.isUnlocked).toBe(false);
     });
     it('should unlock correctly with correct password', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
+      expect(keyRing.isUnlocked).toBe(true);
 
       const state = await keyRing.getState();
       expect(state.wallets.length).toEqual(1);
@@ -149,7 +163,9 @@ describe('Plug KeyRing', () => {
     it('should lock correctly when unlocked', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
+      expect(keyRing.isUnlocked).toBe(true);
       keyRing.lock();
+      expect(keyRing.isUnlocked).toBe(false);
       await expect(() => keyRing.getState()).rejects.toEqual(
         Error(ERRORS.STATE_LOCKED)
       );
