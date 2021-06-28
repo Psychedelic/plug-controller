@@ -32,6 +32,7 @@ class PlugKeyRing {
 
   public init = async (): Promise<void> => {
     const state = await store.get();
+    this.isUnlocked = !!state?.isUnlocked;
     this.isInitialized = !!state?.isInitialized;
   };
 
@@ -106,6 +107,8 @@ class PlugKeyRing {
     try {
       await this.loadFromPersistance(password);
       this.isUnlocked = password === this.state?.password;
+
+      await store.set({ isUnlocked: this.isUnlocked });
       return this.isUnlocked;
     } catch (e) {
       this.isUnlocked = false;
@@ -113,9 +116,10 @@ class PlugKeyRing {
     }
   };
 
-  public lock = (): void => {
+  public lock = async (): Promise<void> => {
     this.isUnlocked = false;
     this.state = { wallets: [] };
+    await store.set({ isUnlocked: this.isUnlocked });
   };
 
   public editPrincipal = async (
@@ -197,7 +201,7 @@ class PlugKeyRing {
       mnemonic,
     };
     this.isInitialized = true;
-    await store.set({ isInitialized: true });
+    await store.set({ isInitialized: true, isUnlocked: false });
     await this.saveEncryptedState(data, password);
     return wallet;
   };
