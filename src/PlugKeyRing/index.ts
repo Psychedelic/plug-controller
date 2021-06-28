@@ -96,9 +96,14 @@ class PlugKeyRing {
 
   public unlock = async (password: string): Promise<boolean> => {
     await this.checkInitialized();
-    await this.loadFromPersistance(password);
-    this.isUnlocked = password === this.state.password;
-    return this.isUnlocked;
+    try {
+      await this.loadFromPersistance(password);
+      this.isUnlocked = password === this.state?.password;
+      return this.isUnlocked;
+    } catch (e) {
+      this.isUnlocked = false;
+      return false;
+    }
   };
 
   public lock = (): void => {

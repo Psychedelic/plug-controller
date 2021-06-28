@@ -160,6 +160,15 @@ describe('Plug KeyRing', () => {
       expect(state.currentWalletId).toEqual(0);
       expect(state.password).toEqual(TEST_PASSWORD);
     });
+    it('should fail to unlock with incorrect password', async () => {
+      await keyRing.create({ password: TEST_PASSWORD });
+      const unlocked = await keyRing.unlock('false1234');
+      expect(unlocked).toBe(false);
+      expect(keyRing.isUnlocked).toBe(false);
+      await expect(() => keyRing.getState()).rejects.toEqual(
+        Error(ERRORS.STATE_LOCKED)
+      );
+    });
     it('should lock correctly when unlocked', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
