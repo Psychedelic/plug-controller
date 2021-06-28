@@ -1,6 +1,7 @@
 import CryptoJS from 'crypto-js';
 
 import { ERRORS } from '../errors';
+import { GetTransactionsResponse } from '../interfaces/nns_uid';
 import PlugWallet from '../PlugWallet';
 import { createAccount } from '../utils/account';
 import Storage from '../utils/storage';
@@ -23,7 +24,7 @@ class PlugKeyRing {
   public isInitialized = false;
 
   public constructor() {
-    this.state = { wallets: [] };
+    this.state = { wallets: [], currentWalletId: 0 };
     this.isUnlocked = false;
     this.isInitialized = false;
   }
@@ -132,6 +133,22 @@ class PlugKeyRing {
 
     this.state.wallets = wallets;
     this.saveEncryptedState({ wallets }, this.state.password);
+  };
+
+  public getBalance = async (subAccount?: number): Promise<bigint> => {
+    const index = subAccount || this.state.currentWalletId || 0;
+    if (index < 0 || index >= this.state.wallets.length)
+      throw new Error(ERRORS.INVALID_WALLET_NUMBER);
+    return this.state.wallets[index].getBalance();
+  };
+
+  public getTransactions = async (
+    subAccount?: number
+  ): Promise<GetTransactionsResponse> => {
+    const index = subAccount || this.state.currentWalletId || 0;
+    if (index < 0 || index >= this.state.wallets.length)
+      throw new Error(ERRORS.INVALID_WALLET_NUMBER);
+    return this.state.wallets[index].getTransactions();
   };
 
   private checkInitialized = async (): Promise<void> => {
