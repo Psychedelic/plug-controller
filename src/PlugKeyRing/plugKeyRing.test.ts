@@ -39,8 +39,9 @@ describe('Plug KeyRing', () => {
         Error(ERRORS.NOT_INITIALIZED)
       );
       await expect(() => keyRing.getState()).rejects.toEqual(
-        Error(ERRORS.STATE_LOCKED)
+        Error(ERRORS.NOT_INITIALIZED)
       );
+      expect(keyRing.isInitialized).toBe(false);
     });
   });
 

@@ -18,11 +18,14 @@ const store = process.env.NODE_ENV === 'test' ? mockStore : new Storage();
 class PlugKeyRing {
   private state: PlugState;
 
-  private isUnlocked = false;
+  public isUnlocked = false;
+
+  public isInitialized = false;
 
   public constructor() {
     this.state = { wallets: [] };
     this.isUnlocked = false;
+    this.isInitialized = false;
   }
 
   public loadFromPersistance = async (password: string): Promise<void> => {
@@ -88,6 +91,7 @@ class PlugKeyRing {
   };
 
   public getState = async (): Promise<PlugState> => {
+    await this.checkInitialized();
     this.checkUnlocked();
     await this.loadFromPersistance(this.state.password as string);
     return this.state;
