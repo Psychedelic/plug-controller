@@ -5,6 +5,7 @@ import { GetTransactionsResponse } from '../interfaces/nns_uid';
 
 import { createAccountFromMnemonic } from '../utils/account';
 import { createAgent, createLedgerActor, createNNSActor } from '../utils/dfx';
+import { SendOpts } from '../utils/dfx/ledger/methods';
 
 interface PlugWalletArgs {
   name?: string;
@@ -84,6 +85,18 @@ class PlugWallet {
     const NNS = await createNNSActor(agent);
 
     return NNS.getTransactions(this.accountId);
+  };
+
+  public sendICP = async (
+    to: string,
+    amount: bigint,
+    opts?: SendOpts
+  ): Promise<bigint> => {
+    const agent = await createAgent({
+      secretKey: this.identity.getKeyPair().secretKey as Uint8Array,
+    });
+    const ledger = await createLedgerActor(agent);
+    return ledger.sendICP({ to, amount, opts });
   };
 }
 

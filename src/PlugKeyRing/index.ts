@@ -4,6 +4,7 @@ import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../interfaces/nns_uid';
 import PlugWallet from '../PlugWallet';
 import { createAccount } from '../utils/account';
+import { SendOpts } from '../utils/dfx/ledger/methods';
 import Storage from '../utils/storage';
 import mockStore from '../utils/storage/mock';
 
@@ -141,6 +142,7 @@ class PlugKeyRing {
   };
 
   public getBalance = async (subAccount?: number): Promise<bigint> => {
+    this.checkUnlocked();
     const index = subAccount || this.state.currentWalletId || 0;
     if (index < 0 || index >= this.state.wallets.length)
       throw new Error(ERRORS.INVALID_WALLET_NUMBER);
@@ -150,6 +152,7 @@ class PlugKeyRing {
   public getTransactions = async (
     subAccount?: number
   ): Promise<GetTransactionsResponse> => {
+    this.checkUnlocked();
     const index = subAccount || this.state.currentWalletId || 0;
     if (index < 0 || index >= this.state.wallets.length)
       throw new Error(ERRORS.INVALID_WALLET_NUMBER);
@@ -159,6 +162,20 @@ class PlugKeyRing {
   private checkInitialized = async (): Promise<void> => {
     await this.init();
     if (!this.isInitialized) throw new Error(ERRORS.NOT_INITIALIZED);
+  };
+
+  public sendICP = async (
+    to: string,
+    amount: bigint,
+    opts?: SendOpts
+  ): Promise<bigint> => {
+    this.checkUnlocked();
+    const currentWalletNumber = this.state.currentWalletId;
+    return this.state.wallets[currentWalletNumber || 0].sendICP(
+      to,
+      amount,
+      opts
+    );
   };
 
   private checkUnlocked = (): void => {
