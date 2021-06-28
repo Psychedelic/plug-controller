@@ -1,6 +1,5 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
-import { create } from 'istanbul-reports';
 import RandomBigInt from 'random-bigint';
 
 import PlugKeyRing from '.';
@@ -51,16 +50,14 @@ describe('Plug KeyRing', () => {
     walletNumber: 0,
   });
   let keyRing: PlugKeyRing;
-
-  beforeAll(async () => {
+  const cleanup = async (): Promise<void> => {
     await store.clear();
     keyRing = new PlugKeyRing();
-  });
+  };
 
-  beforeEach(async () => {
-    await store.clear();
-    keyRing = new PlugKeyRing();
-  });
+  beforeAll(cleanup);
+  beforeEach(cleanup);
+  afterEach(cleanup);
 
   describe('initialization', () => {
     it('should be empty and locked if not initialized', async () => {
@@ -208,7 +205,7 @@ describe('Plug KeyRing', () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       expect(keyRing.isUnlocked).toBe(true);
-      keyRing.lock();
+      await keyRing.lock();
       expect(keyRing.isUnlocked).toBe(false);
       await expect(() => keyRing.getState()).rejects.toEqual(
         Error(ERRORS.STATE_LOCKED)
