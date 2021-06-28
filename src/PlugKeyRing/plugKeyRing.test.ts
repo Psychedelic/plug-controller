@@ -366,6 +366,7 @@ describe('Plug KeyRing', () => {
       );
     });
   });
+
   describe('get transactions', () => {
     const transactions = {};
     let walletsCreated = 0;

@@ -22,7 +22,7 @@ class PlugKeyRing {
   private isUnlocked = false;
 
   public constructor() {
-    this.state = { wallets: [] };
+    this.state = { wallets: [], currentWalletId: 0 };
     this.isUnlocked = false;
   }
 
@@ -125,7 +125,7 @@ class PlugKeyRing {
   };
 
   public getBalance = async (subAccount?: number): Promise<bigint> => {
-    const index = subAccount || 0;
+    const index = subAccount || this.state.currentWalletId || 0;
     if (index < 0 || index >= this.state.wallets.length)
       throw new Error(ERRORS.INVALID_WALLET_NUMBER);
     return this.state.wallets[index].getBalance();
@@ -134,7 +134,7 @@ class PlugKeyRing {
   public getTransactions = async (
     subAccount?: number
   ): Promise<GetTransactionsResponse> => {
-    const index = subAccount || 0;
+    const index = subAccount || this.state.currentWalletId || 0;
     if (index < 0 || index >= this.state.wallets.length)
       throw new Error(ERRORS.INVALID_WALLET_NUMBER);
     return this.state.wallets[index].getTransactions();
