@@ -5,9 +5,9 @@
 import RandomBigInt from 'random-bigint';
 import { ActorSubclass } from '@dfinity/agent';
 
-import LedgerService, { ICPTs, TimeStamp } from '../../../interfaces/ledger';
+import LedgerService, { TimeStamp } from '../../../interfaces/ledger';
 
-interface SendOpts {
+export interface SendOpts {
   fee?: bigint;
   memo?: bigint;
   from_subaccount?: number;
@@ -21,32 +21,27 @@ interface SendICPArgs {
 }
 
 export interface LedgerServiceExtended extends LedgerService {
-  sendICP: (args_0: SendICPArgs) => Promise<void>;
+  sendICP: (args_0: SendICPArgs) => Promise<bigint>;
   getBalance: (accountId: string) => Promise<bigint>;
 }
 
 const sendICP = async (
   actor: ActorSubclass<LedgerService>,
   args: SendICPArgs
-): Promise<void> => {
+): Promise<bigint> => {
   const { to, amount, opts } = args;
   const defaultArgs = {
     fee: BigInt(10000),
     memo: RandomBigInt(32),
   };
-  actor
-    .send_dfx({
-      to,
-      fee: { e8s: opts?.fee || defaultArgs.fee },
-      amount: { e8s: amount },
-      memo: opts?.memo || defaultArgs.memo,
-      from_subaccount: [], // For now, using default subaccount to handle ICP
-      created_at_time: [],
-    })
-    .then(res => {
-      console.log(res);
-    })
-    .catch(err => console.log('ERROR: ', err));
+  return actor.send_dfx({
+    to,
+    fee: { e8s: opts?.fee || defaultArgs.fee },
+    amount: { e8s: amount },
+    memo: opts?.memo || defaultArgs.memo,
+    from_subaccount: [], // For now, using default subaccount to handle ICP
+    created_at_time: [],
+  });
 };
 
 const getBalance = async (
