@@ -1,7 +1,10 @@
 import { KeyPair, Principal } from '@dfinity/agent';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
 import { JsonnableEd25519KeyIdentity } from '@dfinity/identity/lib/cjs/identity/ed25519';
+import { GetTransactionsResponse } from '../interfaces/nns_uid';
+
 import { createAccountFromMnemonic } from '../utils/account';
+import { createAgent, createLedgerActor, createNNSActor } from '../utils/dfx';
 
 interface PlugWalletArgs {
   name?: string;
@@ -64,6 +67,24 @@ class PlugWallet {
     accountId: this.accountId,
     icon: this.icon,
   });
+
+  public getBalance = async (): Promise<bigint> => {
+    const agent = await createAgent({
+      secretKey: this.identity.getKeyPair().secretKey as Uint8Array,
+    });
+    const ledger = await createLedgerActor(agent);
+
+    return ledger.getBalance(this.accountId);
+  };
+
+  public getTransactions = async (): Promise<GetTransactionsResponse> => {
+    const agent = await createAgent({
+      secretKey: this.identity.getKeyPair().secretKey as Uint8Array,
+    });
+    const NNS = await createNNSActor(agent);
+
+    return NNS.getTransactions(this.accountId);
+  };
 }
 
 export default PlugWallet;

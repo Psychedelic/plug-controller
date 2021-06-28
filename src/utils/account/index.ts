@@ -12,7 +12,7 @@ import {
   SUB_ACCOUNT_ZERO,
   HARDENED_OFFSET,
 } from './constants';
-import { getLedgerActor } from '../dfx';
+import { createLedgerActor, createAgent } from '../dfx';
 import {
   byteArrayToWordArray,
   generateChecksum,
@@ -119,7 +119,8 @@ export const createAccountFromMnemonic = (
 export const queryAccounts = async (
   secretKey: Uint8Array
 ): Promise<{ [key: string]: { accountId: string; balance: number } }> => {
-  const ledgerActor = await getLedgerActor(secretKey);
+  const agent = await createAgent({ secretKey });
+  const ledgerActor = await createLedgerActor(agent);
   const identity = Ed25519KeyIdentity.fromSecretKey(secretKey);
   const balances = {};
   for (let subAccount = 0; subAccount < 10; subAccount += 1) {
