@@ -1,12 +1,23 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
+import { create } from 'istanbul-reports';
 import RandomBigInt from 'random-bigint';
 
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../interfaces/nns_uid';
 import PlugWallet from '../PlugWallet';
+import { createAgent } from '../utils/dfx';
 import store from '../utils/storage/mock';
+
+const mockSendICP = jest.fn();
+
+jest.mock('../utils/dfx', () => {
+  return {
+    createAgent: jest.fn(),
+    createLedgerActor: () => ({ sendICP: mockSendICP }),
+  };
+});
 
 const TEST_PASSWORD = 'Somepassword1234';
 const TEST_MNEMONIC = bip39.generateMnemonic();
@@ -430,6 +441,56 @@ describe('Plug KeyRing', () => {
       await expect(keyRing.getTransactions(walletsCreated + 2)).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
+    });
+  });
+
+  describe('sendICP', () => {
+    let walletsCreated = 0;
+    beforeEach(async () => {
+      keyRing = new PlugKeyRing();
+      await keyRing.create({ password: TEST_PASSWORD });
+      await keyRing.unlock(TEST_PASSWORD);
+      walletsCreated = await createManyWallets(keyRing);
+    });
+
+    it('call create agent with secret key', async () => {
+      const { wallets, currentWalletId } = await keyRing.getState();
+      const amount = RandomBigInt(32);
+      const ind = Math.round(Math.random() * (walletsCreated - 1));
+      const to = wallets[ind].principal;
+      const defaultWallet = currentWalletId || 0;
+
+      await keyRing.sendICP(to.toString(), amount);
+      expect(createAgent).toHaveBeenCalled();
+      expect((createAgent as jest.Mock).mock.calls[0][0].secretKey).toEqual(
+        wallets[defaultWallet]['identity'].getKeyPair().secretKey
+      );
+    });
+
+    it('call sendICP with to principal', async () => {
+      const { wallets } = await keyRing.getState();
+      const amount = RandomBigInt(32);
+      const ind = Math.round(Math.random() * (walletsCreated - 1));
+      const to = wallets[ind].principal;
+
+      await keyRing.sendICP(to.toString(), amount);
+      expect(createAgent).toHaveBeenCalled();
+      expect(mockSendICP.mock.calls[0][0].amount).toEqual(amount);
+    });
+
+    it('call sendICP with correct amount', async () => {
+      const { wallets } = await keyRing.getState();
+      const amount = RandomBigInt(32);
+      const ind = Math.round(Math.random() * (walletsCreated - 1));
+      const to = wallets[ind].principal;
+
+      await keyRing.sendICP(to.toString(), amount);
+      expect(createAgent).toHaveBeenCalled();
+      expect(mockSendICP.mock.calls[0][0].to).toEqual(to.toString());
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
     });
   });
 });
