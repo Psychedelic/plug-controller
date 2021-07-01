@@ -5,4 +5,5 @@ export const ERRORS = {
   NOT_INITIALIZED: 'Plug must be initialized',
   STATE_LOCKED: 'The state is locked',
   INVALID_WALLET_NUMBER: 'Invalid wallet number',
+  GET_TRANSACTIONS_FAILS: 'Get transactions fails',
 };
