@@ -6,3 +6,4 @@ export const NET_ID = {
   network: '00000000000000020101',
 };
 export const ROSETTA_URL = 'https://rosetta-api.internetcomputer.org';
+export const PRINCIPAL_REGEX = /(\w{5}-){10}\w{3}/g;

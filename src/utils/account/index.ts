@@ -43,7 +43,7 @@ export const extendKey = ({ key, chainCode }, index): DerivedKey => {
 /*
     Used dfinity/keysmith/account/account.go as a base for the ID generation
 */
-export const createAccountId = (
+export const getAccountId = (
   principal: Principal,
   subAccount?: number
 ): string => {
@@ -89,7 +89,7 @@ const getAccountCredentials = (
   const { key } = deriveKey(mnemonic, subAccount || 0);
   // Identity has boths keys via getKeyPair and PID via getPrincipal
   const identity = Ed25519KeyIdentity.generate(key);
-  const accountId = createAccountId(identity.getPrincipal(), subAccount);
+  const accountId = getAccountId(identity.getPrincipal(), subAccount);
   return {
     mnemonic,
     identity,
@@ -124,7 +124,7 @@ export const queryAccounts = async (
   const identity = Ed25519KeyIdentity.fromSecretKey(secretKey);
   const balances = {};
   for (let subAccount = 0; subAccount < 10; subAccount += 1) {
-    const account = createAccountId(identity.getPrincipal(), subAccount);
+    const account = getAccountId(identity.getPrincipal(), subAccount);
     ledgerActor.account_balance_dfx({ account }).then(res => {
       console.log('account balanace', res);
       balances[subAccount] = { accountId: account, balance: res.e8s };

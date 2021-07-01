@@ -1,13 +1,22 @@
 import CryptoJS from 'crypto-js';
+import { Principal } from '@dfinity/agent';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/rosetta';
 import PlugWallet from '../PlugWallet';
-import { createAccount } from '../utils/account';
+import { createAccount, getAccountId } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import Storage from '../utils/storage';
 import mockStore from '../utils/storage/mock';
+import { PRINCIPAL_REGEX } from '../utils/dfx/constants';
 
+export const validatePrincipalId = (text: string): boolean => {
+  try {
+    return Boolean(PRINCIPAL_REGEX.test(text) && Principal.fromText(text));
+  } catch (e) {
+    return false;
+  }
+};
 interface PlugState {
   wallets: Array<PlugWallet>;
   currentWalletId?: number;
@@ -175,8 +184,12 @@ class PlugKeyRing {
   ): Promise<bigint> => {
     this.checkUnlocked();
     const currentWalletNumber = this.state.currentWalletId;
+    let account = to;
+    if (validatePrincipalId(to)) {
+      account = getAccountId(Principal.fromText(to));
+    }
     return this.state.wallets[currentWalletNumber || 0].sendICP(
-      to,
+      account,
       amount,
       opts
     );
