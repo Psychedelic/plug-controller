@@ -1,7 +1,6 @@
 import fetch from 'cross-fetch';
 import { ERRORS } from '../../errors';
-
-const URL = 'https://rosetta-api.internetcomputer.org';
+import { NET_ID, ROSETTA_URL } from './constants';
 
 interface Operation {
   account: {
@@ -82,13 +81,10 @@ const getTransactionInfo = (
 export const getTransactions = async (
   accountId: string
 ): Promise<GetTransactionResposne> => {
-  const response = await fetch(`${URL}/search/transactions`, {
+  const response = await fetch(`${ROSETTA_URL}/search/transactions`, {
     method: 'POST',
     body: JSON.stringify({
-      network_identifier: {
-        blockchain: 'Internet Computer',
-        network: '00000000000000020101',
-      },
+      network_identifier: NET_ID,
       account_identifier: {
         address: accountId,
       },
@@ -101,9 +97,9 @@ export const getTransactions = async (
   if (!response.ok)
     throw Error(`${ERRORS.GET_TRANSACTIONS_FAILS} ${response.statusText}`);
   const { transactions, total_count } = await response.json();
-  const transactionsInfo = transactions.map(({ transaction }) => {
-    return getTransactionInfo(accountId, transaction);
-  });
+  const transactionsInfo = transactions.map(({ transaction }) =>
+    getTransactionInfo(accountId, transaction)
+  );
   return {
     totalCount: total_count,
     transactions: transactionsInfo,
