@@ -1,3 +1,6 @@
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/camelcase */
+
 import fetch from 'cross-fetch';
 import { ERRORS } from '../../errors';
 import { NET_ID, ROSETTA_URL } from './constants';

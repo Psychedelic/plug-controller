@@ -8,13 +8,16 @@ import { GetTransactionsResponse } from '../utils/dfx/rosetta';
 import PlugWallet from '../PlugWallet';
 import { createAgent } from '../utils/dfx';
 import store from '../utils/storage/mock';
+import { getAccountId } from '../utils/account';
 
 const mockSendICP = jest.fn();
 
 jest.mock('../utils/dfx', () => {
   return {
     createAgent: jest.fn(),
-    createLedgerActor: () => ({ sendICP: mockSendICP }),
+    createLedgerActor: (): { sendICP: jest.Mock<any, any> } => ({
+      sendICP: mockSendICP,
+    }),
   };
 });
 
@@ -24,7 +27,7 @@ const TEST_MNEMONIC = bip39.generateMnemonic();
 const createManyWallets = async (keyRing: PlugKeyRing): Promise<number> => {
   const many = Math.round(Math.random() * 20) + 2;
   for (let i = 1; i < many; i += 1) {
-    await keyRing.createPrincipal();
+    await keyRing.createPrincipal(); // eslint-disable-line
   }
   return many;
 };
@@ -471,6 +474,17 @@ describe('Plug KeyRing', () => {
         wallets[defaultWallet].keys.secretKey
       );
     });
+    it('call sendICP with to account', async () => {
+      const { wallets } = await keyRing.getState();
+      const amount = RandomBigInt(32);
+      const ind = Math.round(Math.random() * (walletsCreated - 1));
+      const to = getAccountId(wallets[ind].principal);
+
+      await keyRing.sendICP(to, amount);
+      expect(createAgent).toHaveBeenCalled();
+      expect(mockSendICP.mock.calls[0][0].amount).toEqual(amount);
+      expect(mockSendICP.mock.calls[0][0].to).toEqual(to);
+    });
 
     it('call sendICP with to principal', async () => {
       const { wallets } = await keyRing.getState();
@@ -481,17 +495,7 @@ describe('Plug KeyRing', () => {
       await keyRing.sendICP(to.toString(), amount);
       expect(createAgent).toHaveBeenCalled();
       expect(mockSendICP.mock.calls[0][0].amount).toEqual(amount);
-    });
-
-    it('call sendICP with correct amount', async () => {
-      const { wallets } = await keyRing.getState();
-      const amount = RandomBigInt(32);
-      const ind = Math.round(Math.random() * (walletsCreated - 1));
-      const to = wallets[ind].principal;
-
-      await keyRing.sendICP(to.toString(), amount);
-      expect(createAgent).toHaveBeenCalled();
-      expect(mockSendICP.mock.calls[0][0].to).toEqual(to.toString());
+      expect(mockSendICP.mock.calls[0][0].to).toEqual(getAccountId(to));
     });
 
     afterEach(() => {

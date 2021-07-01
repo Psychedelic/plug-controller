@@ -5,7 +5,7 @@ import { open, sign } from '../signature';
 import {
   createAccount,
   createAccountFromMnemonic,
-  createAccountId,
+  getAccountId,
 } from './index';
 
 describe('Account utils', () => {
@@ -132,7 +132,7 @@ describe('Account utils', () => {
       );
       const accountId =
         '1f77688a6a9b2b85640d753d487209344cc9c9675c409bbef5e061710c7220ab';
-      const id = createAccountId(principal);
+      const id = getAccountId(principal);
       expect(id).toEqual(accountId);
     });
   });
