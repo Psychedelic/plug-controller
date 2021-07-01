@@ -5,7 +5,7 @@ import { JsonnableEd25519KeyIdentity } from '@dfinity/identity/lib/cjs/identity/
 import { createAccountFromMnemonic } from '../utils/account';
 import { createAgent, createLedgerActor } from '../utils/dfx';
 import { SendOpts } from '../utils/dfx/ledger/methods';
-import { getTransactions, GetTransactionResposne } from '../utils/dfx/rosetta';
+import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
 
 interface PlugWalletArgs {
   name?: string;
@@ -78,7 +78,7 @@ class PlugWallet {
     return ledger.getBalance(this.accountId);
   };
 
-  public getTransactions = async (): Promise<GetTransactionResposne> => {
+  public getTransactions = async (): Promise<GetTransactionsResponse> => {
     return getTransactions(this.accountId);
   };
 

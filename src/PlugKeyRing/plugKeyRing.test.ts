@@ -4,7 +4,7 @@ import RandomBigInt from 'random-bigint';
 
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
-import { GetTransactionsResponse } from '../interfaces/nns_uid';
+import { GetTransactionsResponse } from '../utils/dfx/rosetta';
 import PlugWallet from '../PlugWallet';
 import { createAgent } from '../utils/dfx';
 import store from '../utils/storage/mock';
@@ -34,10 +34,18 @@ const createManyTransactions = (): GetTransactionsResponse => {
   const transactions: GetTransactionsResponse = { total: 0, transactions: [] };
   for (let i = 1; i < many; i += 1) {
     transactions.transactions.push({
-      memo: RandomBigInt(32),
-      timestamp: { timestamp_nanos: RandomBigInt(32) },
-      block_height: RandomBigInt(32),
-      transfer: { Burn: { amount: RandomBigInt(32) } },
+      timestamp: RandomBigInt(32),
+      hash: RandomBigInt(32),
+      from: 'string',
+      to: 'string',
+      amount: BigInt(1000),
+      currency: { symbol: 'ICP', decimals: 8 },
+      fee: {
+        amount: BigInt(1000),
+        currency: { symbol: 'ICP', decimals: 8 },
+      },
+      status: 'COMPLETED',
+      type: 'SEND',
     });
   }
   return transactions;
@@ -460,7 +468,7 @@ describe('Plug KeyRing', () => {
       await keyRing.sendICP(to.toString(), amount);
       expect(createAgent).toHaveBeenCalled();
       expect((createAgent as jest.Mock).mock.calls[0][0].secretKey).toEqual(
-        wallets[defaultWallet]['identity'].getKeyPair().secretKey
+        wallets[defaultWallet].keys.secretKey
       );
     });
 

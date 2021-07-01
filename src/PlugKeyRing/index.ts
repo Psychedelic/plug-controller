@@ -1,7 +1,7 @@
 import CryptoJS from 'crypto-js';
 
 import { ERRORS } from '../errors';
-import { GetTransactionResposne } from '../utils/dfx/rosetta';
+import { GetTransactionsResponse } from '../utils/dfx/rosetta';
 import PlugWallet from '../PlugWallet';
 import { createAccount } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
@@ -155,7 +155,7 @@ class PlugKeyRing {
 
   public getTransactions = async (
     subAccount?: number
-  ): Promise<GetTransactionResposne> => {
+  ): Promise<GetTransactionsResponse> => {
     this.checkUnlocked();
     const index = subAccount || this.state.currentWalletId || 0;
     if (index < 0 || index >= this.state.wallets.length)

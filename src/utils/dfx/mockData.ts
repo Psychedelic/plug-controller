@@ -126,7 +126,7 @@ export const mockRosettaTransaction = {
 };
 
 export const mockTransactionResult = {
-  totalCount: 2,
+  total: 2,
   transactions: [
     {
       status: 'COMPLETED',
