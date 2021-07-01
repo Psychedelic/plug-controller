@@ -43,8 +43,8 @@ export interface InferredTransaction {
   type: 'SEND' | 'RECEIVE' | 'BURN' | 'MINT';
 }
 
-export interface GetTransactionResposne {
-  totalCount: number;
+export interface GetTransactionsResponse {
+  total: number;
   transactions: InferredTransaction[];
 }
 
@@ -80,7 +80,7 @@ const getTransactionInfo = (
 
 export const getTransactions = async (
   accountId: string
-): Promise<GetTransactionResposne> => {
+): Promise<GetTransactionsResponse> => {
   const response = await fetch(`${ROSETTA_URL}/search/transactions`, {
     method: 'POST',
     body: JSON.stringify({
@@ -101,7 +101,7 @@ export const getTransactions = async (
     getTransactionInfo(accountId, transaction)
   );
   return {
-    totalCount: total_count,
+    total: total_count,
     transactions: transactionsInfo,
   };
 };
