@@ -57,6 +57,13 @@ class PlugWallet {
     this.name = val;
   }
 
+  public async sign(payload: ArrayBuffer): Promise<ArrayBuffer> {
+    const buffer = await this.identity.sign(payload);
+    return buffer.buffer.slice(
+      buffer.byteOffset, buffer.byteOffset + buffer.byteLength
+    );
+  }
+
   public setIcon(val: string): void {
     this.icon = val;
   }
