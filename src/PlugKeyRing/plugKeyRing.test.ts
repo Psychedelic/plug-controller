@@ -122,7 +122,7 @@ describe('Plug KeyRing', () => {
 
   describe('import', () => {
     it('should import a keyring and expose state correctly', async () => {
-      const wallet = await keyRing.importMnemonic({
+      const { wallet } = await keyRing.importMnemonic({
         password: TEST_PASSWORD,
         mnemonic: TEST_MNEMONIC,
       });
@@ -160,11 +160,11 @@ describe('Plug KeyRing', () => {
       expect(keyRing.isInitialized).toBe(false);
     });
     it('should import the same wallet even with different passwords', async () => {
-      const wallet = await keyRing.importMnemonic({
+      const { wallet } = await keyRing.importMnemonic({
         mnemonic: TEST_MNEMONIC,
         password: TEST_PASSWORD,
       });
-      const newWallet = await keyRing.importMnemonic({
+      const { wallet: newWallet } = await keyRing.importMnemonic({
         mnemonic: TEST_MNEMONIC,
         password: 'newpassword1',
       });
@@ -323,7 +323,7 @@ describe('Plug KeyRing', () => {
     it('should create new wallets with a default name', async () => {
       const { wallet } = await keyRing.create({ password: TEST_PASSWORD });
       expect(wallet.name).toEqual('Main IC Wallet');
-      const newWallet = await keyRing.importMnemonic({
+      const { wallet: newWallet } = await keyRing.importMnemonic({
         mnemonic: TEST_MNEMONIC,
         password: TEST_PASSWORD,
       });

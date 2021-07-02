@@ -83,8 +83,10 @@ class PlugKeyRing {
   }: {
     mnemonic: string;
     password: string;
-  }): Promise<PlugWallet> =>
-    this.createAndPersistKeyRing({ mnemonic, password });
+  }): Promise<{ wallet: PlugWallet; mnemonic: string }> => {
+    const wallet = await this.createAndPersistKeyRing({ mnemonic, password });
+    return { wallet, mnemonic };
+  };
 
   // Assumes the state is already initialized
   public createPrincipal = async (): Promise<PlugWallet> => {
