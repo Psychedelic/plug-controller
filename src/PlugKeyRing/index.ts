@@ -223,7 +223,7 @@ class PlugKeyRing {
 
   private saveEncryptedState = async (newState, password): Promise<void> => {
     const stringData = JSON.stringify({ ...this.state, ...newState });
-    const encrypted = CryptoJS.AES.encrypt(stringData, password);
+    const encrypted = CryptoJS.AES.encrypt(stringData, password).toString();
     await store.set({ vault: encrypted });
   };
 
