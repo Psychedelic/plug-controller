@@ -1,14 +1,13 @@
-![](https://storageapi.fleek.co/rocky-fleek-team-bucket/plug-npm.png)
+![](https://storageapi.fleek.co/fleek-team-bucket/plug.png)
 
 
-# Plug Wallet Controller - Controller functions for Plug Wallet Extension
+# Plug Controller - Controller functions for the Plug Extension
 [![Fleek](https://img.shields.io/badge/Made%20by-Fleek-blue)](https://fleek.co/)
-[![Dev Slack](https://img.shields.io/badge/Dev%20Slack-Channel-blue)](https://slack.fleek.co/)
-[![License](https://img.shields.io/badge/License-MIT-green)](https://github.com/FleekHQ/space-sdk/blob/master/LICENSE)
+[![Discord](https://img.shields.io/badge/Discord-Channel-blue)](https://discord.gg/yVEcEzmrgm)
 
 ## Introduction
 
-Plug Wallet Controller is a package intended to provide utility to Plug Wallet's Chrome Extension for the Internet Computer.
+The Plug Controller is a package that provides utility & logic to the Plug browser wallet extension, as well as the account creation and management. It handles the interactions between the extension and the Internet Computer as users interact with accounts, balances, canisters, and the network.
 
 ## Requirements
 
