@@ -8,7 +8,7 @@
 
 ## Introduction
 
-Plug Wallet Controller is a package intended to provide utility to Plug Wallet's Chrome Extension for the Internet Computer.
+The Plug Wallet Controller is a package that provides utility & logic to the Plug browser wallet extension, as well as the account creation and management. It handles the interactions between the extension and the Internet Computer as users interact with accounts, balances, canisters, and the network.
 
 ## Requirements
 
