@@ -12,5 +12,3 @@ export const createKeyPair = (
   const { key } = derivePath(DERIVATION_PATH, seed.toString('hex'), index);
   return tweetnacl.sign.keyPair.fromSeed(key);
 };
-
-export default {};
