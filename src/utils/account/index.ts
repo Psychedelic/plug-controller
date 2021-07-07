@@ -1,44 +1,25 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
-import createHmac from 'create-hmac';
 import { Principal } from '@dfinity/agent';
+import { blobFromUint8Array } from '@dfinity/candid';
+
 import { ERRORS } from '../../errors';
 
 import { AccountCredentials } from '../../interfaces/account';
-import {
-  DERIVATION_PATH,
-  ACCOUNT_DOMAIN_SEPERATOR,
-  SUB_ACCOUNT_ZERO,
-  HARDENED_OFFSET,
-} from './constants';
+import { ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO } from './constants';
 import { createLedgerActor, createAgent } from '../dfx';
 import {
   byteArrayToWordArray,
   generateChecksum,
   wordArrayToByteArray,
 } from '../crypto';
-import { derivePath } from '../crypto/hdKeyManager';
+import { createKeyPair } from '../crypto/hdKeyManager';
 
 interface DerivedKey {
   key: Buffer;
   chainCode: Buffer;
 }
-
-export const extendKey = ({ key, chainCode }, index): DerivedKey => {
-  const indexBuffer = Buffer.allocUnsafe(4);
-  indexBuffer.writeUInt32BE(HARDENED_OFFSET + index, 0);
-  const data = Buffer.concat([Buffer.alloc(1, 0), key, indexBuffer]);
-  const I = createHmac('sha512', chainCode)
-    .update(data)
-    .digest();
-  const IL = I.slice(0, 32);
-  const IR = I.slice(32);
-  return {
-    key: IL,
-    chainCode: IR,
-  };
-};
 
 /*
     Used dfinity/keysmith/account/account.go as a base for the ID generation
@@ -69,26 +50,16 @@ export const getAccountId = (
   return val;
 };
 
-const deriveKey = (mnemonic: string, index = 0): DerivedKey => {
-  const hexSeed = bip39.mnemonicToSeedSync(mnemonic);
-  const masterXKey = derivePath(
-    DERIVATION_PATH,
-    hexSeed.toString('hex'),
-    HARDENED_OFFSET + index
-  );
-  const childXKey = extendKey(masterXKey, 0);
-  const grandchildXKey = extendKey(childXKey, index);
-
-  return grandchildXKey;
-};
-
 const getAccountCredentials = (
   mnemonic: string,
   subAccount?: number
 ): AccountCredentials => {
-  const { key } = deriveKey(mnemonic, subAccount || 0);
+  const keyPair = createKeyPair(mnemonic, subAccount || 0);
   // Identity has boths keys via getKeyPair and PID via getPrincipal
-  const identity = Ed25519KeyIdentity.generate(key);
+  const identity = Ed25519KeyIdentity.fromKeyPair(
+    blobFromUint8Array(keyPair.publicKey),
+    blobFromUint8Array(keyPair.secretKey)
+  );
   const accountId = getAccountId(identity.getPrincipal(), subAccount);
   return {
     mnemonic,
