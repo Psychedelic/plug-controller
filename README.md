@@ -1,30 +1,13 @@
-![](https://storageapi.fleek.co/rocky-fleek-team-bucket/plug-npm.png)
+![](https://storageapi.fleek.co/fleek-team-bucket/plug-banner.png)
 
 
-# Plug Wallet Controller - Controller functions for Plug Wallet Extension
+# Plug Controller - Controller functions for the Plug Extension
 [![Fleek](https://img.shields.io/badge/Made%20by-Fleek-blue)](https://fleek.co/)
-[![Dev Slack](https://img.shields.io/badge/Dev%20Slack-Channel-blue)](https://slack.fleek.co/)
-[![License](https://img.shields.io/badge/License-MIT-green)](https://github.com/FleekHQ/space-sdk/blob/master/LICENSE)
+[![Discord](https://img.shields.io/badge/Discord-Channel-blue)](https://discord.gg/yVEcEzmrgm)
 
 ## Introduction
 
-Plug Wallet Controller is a package intended to provide utility to Plug Wallet's Chrome Extension for the Internet Computer.
-
-## Requirements
-
-Authenticate to Github registry by:
-
-```
-npm login --registry=https://npm.pkg.github.com --scope=@Psychedelic
-```
-
-This because the packages under the organisation scope [@Psychedelic](https://github.com/Psychedelic) are published under the [Psychedelic packages](https://github.com/orgs/Psychedelic/packages), as you can see in the `.npmrc`:
-
-```
-@psychedelic:registry=https://npm.pkg.github.com
-```
-
-Choose the github username that you use as a member of @Psychedelic and for the password, a [personal access token](https://github.com/settings/tokens), with the  `read:packages` scope (permission) and `write:packages`, to publish it.
+The Plug Controller is a package that provides utility & logic to the Plug browser wallet extension, as well as the account creation and management. It handles the interactions between the extension and the Internet Computer as users interact with accounts, balances, canisters, and the network.
 
 ## Installation
 
