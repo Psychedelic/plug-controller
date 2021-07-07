@@ -9,22 +9,6 @@
 
 The Plug Controller is a package that provides utility & logic to the Plug browser wallet extension, as well as the account creation and management. It handles the interactions between the extension and the Internet Computer as users interact with accounts, balances, canisters, and the network.
 
-## Requirements
-
-Authenticate to Github registry by:
-
-```
-npm login --registry=https://npm.pkg.github.com --scope=@Psychedelic
-```
-
-This because the packages under the organisation scope [@Psychedelic](https://github.com/Psychedelic) are published under the [Psychedelic packages](https://github.com/orgs/Psychedelic/packages), as you can see in the `.npmrc`:
-
-```
-@psychedelic:registry=https://npm.pkg.github.com
-```
-
-Choose the github username that you use as a member of @Psychedelic and for the password, a [personal access token](https://github.com/settings/tokens), with the  `read:packages` scope (permission) and `write:packages`, to publish it.
-
 ## Installation
 
 `npm install @psychedelic/plug-controller`
