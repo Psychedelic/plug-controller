@@ -16,22 +16,22 @@ The Plug Controller is a package that provides utility & logic to the Plug brows
 ## Plug KeyRing
 A Plug Keyring is a class that manages the user's accounts and allow you to create/import a mnemonic and its keypair. 
 ```
-import { PlugKeyRing } from '@psychedelic/plug-controller';
+import PlugController from '@psychedelic/plug-controller';
 
-const keyRing = new PlugKeyRing();
+const keyRing = new PlugController.PlugKeyRing();
 
 // Initialize keyring and load state from extension storage
-await keyRing.load();
+await keyRing.init();
 ```
 
 ### Keyring Creation
 ```
 // Creates the keyring and returns the default wallet
-const wallet: PlugWallet = keyRing.create(password);
+const wallet: PlugWallet = await keyRing.create(password);
 ```
 
 ### Mnemonic Import
 ```
 // Creates the keyring using the provided mnemonic and returns the default wallet
-const wallet: PlugWallet = keyRing.importFromMnemonic(mnemonic, password);
+const wallet: PlugWallet = await keyRing.importFromMnemonic(mnemonic, password);
 ```
