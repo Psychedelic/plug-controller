@@ -11,7 +11,19 @@ The Plug Controller is a package that provides utility & logic to the Plug brows
 
 ## Installation
 
-`npm install @psychedelic/plug-controller`
+```
+npm install @psychedelic/plug-controller
+```
+
+To install the package you need to be authenticated to Github via `npm login`, ensure that you have:
+
+- A personal access token (create one [here]((https://github.com/settings/tokens))) with the `repo` and `read:packages` scopes to login to the [GitHub Package Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-to-github-packages).
+
+- Have authenticated via `npm login`, using the **personal access token** as your **password**:
+
+```
+npm login --registry=https://npm.pkg.github.com --scope=@Psychedelic
+```
 
 ## Plug KeyRing
 A Plug Keyring is a class that manages the user's accounts and allow you to create/import a mnemonic and its keypair. 
