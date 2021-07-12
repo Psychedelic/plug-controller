@@ -169,7 +169,6 @@ describe('Plug KeyRing', () => {
         password: 'newpassword1',
       });
       expect(wallet.toJSON()).toEqual(newWallet.toJSON());
-      expect(wallet.keys).toEqual(newWallet.keys);
       expect(wallet.principal).toEqual(newWallet.principal);
     });
   });
@@ -462,17 +461,13 @@ describe('Plug KeyRing', () => {
     });
 
     it('call create agent with secret key', async () => {
-      const { wallets, currentWalletId } = await keyRing.getState();
+      const { wallets } = await keyRing.getState();
       const amount = RandomBigInt(32);
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = wallets[ind].principal;
-      const defaultWallet = currentWalletId || 0;
 
       await keyRing.sendICP(to.toString(), amount);
       expect(createAgent).toHaveBeenCalled();
-      expect((createAgent as jest.Mock).mock.calls[0][0].secretKey).toEqual(
-        wallets[defaultWallet].keys.secretKey
-      );
     });
     it('call sendICP with to account', async () => {
       const { wallets } = await keyRing.getState();
