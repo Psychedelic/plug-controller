@@ -63,7 +63,7 @@ class PlugWallet {
   public toJSON = (): JSONWallet => ({
     name: this.name,
     walletNumber: this.walletNumber,
-    principal: this.identity.getPrincipal.toString(),
+    principalId: this.identity.getPrincipal.toString(),
     accountId: this.accountId,
     icon: this.icon,
   });
