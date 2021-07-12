@@ -1,4 +1,3 @@
-import { Principal } from '@dfinity/agent';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
 
 import { createAccountFromMnemonic } from '../utils/account';
@@ -16,7 +15,7 @@ interface PlugWalletArgs {
 interface JSONWallet {
   name: string;
   walletNumber: number;
-  principalId: string;
+  principal: string;
   accountId: string;
   icon?: string;
 }
@@ -30,6 +29,8 @@ class PlugWallet {
 
   accountId: string;
 
+  principal: string;
+
   private identity: Ed25519KeyIdentity;
 
   constructor({ name, icon, walletNumber, mnemonic }: PlugWalletArgs) {
@@ -42,10 +43,7 @@ class PlugWallet {
     );
     this.identity = identity;
     this.accountId = accountId;
-  }
-
-  get principal(): Principal {
-    return this.identity.getPrincipal();
+    this.principal = identity.getPrincipal().toText();
   }
 
   public setName(val: string): void {
@@ -59,7 +57,7 @@ class PlugWallet {
   public toJSON = (): JSONWallet => ({
     name: this.name,
     walletNumber: this.walletNumber,
-    principalId: this.identity.getPrincipal().toText(),
+    principal: this.identity.getPrincipal().toText(),
     accountId: this.accountId,
     icon: this.icon,
   });

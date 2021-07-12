@@ -1,6 +1,7 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import RandomBigInt from 'random-bigint';
+import { Principal } from '@dfinity/agent';
 
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
@@ -473,7 +474,7 @@ describe('Plug KeyRing', () => {
       const { wallets } = await keyRing.getState();
       const amount = RandomBigInt(32);
       const ind = Math.round(Math.random() * (walletsCreated - 1));
-      const to = getAccountId(wallets[ind].principal);
+      const to = getAccountId(Principal.fromText(wallets[ind].principal));
 
       await keyRing.sendICP(to, amount);
       expect(createAgent).toHaveBeenCalled();
@@ -490,7 +491,9 @@ describe('Plug KeyRing', () => {
       await keyRing.sendICP(to.toString(), amount);
       expect(createAgent).toHaveBeenCalled();
       expect(mockSendICP.mock.calls[0][0].amount).toEqual(amount);
-      expect(mockSendICP.mock.calls[0][0].to).toEqual(getAccountId(to));
+      expect(mockSendICP.mock.calls[0][0].to).toEqual(
+        getAccountId(Principal.fromText(to))
+      );
     });
 
     afterEach(() => {
