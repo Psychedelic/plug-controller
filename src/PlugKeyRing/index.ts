@@ -83,8 +83,10 @@ class PlugKeyRing {
   }: {
     mnemonic: string;
     password: string;
-  }): Promise<PlugWallet> =>
-    this.createAndPersistKeyRing({ mnemonic, password });
+  }): Promise<{ wallet: PlugWallet; mnemonic: string }> => {
+    const wallet = await this.createAndPersistKeyRing({ mnemonic, password });
+    return { wallet, mnemonic };
+  };
 
   // Assumes the state is already initialized
   public createPrincipal = async (): Promise<PlugWallet> => {
@@ -221,7 +223,7 @@ class PlugKeyRing {
 
   private saveEncryptedState = async (newState, password): Promise<void> => {
     const stringData = JSON.stringify({ ...this.state, ...newState });
-    const encrypted = CryptoJS.AES.encrypt(stringData, password);
+    const encrypted = CryptoJS.AES.encrypt(stringData, password).toString();
     await store.set({ vault: encrypted });
   };
 
