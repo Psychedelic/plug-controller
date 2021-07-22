@@ -76,7 +76,6 @@ class PlugKeyRing {
     return { wallet, mnemonic };
   };
 
-  // CHECK WITH JANISON: What if they import the mnemonic in another place and put a different password? wouldn't that create a different account? (check seed derivation)
   public importMnemonic = async ({
     mnemonic,
     password,
