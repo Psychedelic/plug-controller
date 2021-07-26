@@ -1,3 +1,4 @@
+import { BinaryBlob, PublicKey } from '@dfinity/agent';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
 
 import { createAccountFromMnemonic } from '../utils/account';
@@ -50,6 +51,10 @@ class PlugWallet {
     this.name = val;
   }
 
+  public async sign(payload: BinaryBlob): Promise<BinaryBlob> {
+    return this.identity.sign(payload);
+  }
+
   public setIcon(val: string): void {
     this.icon = val;
   }
@@ -86,6 +91,10 @@ class PlugWallet {
     const ledger = await createLedgerActor(agent);
     return ledger.sendICP({ to, amount, opts });
   };
+
+  public get publicKey(): PublicKey {
+    return this.identity.getKeyPair().publicKey;
+  }
 }
 
 export default PlugWallet;
