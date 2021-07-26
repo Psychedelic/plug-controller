@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js';
-import { Principal, PublicKey } from '@dfinity/agent';
+import { BinaryBlob, Principal, PublicKey } from '@dfinity/agent';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/rosetta';
@@ -122,9 +122,9 @@ class PlugKeyRing {
   };
 
   public sign = async (
-    payload: ArrayBuffer,
+    payload: BinaryBlob,
     subaccount = 0
-  ): Promise<ArrayBuffer> => {
+  ): Promise<BinaryBlob> => {
     this.checkUnlocked();
     validateSubaccount(subaccount, this.state.wallets.length);
     const wallet = this.state.wallets[subaccount];
