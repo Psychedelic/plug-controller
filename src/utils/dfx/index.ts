@@ -3,7 +3,7 @@
 /* eslint-disable camelcase */
 import fetch from 'cross-fetch';
 import { config } from 'dotenv';
-import { HttpAgent, Actor, ActorSubclass } from '@dfinity/agent';
+import { HttpAgent, Actor, ActorSubclass, IDL } from '@dfinity/agent';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
 
 import walletIDLFactory from '../../idls/walltet';
@@ -47,6 +47,21 @@ export const getCyclesWalletActor = async (
   );
   return actor;
 };
+
+export const createActor = <T>({
+  agent,
+  canisterId,
+  interfaceFactory,
+}: {
+  agent: HttpAgent;
+  actor: ActorSubclass<ActorSubclass<T>>;
+  canisterId: string;
+  interfaceFactory: IDL.InterfaceFactory;
+}): Promise<ActorSubclass<T>> =>
+  Actor.createActor(interfaceFactory, {
+    agent,
+    canisterId,
+  });
 
 export { createLedgerActor } from './ledger';
 export { createNNSActor } from './nns_uid';
