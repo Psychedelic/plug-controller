@@ -1,5 +1,6 @@
 import CryptoJS from 'crypto-js';
-import { BinaryBlob, Principal, PublicKey } from '@dfinity/agent';
+import { Principal } from '@dfinity/agent';
+import { BinaryBlob } from '@dfinity/candid';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/rosetta';
@@ -10,6 +11,7 @@ import Storage from '../utils/storage';
 import mockStore from '../utils/storage/mock';
 import { PRINCIPAL_REGEX } from '../utils/dfx/constants';
 import { validateSubaccount } from './utils';
+import { PublicKey } from '../utils/crypto/secpk256k1/publicKey';
 
 export const validatePrincipalId = (text: string): boolean => {
   try {

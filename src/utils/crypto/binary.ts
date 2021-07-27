@@ -1,3 +1,4 @@
+/* eslint-disable no-prototype-builtins */
 /* eslint-disable no-bitwise */
 import crc32 from 'buffer-crc32';
 import CryptoJS from 'crypto-js';

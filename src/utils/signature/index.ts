@@ -1,9 +1,18 @@
-import { sign as _sign } from 'tweetnacl';
+import { blobToHex } from '@dfinity/agent';
+import { BinaryBlob } from '@dfinity/candid';
+import ellipticcurve from 'starkbank-ecdsa';
 
-export const sign = (message: string, secretKey: Uint8Array): Uint8Array =>
-  _sign(Buffer.from(message, 'utf8'), secretKey);
+import { PublicKey } from '../crypto/secpk256k1/publicKey';
 
-export const open = (secret: Uint8Array, publicKey: Uint8Array): string => {
-  const binary = _sign.open(secret, publicKey);
-  return Buffer.from(binary as ArrayBuffer).toString('utf-8');
+const { Ecdsa, PrivateKey } = ellipticcurve;
+
+export const sign = (message: string, secretKey: BinaryBlob): ArrayBuffer => {
+  return Ecdsa.sign(message, PrivateKey.fromString(blobToHex(secretKey)));
+};
+export const verify = (
+  message: string,
+  signature: ArrayBuffer,
+  publicKey: PublicKey
+): boolean => {
+  return Ecdsa.verify(message, signature, publicKey);
 };

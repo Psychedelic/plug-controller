@@ -1,8 +1,7 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
-import { Ed25519KeyIdentity } from '@dfinity/identity';
 import { Principal } from '@dfinity/agent';
-import { blobFromUint8Array } from '@dfinity/candid';
+import { blobFromHex } from '@dfinity/candid';
 
 import { ERRORS } from '../../errors';
 
@@ -13,8 +12,9 @@ import {
   byteArrayToWordArray,
   generateChecksum,
   wordArrayToByteArray,
-} from '../crypto';
-import { createKeyPair } from '../crypto/hdKeyManager';
+} from '../crypto/binary';
+import { createSecp256K1KeyPair } from '../crypto/keys';
+import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
 
 interface DerivedKey {
   key: Buffer;
@@ -54,11 +54,12 @@ const getAccountCredentials = (
   mnemonic: string,
   subAccount?: number
 ): AccountCredentials => {
-  const keyPair = createKeyPair(mnemonic, subAccount || 0);
+  const keyPair = createSecp256K1KeyPair(mnemonic, subAccount || 0);
   // Identity has boths keys via getKeyPair and PID via getPrincipal
-  const identity = Ed25519KeyIdentity.fromKeyPair(
-    blobFromUint8Array(keyPair.publicKey),
-    blobFromUint8Array(keyPair.secretKey)
+  console.log('priv key', blobFromHex(keyPair.privateKey.toString().slice(5)));
+  const identity = Secp256k1KeyIdentity.fromKeyPair(
+    keyPair.publicKey,
+    blobFromHex(keyPair.privateKey.toString())
   );
   const accountId = getAccountId(identity.getPrincipal(), subAccount);
   return {
@@ -92,7 +93,7 @@ export const queryAccounts = async (
 ): Promise<{ [key: string]: { accountId: string; balance: number } }> => {
   const agent = await createAgent({ secretKey });
   const ledgerActor = await createLedgerActor(agent);
-  const identity = Ed25519KeyIdentity.fromSecretKey(secretKey);
+  const identity = Secp256k1KeyIdentity.fromSecretKey(secretKey);
   const balances = {};
   for (let subAccount = 0; subAccount < 10; subAccount += 1) {
     const account = getAccountId(identity.getPrincipal(), subAccount);
