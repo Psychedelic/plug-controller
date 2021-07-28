@@ -1,4 +1,4 @@
-import { blobToUint8Array } from '@dfinity/agent';
+import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 
 import { createAccountFromMnemonic } from '../utils/account';
@@ -69,7 +69,7 @@ class PlugWallet {
   });
 
   public getBalance = async (): Promise<bigint> => {
-    const secretKey = this.identity.getKeyPair().privateKey;
+    const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
     const ledger = await createLedgerActor(agent);
 
@@ -85,13 +85,13 @@ class PlugWallet {
     amount: bigint,
     opts?: SendOpts
   ): Promise<bigint> => {
-    const secretKey = this.identity.getKeyPair().privateKey;
+    const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
     const ledger = await createLedgerActor(agent);
     return ledger.sendICP({ to, amount, opts });
   };
 
-  public get publicKey(): BinaryBlob {
+  public get publicKey(): PublicKey {
     return this.identity.getKeyPair().publicKey;
   }
 }

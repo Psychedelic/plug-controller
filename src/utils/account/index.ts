@@ -6,7 +6,6 @@ import { ERRORS } from '../../errors';
 
 import { AccountCredentials } from '../../interfaces/account';
 import { ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO } from './constants';
-import { createLedgerActor, createAgent } from '../dfx';
 import {
   byteArrayToWordArray,
   generateChecksum,
@@ -56,8 +55,8 @@ const getAccountCredentials = (
   const keyPair = createSecp256K1KeyPair(mnemonic, subAccount || 0);
   // Identity has boths keys via getKeyPair and PID via getPrincipal
   const identity = Secp256k1KeyIdentity.fromKeyPair(
-    keyPair.publicKey,
-    keyPair.privateKey
+    keyPair.publicKey.toRaw(),
+    keyPair.secretKey
   );
   const accountId = getAccountId(identity.getPrincipal(), subAccount);
   return {

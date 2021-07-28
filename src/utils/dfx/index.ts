@@ -4,12 +4,12 @@
 import fetch from 'cross-fetch';
 import { config } from 'dotenv';
 import { HttpAgent, Actor, ActorSubclass } from '@dfinity/agent';
+import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
 
 import walletIDLFactory from '../../idls/walltet';
 import WalletService from '../../interfaces/wallet';
 import { IC_HOST } from './constants';
 import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
-import { Secp256k1KeyPair } from '../crypto/keys';
 
 if (process.env.NODE_ENV !== 'production') config();
 
@@ -18,16 +18,15 @@ export interface CreateAgentArgs {
   defaultIdentity?: Secp256k1KeyIdentity;
 }
 
-export const createIdentity = (
-  secretKey: Secp256k1KeyPair['privateKey']
-): Secp256k1KeyIdentity =>
-  Secp256k1KeyIdentity.fromKeyPair(secretKey.publicKey(), secretKey);
+export const createIdentity = (secretKey: BinaryBlob): Secp256k1KeyIdentity =>
+  Secp256k1KeyIdentity.fromSecretKey(secretKey);
 
 export const createAgent = async ({
   secretKey,
   defaultIdentity,
 }: CreateAgentArgs): Promise<HttpAgent> => {
-  const identity = defaultIdentity || createIdentity(secretKey);
+  const identity =
+    defaultIdentity || createIdentity(blobFromUint8Array(secretKey));
   const agent = await Promise.resolve(
     new HttpAgent({ host: process.env.DFX_HOST || IC_HOST, fetch, identity })
   ).then(async ag => {

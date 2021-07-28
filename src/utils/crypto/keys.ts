@@ -2,15 +2,15 @@ import tweetnacl from 'tweetnacl';
 import * as bip39 from 'bip39';
 import { derivePath } from 'ed25519-hd-key';
 import HDKey from 'hdkey';
-import EllipticCurve from 'starkbank-ecdsa';
+import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
+import Secp256k1 from 'secp256k1';
 
 import { DERIVATION_PATH } from '../account/constants';
-
-const { PrivateKey } = EllipticCurve;
+import Secp256k1PublicKey from './secpk256k1/publicKey';
 
 export interface Secp256k1KeyPair {
-  publicKey: typeof EllipticCurve.PublicKey;
-  privateKey: typeof EllipticCurve.PrivateKey;
+  publicKey: Secp256k1PublicKey;
+  secretKey: BinaryBlob;
 }
 
 export const createKeyPair = (
@@ -35,12 +35,10 @@ export const createSecp256K1KeyPair = (
 
   // BIP 44 derivation path definition
   // m / purpose' / coin_type' / account' / change / address_index ---> this being the subaccount index
-  const derivedKey = masterKey.derive(`${DERIVATION_PATH}/${index}`);
-  // Key is serialized as { xpriv: string, xpub: string }
-  const privateKey = PrivateKey.fromString(derivedKey.toJSON().xpriv);
-  const publicKey = privateKey.publicKey();
+  const { privateKey } = masterKey.derive(`${DERIVATION_PATH}/${index}`);
+  const publicKey = Secp256k1.publicKeyCreate(privateKey, false);
   return {
-    privateKey,
-    publicKey,
+    secretKey: privateKey,
+    publicKey: Secp256k1PublicKey.fromRaw(blobFromUint8Array(publicKey)),
   };
 };

@@ -1,58 +1,25 @@
 /* eslint-disable no-underscore-dangle */
-import EllipticCurve from 'starkbank-ecdsa';
-import * as BigintConversion from 'bigint-conversion';
+import Secp256k1 from 'secp256k1';
 
 import {
   blobFromHex,
   blobFromUint8Array,
   blobToHex,
-  blobFromBuffer,
   BinaryBlob,
-  derBlobFromBlob,
 } from '@dfinity/candid';
-import { SignIdentity } from '@dfinity/agent';
-import Secp256k1PublicKey, { PublicKey } from './publicKey';
-import { Secp256k1KeyPair } from '../keys';
-
-const { PrivateKey, Ecdsa } = EllipticCurve;
+import { PublicKey, SignIdentity } from '@dfinity/agent';
+import Secp256k1PublicKey from './publicKey';
 
 declare type PublicKeyHex = string;
 declare type SecretKeyHex = string;
 export declare type JsonableSecp256k1Identity = [PublicKeyHex, SecretKeyHex];
 
 class Secp256k1KeyIdentity extends SignIdentity {
-  protected _publicKey;
-
-  protected _privateKey;
-
-  constructor(
-    publicKey: Secp256k1PublicKey,
-    privateKey: typeof EllipticCurve.PrivateKey
-  ) {
-    super();
-    this._privateKey = privateKey;
-    this._publicKey = publicKey;
-  }
-
-  static fromPem(pem): Secp256k1KeyIdentity {
-    if (!pem) throw new Error('Identity creation failed: PEM is required');
-    try {
-      const privateKey = PrivateKey.fromPem(pem);
-      const publicKey = privateKey.publicKey();
-      return new Secp256k1KeyIdentity(
-        Secp256k1PublicKey.fromRaw(publicKey),
-        privateKey
-      );
-    } catch (e) {
-      throw new Error(`Identity creation failed: ${e}.`);
-    }
-  }
-
-  static fromParsedJson(obj: JsonableSecp256k1Identity): Secp256k1KeyIdentity {
-    const [publicKeyDer, privateKeyDer] = obj;
+  public static fromParsedJson(obj: [string, string]): Secp256k1KeyIdentity {
+    const [publicKeyRaw, privateKeyRaw] = obj;
     return new Secp256k1KeyIdentity(
-      Secp256k1PublicKey.fromDer(derBlobFromBlob(blobFromHex(publicKeyDer))),
-      PrivateKey.fromDer(blobFromHex(privateKeyDer))
+      Secp256k1PublicKey.fromRaw(blobFromHex(publicKeyRaw)),
+      blobFromHex(privateKeyRaw)
     );
   }
 
@@ -72,7 +39,7 @@ class Secp256k1KeyIdentity extends SignIdentity {
             blobFromUint8Array(new Uint8Array(publicKey.data))
           )
         : Secp256k1PublicKey.fromDer(
-            derBlobFromBlob(blobFromUint8Array(new Uint8Array(_publicKey.data)))
+            blobFromUint8Array(new Uint8Array(_publicKey.data))
           );
 
       if (publicKey && secretKey && secretKey.data) {
@@ -95,49 +62,60 @@ class Secp256k1KeyIdentity extends SignIdentity {
     );
   }
 
-  static fromKeyPair(
-    publicKey: PublicKey,
-    privateKey: typeof EllipticCurve.PrivateKey
+  public static fromKeyPair(
+    publicKey: BinaryBlob,
+    privateKey: BinaryBlob
   ): Secp256k1KeyIdentity {
     return new Secp256k1KeyIdentity(
-      Secp256k1PublicKey.fromDer(publicKey.toDer()),
+      Secp256k1PublicKey.fromRaw(publicKey),
       privateKey
     );
   }
 
   public static fromSecretKey(secretKey: ArrayBuffer): Secp256k1KeyIdentity {
-    const privateKey = PrivateKey.from(new Uint8Array(secretKey));
+    const publicKey = Secp256k1.publicKeyCreate(new Uint8Array(secretKey));
     const identity = Secp256k1KeyIdentity.fromKeyPair(
-      blobFromHex(privateKey.publicKey.toString()),
-      blobFromHex(privateKey.toString())
+      blobFromUint8Array(publicKey),
+      blobFromUint8Array(new Uint8Array(secretKey))
     );
     return identity;
+  }
+
+  protected _publicKey: Secp256k1PublicKey;
+
+  // `fromRaw` and `fromDer` should be used for instantiation, not this constructor.
+  protected constructor(
+    publicKey: PublicKey,
+    protected _privateKey: BinaryBlob
+  ) {
+    super();
+    this._publicKey = Secp256k1PublicKey.from(publicKey);
   }
 
   /**
    * Serialize this key to JSON.
    */
-  toJSON(): JsonableSecp256k1Identity {
-    return [
-      blobToHex(this._publicKey.toDer()),
-      blobToHex(this._privateKey.toDer()),
-    ];
+  public toJSON(): JsonableSecp256k1Identity {
+    return [blobToHex(this._publicKey.toRaw()), blobToHex(this._privateKey)];
   }
 
   /**
    * Return a copy of the key pair.
    */
-  getKeyPair(): Secp256k1KeyPair {
+  public getKeyPair(): {
+    secretKey: BinaryBlob;
+    publicKey: Secp256k1PublicKey;
+  } {
     return {
-      privateKey: this._privateKey,
-      publicKey: this._publicKey.toRaw(),
+      secretKey: blobFromUint8Array(new Uint8Array(this._privateKey)),
+      publicKey: this._publicKey,
     };
   }
 
   /**
    * Return the public key.
    */
-  getPublicKey(): Secp256k1PublicKey {
+  public getPublicKey(): PublicKey {
     return this._publicKey;
   }
 
@@ -145,24 +123,12 @@ class Secp256k1KeyIdentity extends SignIdentity {
    * Signs a blob of data, with this identity's private key.
    * @param challenge - challenge to sign with this identity's secretKey, producing a signature
    */
-  async sign(challenge: BinaryBlob): Promise<BinaryBlob> {
-    const blob =
-      challenge instanceof Buffer
-        ? blobFromBuffer(challenge)
-        : blobFromUint8Array(new Uint8Array(challenge));
-    const signature = Ecdsa.sign(blob, this._privateKey);
-
-    const ra = BigintConversion.bigintToBuf(signature.r);
-    const sa = BigintConversion.bigintToBuf(signature.s);
-
-    // const ra = BigintBuffer.toBufferBE(signature.r, 32);
-    // const sa = BigintBuffer.toBufferBE(signature.s, 32);
-    return blobFromUint8Array(
-      new Uint8Array([
-        ...Array.from(new Uint8Array(ra)),
-        ...Array.from(new Uint8Array(sa)),
-      ])
+  public async sign(challenge: BinaryBlob): Promise<BinaryBlob> {
+    const { signature } = Secp256k1.ecdsaSign(
+      new Uint8Array(challenge),
+      this._privateKey
     );
+    return blobFromUint8Array(signature);
   }
 }
 
