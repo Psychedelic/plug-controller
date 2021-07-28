@@ -9,6 +9,7 @@ import walletIDLFactory from '../../idls/walltet';
 import WalletService from '../../interfaces/wallet';
 import { IC_HOST } from './constants';
 import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
+import { Secp256k1KeyPair } from '../crypto/keys';
 
 if (process.env.NODE_ENV !== 'production') config();
 
@@ -17,8 +18,10 @@ export interface CreateAgentArgs {
   defaultIdentity?: Secp256k1KeyIdentity;
 }
 
-export const createIdentity = (secretKey: Uint8Array): Secp256k1KeyIdentity =>
-  Secp256k1KeyIdentity.fromSecretKey(secretKey);
+export const createIdentity = (
+  secretKey: Secp256k1KeyPair['privateKey']
+): Secp256k1KeyIdentity =>
+  Secp256k1KeyIdentity.fromKeyPair(secretKey.publicKey(), secretKey);
 
 export const createAgent = async ({
   secretKey,

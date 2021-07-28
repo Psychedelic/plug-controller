@@ -69,7 +69,7 @@ class PlugWallet {
   });
 
   public getBalance = async (): Promise<bigint> => {
-    const secretKey = blobToUint8Array(this.identity.getKeyPair().privateKey);
+    const secretKey = this.identity.getKeyPair().privateKey;
     const agent = await createAgent({ secretKey });
     const ledger = await createLedgerActor(agent);
 
@@ -85,7 +85,7 @@ class PlugWallet {
     amount: bigint,
     opts?: SendOpts
   ): Promise<bigint> => {
-    const secretKey = blobToUint8Array(this.identity.getKeyPair().privateKey);
+    const secretKey = this.identity.getKeyPair().privateKey;
     const agent = await createAgent({ secretKey });
     const ledger = await createLedgerActor(agent);
     return ledger.sendICP({ to, amount, opts });

@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import ellipticcurve from 'starkbank-ecdsa';
+import EllipticCurve from 'starkbank-ecdsa';
 import * as BigintConversion from 'bigint-conversion';
 
 import {
@@ -14,7 +14,7 @@ import { SignIdentity } from '@dfinity/agent';
 import Secp256k1PublicKey, { PublicKey } from './publicKey';
 import { Secp256k1KeyPair } from '../keys';
 
-const { PrivateKey, Ecdsa } = ellipticcurve;
+const { PrivateKey, Ecdsa } = EllipticCurve;
 
 declare type PublicKeyHex = string;
 declare type SecretKeyHex = string;
@@ -25,7 +25,10 @@ class Secp256k1KeyIdentity extends SignIdentity {
 
   protected _privateKey;
 
-  constructor(publicKey: Secp256k1PublicKey, privateKey: BinaryBlob) {
+  constructor(
+    publicKey: Secp256k1PublicKey,
+    privateKey: typeof EllipticCurve.PrivateKey
+  ) {
     super();
     this._privateKey = privateKey;
     this._publicKey = publicKey;
@@ -34,10 +37,12 @@ class Secp256k1KeyIdentity extends SignIdentity {
   static fromPem(pem): Secp256k1KeyIdentity {
     if (!pem) throw new Error('Identity creation failed: PEM is required');
     try {
-      const secretKey = PrivateKey.fromPem(pem);
-      const publicKey = secretKey.publicKey();
-      const secretKeyBuffer = blobFromHex(secretKey.toString());
-      return new this(Secp256k1PublicKey.fromRaw(publicKey), secretKeyBuffer);
+      const privateKey = PrivateKey.fromPem(pem);
+      const publicKey = privateKey.publicKey();
+      return new Secp256k1KeyIdentity(
+        Secp256k1PublicKey.fromRaw(publicKey),
+        privateKey
+      );
     } catch (e) {
       throw new Error(`Identity creation failed: ${e}.`);
     }
@@ -92,7 +97,7 @@ class Secp256k1KeyIdentity extends SignIdentity {
 
   static fromKeyPair(
     publicKey: PublicKey,
-    privateKey: BinaryBlob
+    privateKey: typeof EllipticCurve.PrivateKey
   ): Secp256k1KeyIdentity {
     return new Secp256k1KeyIdentity(
       Secp256k1PublicKey.fromDer(publicKey.toDer()),

@@ -1,7 +1,6 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import { Principal } from '@dfinity/agent';
-import { blobFromHex } from '@dfinity/candid';
 
 import { ERRORS } from '../../errors';
 
@@ -56,10 +55,9 @@ const getAccountCredentials = (
 ): AccountCredentials => {
   const keyPair = createSecp256K1KeyPair(mnemonic, subAccount || 0);
   // Identity has boths keys via getKeyPair and PID via getPrincipal
-  console.log('priv key', blobFromHex(keyPair.privateKey.toString().slice(5)));
   const identity = Secp256k1KeyIdentity.fromKeyPair(
     keyPair.publicKey,
-    blobFromHex(keyPair.privateKey.toString())
+    keyPair.privateKey
   );
   const accountId = getAccountId(identity.getPrincipal(), subAccount);
   return {
@@ -85,22 +83,4 @@ export const createAccountFromMnemonic = (
     throw new Error(ERRORS.INVALID_ACC_ID);
   }
   return getAccountCredentials(mnemonic, accountId);
-};
-
-// Queries first 10 accounts for the provided key
-export const queryAccounts = async (
-  secretKey: Uint8Array
-): Promise<{ [key: string]: { accountId: string; balance: number } }> => {
-  const agent = await createAgent({ secretKey });
-  const ledgerActor = await createLedgerActor(agent);
-  const identity = Secp256k1KeyIdentity.fromSecretKey(secretKey);
-  const balances = {};
-  for (let subAccount = 0; subAccount < 10; subAccount += 1) {
-    const account = getAccountId(identity.getPrincipal(), subAccount);
-    ledgerActor.account_balance_dfx({ account }).then(res => {
-      console.log('account balanace', res);
-      balances[subAccount] = { accountId: account, balance: res.e8s };
-    });
-  }
-  return balances;
 };

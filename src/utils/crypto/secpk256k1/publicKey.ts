@@ -1,7 +1,7 @@
 import { DerEncodedBlob } from '@dfinity/candid';
-import ellipticcurve from 'starkbank-ecdsa';
+import EllipticCurve from 'starkbank-ecdsa';
 
-export type PublicKey = typeof ellipticcurve.PublicKey;
+export type PublicKey = typeof EllipticCurve.PublicKey;
 
 class Secp256k1PublicKey {
   private readonly rawKey: PublicKey;
@@ -18,7 +18,7 @@ class Secp256k1PublicKey {
   }
 
   static fromDer(derKey: DerEncodedBlob): Secp256k1PublicKey {
-    return new Secp256k1PublicKey(ellipticcurve.PublicKey.fromDer(derKey));
+    return new Secp256k1PublicKey(EllipticCurve.PublicKey.fromDer(derKey));
   }
 
   toDer(): DerEncodedBlob {

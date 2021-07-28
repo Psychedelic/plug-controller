@@ -139,7 +139,7 @@ describe('Account utils', () => {
   });
 
   describe('credentials utility', () => {
-    test.only('should sign a message into an unreadable state and recover it using its keys', () => {
+    test('should sign a message into an unreadable state and recover it using its keys', () => {
       const { privateKey, publicKey } = globalKeys;
       const message = 'This is a secret message!';
       const signed = sign(message, privateKey);

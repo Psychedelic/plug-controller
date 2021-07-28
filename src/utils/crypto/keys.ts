@@ -2,15 +2,15 @@ import tweetnacl from 'tweetnacl';
 import * as bip39 from 'bip39';
 import { derivePath } from 'ed25519-hd-key';
 import HDKey from 'hdkey';
-import ellipticcurve from 'starkbank-ecdsa';
+import EllipticCurve from 'starkbank-ecdsa';
 
 import { DERIVATION_PATH } from '../account/constants';
 
-const { PrivateKey } = ellipticcurve;
+const { PrivateKey } = EllipticCurve;
 
 export interface Secp256k1KeyPair {
-  publicKey: typeof ellipticcurve.PublicKey;
-  privateKey: typeof ellipticcurve.PrivateKey;
+  publicKey: typeof EllipticCurve.PublicKey;
+  privateKey: typeof EllipticCurve.PrivateKey;
 }
 
 export const createKeyPair = (
@@ -25,7 +25,10 @@ export const createKeyPair = (
   return tweetnacl.sign.keyPair.fromSeed(key);
 };
 
-export const createSecp256K1KeyPair = (mnemonic: string, index = 0) => {
+export const createSecp256K1KeyPair = (
+  mnemonic: string,
+  index = 0
+): Secp256k1KeyPair => {
   // Generate bip39 mnemonic. [Curve agnostic]
   const seed = bip39.mnemonicToSeedSync(mnemonic);
   const masterKey = HDKey.fromMasterSeed(seed);
