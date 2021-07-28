@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js';
-import { Principal } from '@dfinity/agent';
+import { BinaryBlob, Principal, PublicKey } from '@dfinity/agent';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/rosetta';
@@ -9,6 +9,7 @@ import { SendOpts } from '../utils/dfx/ledger/methods';
 import Storage from '../utils/storage';
 import mockStore from '../utils/storage/mock';
 import { PRINCIPAL_REGEX } from '../utils/dfx/constants';
+import { validateSubaccount } from './utils';
 
 export const validatePrincipalId = (text: string): boolean => {
   try {
@@ -43,6 +44,13 @@ class PlugKeyRing {
     const state = await store.get();
     this.isUnlocked = !!state?.isUnlocked;
     this.isInitialized = !!state?.isInitialized;
+  };
+
+  public getPublicKey = async (subaccount = 0): Promise<PublicKey> => {
+    await this.checkInitialized();
+    validateSubaccount(subaccount, this.state.wallets.length);
+    const wallet = this.state.wallets[subaccount];
+    return wallet.publicKey;
   };
 
   private loadFromPersistance = async (password: string): Promise<void> => {
@@ -113,6 +121,17 @@ class PlugKeyRing {
     return this.state;
   };
 
+  public sign = async (
+    payload: BinaryBlob,
+    subaccount = 0
+  ): Promise<BinaryBlob> => {
+    this.checkUnlocked();
+    validateSubaccount(subaccount, this.state.wallets.length);
+    const wallet = this.state.wallets[subaccount];
+    const signed = await wallet.sign(payload);
+    return signed;
+  };
+
   public unlock = async (password: string): Promise<boolean> => {
     await this.checkInitialized();
     try {
@@ -139,13 +158,7 @@ class PlugKeyRing {
   ): Promise<void> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    if (
-      walletNumber < 0 ||
-      !Number.isInteger(walletNumber) ||
-      walletNumber >= this.state.wallets.length
-    ) {
-      throw new Error(ERRORS.INVALID_WALLET_NUMBER);
-    }
+    validateSubaccount(walletNumber, this.state.wallets.length);
     const wallet = this.state.wallets[walletNumber];
     if (name) wallet.setName(name);
     if (emoji) wallet.setIcon(emoji);
@@ -159,8 +172,7 @@ class PlugKeyRing {
   public getBalance = async (subAccount?: number): Promise<bigint> => {
     this.checkUnlocked();
     const index = subAccount || this.state.currentWalletId || 0;
-    if (index < 0 || index >= this.state.wallets.length)
-      throw new Error(ERRORS.INVALID_WALLET_NUMBER);
+    validateSubaccount(index, this.state.wallets.length);
     return this.state.wallets[index].getBalance();
   };
 
@@ -169,8 +181,7 @@ class PlugKeyRing {
   ): Promise<GetTransactionsResponse> => {
     this.checkUnlocked();
     const index = subAccount || this.state.currentWalletId || 0;
-    if (index < 0 || index >= this.state.wallets.length)
-      throw new Error(ERRORS.INVALID_WALLET_NUMBER);
+    validateSubaccount(index, this.state.wallets.length);
     return this.state.wallets[index].getTransactions();
   };
 
