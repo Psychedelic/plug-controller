@@ -1,20 +1,18 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
-import { Ed25519KeyIdentity } from '@dfinity/identity';
 import { Principal } from '@dfinity/agent';
-import { blobFromUint8Array } from '@dfinity/candid';
 
 import { ERRORS } from '../../errors';
 
 import { AccountCredentials } from '../../interfaces/account';
 import { ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO } from './constants';
-import { createLedgerActor, createAgent } from '../dfx';
 import {
   byteArrayToWordArray,
   generateChecksum,
   wordArrayToByteArray,
-} from '../crypto';
-import { createKeyPair } from '../crypto/hdKeyManager';
+} from '../crypto/binary';
+import { createSecp256K1KeyPair } from '../crypto/keys';
+import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
 
 interface DerivedKey {
   key: Buffer;
@@ -54,11 +52,11 @@ const getAccountCredentials = (
   mnemonic: string,
   subAccount?: number
 ): AccountCredentials => {
-  const keyPair = createKeyPair(mnemonic, subAccount || 0);
+  const keyPair = createSecp256K1KeyPair(mnemonic, subAccount || 0);
   // Identity has boths keys via getKeyPair and PID via getPrincipal
-  const identity = Ed25519KeyIdentity.fromKeyPair(
-    blobFromUint8Array(keyPair.publicKey),
-    blobFromUint8Array(keyPair.secretKey)
+  const identity = Secp256k1KeyIdentity.fromKeyPair(
+    keyPair.publicKey.toRaw(),
+    keyPair.secretKey
   );
   const accountId = getAccountId(identity.getPrincipal(), subAccount);
   return {
@@ -84,22 +82,4 @@ export const createAccountFromMnemonic = (
     throw new Error(ERRORS.INVALID_ACC_ID);
   }
   return getAccountCredentials(mnemonic, accountId);
-};
-
-// Queries first 10 accounts for the provided key
-export const queryAccounts = async (
-  secretKey: Uint8Array
-): Promise<{ [key: string]: { accountId: string; balance: number } }> => {
-  const agent = await createAgent({ secretKey });
-  const ledgerActor = await createLedgerActor(agent);
-  const identity = Ed25519KeyIdentity.fromSecretKey(secretKey);
-  const balances = {};
-  for (let subAccount = 0; subAccount < 10; subAccount += 1) {
-    const account = getAccountId(identity.getPrincipal(), subAccount);
-    ledgerActor.account_balance_dfx({ account }).then(res => {
-      console.log('account balanace', res);
-      balances[subAccount] = { accountId: account, balance: res.e8s };
-    });
-  }
-  return balances;
 };

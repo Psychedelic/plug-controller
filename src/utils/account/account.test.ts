@@ -1,7 +1,8 @@
-import { KeyPair, Principal } from '@dfinity/agent';
+import { Principal } from '@dfinity/agent';
 import { ERRORS } from '../../errors';
 import { AccountCredentials } from '../../interfaces/account';
-import { open, sign } from '../signature';
+import { Secp256k1KeyPair } from '../crypto/keys';
+import { verify, sign } from '../signature';
 import {
   createAccount,
   createAccountFromMnemonic,
@@ -10,7 +11,7 @@ import {
 
 describe('Account utils', () => {
   let globalAccount: AccountCredentials;
-  let globalKeys: KeyPair;
+  let globalKeys: Secp256k1KeyPair;
   const MAX_ACCOUNTS = 5;
 
   beforeAll(() => {
@@ -42,7 +43,7 @@ describe('Account utils', () => {
 
         mnemonics.push(mnemonic);
         secretKeys.push(secretKey.toString());
-        publicKeys.push(publicKey.toDer().toString());
+        publicKeys.push(publicKey.toString());
       }
     });
 
@@ -138,15 +139,12 @@ describe('Account utils', () => {
   });
 
   describe('credentials utility', () => {
-    it('should sign a message into an unreadable state and recover it using its keys', () => {
+    test('should sign a message into an unreadable state and recover it using its keys', () => {
       const { secretKey, publicKey } = globalKeys;
-
-      // Binary (raw) public key is not in the interface but it comes with the obj. TODO: Create wrapper interface
-      const pk = publicKey as any;
       const message = 'This is a secret message!';
       const signed = sign(message, secretKey);
-      const opened = open(signed, pk.rawKey);
-      expect(opened).toEqual(message);
+      const opened = verify(message, signed, publicKey);
+      expect(opened).toBe(true);
     });
   });
 });

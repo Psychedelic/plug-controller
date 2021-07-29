@@ -1,5 +1,6 @@
 import CryptoJS from 'crypto-js';
-import { BinaryBlob, Principal, PublicKey } from '@dfinity/agent';
+import { Principal, PublicKey } from '@dfinity/agent';
+import { BinaryBlob } from '@dfinity/candid';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/rosetta';
@@ -84,7 +85,6 @@ class PlugKeyRing {
     return { wallet, mnemonic };
   };
 
-  // CHECK WITH JANISON: What if they import the mnemonic in another place and put a different password? wouldn't that create a different account? (check seed derivation)
   public importMnemonic = async ({
     mnemonic,
     password,

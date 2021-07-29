@@ -1,7 +1,8 @@
-import { BinaryBlob, PublicKey } from '@dfinity/agent';
-import { Ed25519KeyIdentity } from '@dfinity/identity';
+import { PublicKey } from '@dfinity/agent';
+import { BinaryBlob } from '@dfinity/candid';
 
 import { createAccountFromMnemonic } from '../utils/account';
+import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
@@ -32,7 +33,7 @@ class PlugWallet {
 
   principal: string;
 
-  private identity: Ed25519KeyIdentity;
+  private identity: Secp256k1KeyIdentity;
 
   constructor({ name, icon, walletNumber, mnemonic }: PlugWalletArgs) {
     this.name = name || 'Main IC Wallet';
@@ -68,9 +69,8 @@ class PlugWallet {
   });
 
   public getBalance = async (): Promise<bigint> => {
-    const agent = await createAgent({
-      secretKey: this.identity.getKeyPair().secretKey as Uint8Array,
-    });
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey });
     const ledger = await createLedgerActor(agent);
 
     return ledger.getBalance(this.accountId);
@@ -85,9 +85,8 @@ class PlugWallet {
     amount: bigint,
     opts?: SendOpts
   ): Promise<bigint> => {
-    const agent = await createAgent({
-      secretKey: this.identity.getKeyPair().secretKey as Uint8Array,
-    });
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey });
     const ledger = await createLedgerActor(agent);
     return ledger.sendICP({ to, amount, opts });
   };
