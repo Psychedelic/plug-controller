@@ -73,7 +73,10 @@ class Secp256k1KeyIdentity extends SignIdentity {
   }
 
   public static fromSecretKey(secretKey: ArrayBuffer): Secp256k1KeyIdentity {
-    const publicKey = Secp256k1.publicKeyCreate(new Uint8Array(secretKey));
+    const publicKey = Secp256k1.publicKeyCreate(
+      new Uint8Array(secretKey),
+      false
+    );
     const identity = Secp256k1KeyIdentity.fromKeyPair(
       blobFromUint8Array(publicKey),
       blobFromUint8Array(new Uint8Array(secretKey))
