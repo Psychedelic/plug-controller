@@ -1,5 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import Secp256k1 from 'secp256k1';
+import { sha256 } from 'js-sha256';
 
 import {
   blobFromHex,
@@ -127,8 +128,10 @@ class Secp256k1KeyIdentity extends SignIdentity {
    * @param challenge - challenge to sign with this identity's secretKey, producing a signature
    */
   public async sign(challenge: BinaryBlob): Promise<BinaryBlob> {
+    const hash = sha256.create();
+    hash.update(challenge);
     const { signature } = Secp256k1.ecdsaSign(
-      new Uint8Array(challenge),
+      new Uint8Array(hash.digest()),
       this._privateKey
     );
     return blobFromUint8Array(signature);

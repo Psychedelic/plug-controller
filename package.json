@@ -16,6 +16,7 @@
     "ed25519-hd-key": "^1.2.0",
     "extensionizer": "^1.0.1",
     "hdkey": "^2.0.1",
+    "js-sha256": "^0.9.0",
     "random-bigint": "^0.0.1",
     "reflect-metadata": "^0.1.13",
     "secp256k1": "^4.0.2",
