@@ -47,3 +47,9 @@ const wallet: PlugWallet = await keyRing.create(password);
 // Creates the keyring using the provided mnemonic and returns the default wallet
 const wallet: PlugWallet = await keyRing.importFromMnemonic(mnemonic, password);
 ```
+
+## Documentation
+
+Interface and Type definitions documents for the **@Psychedelic/plug-controller** implementation is provided in the following [location](https://twilight-dream-0902.on.fleek.co/).
+
+These are based in the `main release branch` and provide a good overview of the whole package (modules, IDL's, utils, etc).
