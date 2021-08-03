@@ -1,7 +1,10 @@
 import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 
-import { createAccountFromMnemonic } from '../utils/account';
+import {
+  createAccountFromMnemonic,
+  createAccountFromPem,
+} from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
 import { SendOpts } from '../utils/dfx/ledger/methods';
@@ -10,8 +13,9 @@ import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
 interface PlugWalletArgs {
   name?: string;
   walletNumber: number;
-  mnemonic: string;
+  mnemonic?: string;
   icon?: string;
+  pem?: string;
 }
 
 interface JSONWallet {
@@ -35,14 +39,19 @@ class PlugWallet {
 
   private identity: Secp256k1KeyIdentity;
 
-  constructor({ name, icon, walletNumber, mnemonic }: PlugWalletArgs) {
+  constructor({
+    name,
+    icon,
+    walletNumber,
+    mnemonic = '',
+    pem = '',
+  }: PlugWalletArgs) {
     this.name = name || 'Main IC Wallet';
     this.icon = icon;
     this.walletNumber = walletNumber;
-    const { identity, accountId } = createAccountFromMnemonic(
-      mnemonic,
-      walletNumber
-    );
+    const { identity, accountId } = !pem.length
+      ? createAccountFromPem(pem, walletNumber)
+      : createAccountFromMnemonic(mnemonic, walletNumber);
     this.identity = identity;
     this.accountId = accountId;
     this.principal = identity.getPrincipal().toText();

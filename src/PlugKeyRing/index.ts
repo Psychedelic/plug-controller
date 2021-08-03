@@ -96,6 +96,17 @@ class PlugKeyRing {
     return { wallet, mnemonic };
   };
 
+  public importPem = async ({
+    pem,
+    password,
+  }: {
+    pem: string;
+    password: string;
+  }): Promise<{ wallet: PlugWallet; pem: string }> => {
+    const wallet = await this.createAndPersistKeyRing({ pem, password });
+    return { wallet, pem };
+  };
+
   // Assumes the state is already initialized
   public createPrincipal = async (): Promise<PlugWallet> => {
     await this.checkInitialized();
@@ -217,9 +228,14 @@ class PlugKeyRing {
   private createAndPersistKeyRing = async ({
     mnemonic,
     password,
+    pem,
+  }: {
+    mnemonic?: string;
+    password: string;
+    pem?: string;
   }): Promise<PlugWallet> => {
     if (!password) throw new Error(ERRORS.PASSWORD_REQUIRED);
-    const wallet = new PlugWallet({ mnemonic, walletNumber: 0 });
+    const wallet = new PlugWallet({ pem, mnemonic, walletNumber: 0 });
     const data = {
       wallets: [wallet.toJSON()],
       currentWalletId: 0,

@@ -4,7 +4,11 @@ import { Principal } from '@dfinity/agent';
 
 import { ERRORS } from '../../errors';
 
-import { AccountCredentials } from '../../interfaces/account';
+import {
+  AccountCredentials,
+  AccountCredentialsFromMnemonic,
+  AccountCredentialsFromPem,
+} from '../../interfaces/account';
 import { ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO } from './constants';
 import {
   byteArrayToWordArray,
@@ -48,10 +52,10 @@ export const getAccountId = (
   return val;
 };
 
-const getAccountCredentials = (
+const getAccountCredentialsMnemonic = (
   mnemonic: string,
   subAccount?: number
-): AccountCredentials => {
+): AccountCredentialsFromMnemonic => {
   const keyPair = createSecp256K1KeyPair(mnemonic, subAccount || 0);
   // Identity has boths keys via getKeyPair and PID via getPrincipal
   const identity = Secp256k1KeyIdentity.fromKeyPair(
@@ -66,9 +70,34 @@ const getAccountCredentials = (
   };
 };
 
-export const createAccount = (): AccountCredentials => {
+const getAccountCredentialsFromPem = (
+  pem: string,
+  subAccount?: number
+): AccountCredentialsFromPem => {
+  // Identity has boths keys via getKeyPair and PID via getPrincipal
+  const identity = Secp256k1KeyIdentity.fromPem(pem);
+  const accountId = getAccountId(identity.getPrincipal(), subAccount);
+  return {
+    pem,
+    identity,
+    accountId,
+  };
+};
+
+export const createAccount = (): AccountCredentialsFromMnemonic => {
   const mnemonic = bip39.generateMnemonic();
-  return getAccountCredentials(mnemonic, 0);
+  return getAccountCredentialsMnemonic(mnemonic, 0);
+};
+
+export const createAccountFromPem = (
+  pem: string,
+  accountId: number
+): AccountCredentials => {
+  if (!pem.length) throw new Error(ERRORS.INVALID_PEM);
+  if (typeof accountId !== 'number' || accountId < 0) {
+    throw new Error(ERRORS.INVALID_ACC_ID);
+  }
+  return getAccountCredentialsFromPem(pem, accountId);
 };
 
 export const createAccountFromMnemonic = (
@@ -81,5 +110,5 @@ export const createAccountFromMnemonic = (
   if (typeof accountId !== 'number' || accountId < 0) {
     throw new Error(ERRORS.INVALID_ACC_ID);
   }
-  return getAccountCredentials(mnemonic, accountId);
+  return getAccountCredentialsMnemonic(mnemonic, accountId);
 };
