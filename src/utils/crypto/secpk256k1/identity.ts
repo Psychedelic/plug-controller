@@ -15,6 +15,15 @@ declare type PublicKeyHex = string;
 declare type SecretKeyHex = string;
 export declare type JsonableSecp256k1Identity = [PublicKeyHex, SecretKeyHex];
 
+const PEM_BEGIN = '-----BEGIN PRIVATE KEY-----';
+
+const PEM_END = '-----END PRIVATE KEY-----';
+
+const PRIV_KEY_INIT =
+  '308184020100301006072a8648ce3d020106052b8104000a046d306b0201010420';
+
+const KEY_SEPARATOR = 'a144034200';
+
 class Secp256k1KeyIdentity extends SignIdentity {
   public static fromParsedJson(obj: [string, string]): Secp256k1KeyIdentity {
     const [publicKeyRaw, privateKeyRaw] = obj;
@@ -85,6 +94,16 @@ class Secp256k1KeyIdentity extends SignIdentity {
     return identity;
   }
 
+  public static fromPem(pem: string): Secp256k1KeyIdentity {
+    const buffer64 = pem
+      .replace(PEM_BEGIN, '')
+      .replace(PEM_END, '')
+      .trim();
+    const data = Buffer.from(buffer64, 'base64').toString('hex');
+    const keyPair = data.replace(PRIV_KEY_INIT, '').split(KEY_SEPARATOR);
+    return Secp256k1KeyIdentity.fromParsedJson([keyPair[1], keyPair[0]]);
+  }
+
   protected _publicKey: Secp256k1PublicKey;
 
   // `fromRaw` and `fromDer` should be used for instantiation, not this constructor.
@@ -101,6 +120,18 @@ class Secp256k1KeyIdentity extends SignIdentity {
    */
   public toJSON(): JsonableSecp256k1Identity {
     return [blobToHex(this._publicKey.toRaw()), blobToHex(this._privateKey)];
+  }
+
+  /**
+   * Serialize this key to pem file
+   */
+  public toPem(): string {
+    return `${PEM_BEGIN}\n${Buffer.from(
+      `${PRIV_KEY_INIT}${this._privateKey.toString(
+        'hex'
+      )}${KEY_SEPARATOR}${this._publicKey.toRaw().toString('hex')}`,
+      'hex'
+    ).toString('base64')}\n${PEM_END}`;
   }
 
   /**
