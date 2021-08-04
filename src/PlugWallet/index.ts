@@ -105,7 +105,9 @@ class PlugWallet {
     // Get Custom Token Balances
     this.registeredTokens.forEach(async token => {
       const tokenActor = await createTokenActor(token.canisterId, secretKey);
-      const tokenBalance = await tokenActor.balance([]);
+      const tokenBalance = await tokenActor.balance([
+        this.identity.getPrincipal(),
+      ]);
       balances.push({
         name: token.name,
         symbol: token.symbol,
