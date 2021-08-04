@@ -208,6 +208,12 @@ class PlugKeyRing {
     );
   };
 
+  public getPemFile = (walletNumber?: number): string => {
+    this.checkUnlocked();
+    const currentWalletNumber = this.state.currentWalletId;
+    return this.state.wallets[walletNumber || currentWalletNumber || 0].pemFile;
+  };
+
   private checkUnlocked = (): void => {
     if (!this.isUnlocked) {
       throw new Error(ERRORS.STATE_LOCKED);

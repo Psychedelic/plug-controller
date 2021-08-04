@@ -94,6 +94,10 @@ class PlugWallet {
   public get publicKey(): PublicKey {
     return this.identity.getKeyPair().publicKey;
   }
+
+  public get pemFile(): string {
+    return this.identity.getPem();
+  }
 }
 
 export default PlugWallet;
