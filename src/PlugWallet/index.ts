@@ -2,7 +2,7 @@ import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 
 import { ERRORS } from '../errors';
-import { StandardToken } from '../interfaces/token';
+import { StandardToken, TokenBalance } from '../interfaces/token';
 import { validateCanisterId, validateToken } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
@@ -94,12 +94,25 @@ class PlugWallet {
     registeredTokens: this.registeredTokens,
   });
 
-  public getBalance = async (): Promise<bigint> => {
+  public getBalance = async (): Promise<Array<TokenBalance>> => {
     const { secretKey } = this.identity.getKeyPair();
+    const balances: Array<TokenBalance> = [];
+    // Get ICP Balance
     const agent = await createAgent({ secretKey });
     const ledger = await createLedgerActor(agent);
-
-    return ledger.getBalance(this.accountId);
+    const icpBalance = await ledger.getBalance(this.accountId);
+    balances.push({ name: 'ICP', symbol: 'ICP', amount: icpBalance });
+    // Get Custom Token Balances
+    this.registeredTokens.forEach(async token => {
+      const tokenActor = await createTokenActor(token.canisterId, secretKey);
+      const tokenBalance = await tokenActor.balance([]);
+      balances.push({
+        name: token.name,
+        symbol: token.symbol,
+        amount: tokenBalance.amount,
+      });
+    });
+    return balances;
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {

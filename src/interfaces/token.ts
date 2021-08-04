@@ -13,7 +13,16 @@ export interface TokenMetaData {
   'decimal' : number,
   'symbol' : string,
 }
-export type StandardToken = TokenMetaData;
+export interface StandardToken extends TokenMetaData {
+  canisterId: string;
+}
+
+export interface TokenBalance {
+  name: string;
+  symbol: string;
+  amount: bigint;
+}
+
 export type TransactionId = bigint;
 export type TransferError = { 'CallFailed' : null } |
   { 'InsufficientBalance' : null } |
