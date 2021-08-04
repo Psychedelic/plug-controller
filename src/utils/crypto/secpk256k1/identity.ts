@@ -15,6 +15,15 @@ declare type PublicKeyHex = string;
 declare type SecretKeyHex = string;
 export declare type JsonableSecp256k1Identity = [PublicKeyHex, SecretKeyHex];
 
+const PEM_BEGIN = '-----BEGIN PRIVATE KEY-----';
+
+const PEM_END = '-----END PRIVATE KEY-----';
+
+const PRIV_KEY_INIT =
+  '308184020100301006072a8648ce3d020106052b8104000a046d306b0201010420';
+
+const KEY_SEPARATOR = 'a144034200';
+
 class Secp256k1KeyIdentity extends SignIdentity {
   public static fromParsedJson(obj: [string, string]): Secp256k1KeyIdentity {
     const [publicKeyRaw, privateKeyRaw] = obj;
@@ -121,6 +130,20 @@ class Secp256k1KeyIdentity extends SignIdentity {
    */
   public getPublicKey(): PublicKey {
     return this._publicKey;
+  }
+
+  /**
+   *  Return private key in a pem file
+   */
+
+  public getPem(): string {
+    const rawPrivateKey = this._privateKey.toString('hex');
+    const rawPublicKey = this._publicKey.toRaw().toString('hex');
+
+    return `${PEM_BEGIN}\n${Buffer.from(
+      `${PRIV_KEY_INIT}${rawPrivateKey}${KEY_SEPARATOR}${rawPublicKey}`,
+      'hex'
+    ).toString('base64')}\n${PEM_END}`;
   }
 
   /**

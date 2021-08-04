@@ -219,6 +219,13 @@ class PlugKeyRing {
     );
   };
 
+  public getPemFile = (walletNumber?: number): string => {
+    this.checkUnlocked();
+    const currentWalletNumber = walletNumber || this.state.currentWalletId || 0;
+    validateSubaccount(currentWalletNumber, this.state.wallets.length);
+    return this.state.wallets[currentWalletNumber].pemFile;
+  };
+
   private checkUnlocked = (): void => {
     if (!this.isUnlocked) {
       throw new Error(ERRORS.STATE_LOCKED);
