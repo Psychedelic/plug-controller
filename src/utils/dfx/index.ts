@@ -6,8 +6,8 @@ import { config } from 'dotenv';
 import { HttpAgent, Actor, ActorSubclass } from '@dfinity/agent';
 import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
 
-import walletIDLFactory from '../../idls/walltet';
-import WalletService from '../../interfaces/wallet';
+import tokenIDLFactory from '../../idls/token.did';
+import TokenService from '../../interfaces/token';
 import { IC_HOST } from './constants';
 import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
 
@@ -36,13 +36,13 @@ export const createAgent = async ({
   return agent;
 };
 
-export const getCyclesWalletActor = async (
+export const createTokenActor = async (
   canisterId: string,
   secretKey: Uint8Array
-): Promise<ActorSubclass<WalletService>> => {
+): Promise<ActorSubclass<TokenService>> => {
   const agent = await createAgent({ secretKey });
-  const actor = Actor.createActor<ActorSubclass<WalletService>>(
-    walletIDLFactory,
+  const actor = Actor.createActor<ActorSubclass<TokenService>>(
+    tokenIDLFactory,
     { agent, canisterId }
   );
   return actor;
