@@ -12,12 +12,21 @@ import store from '../utils/storage/mock';
 import { getAccountId } from '../utils/account';
 
 const mockSendICP = jest.fn();
+const XTC_MOCK = {
+  canisterId: 'aanaa-xaaaa-aaaah-aaeiq-cai',
+  decimal: 5,
+  name: 'XTC',
+  symbol: 'XTC',
+};
 
 jest.mock('../utils/dfx', () => {
   return {
     createAgent: jest.fn(),
     createLedgerActor: (): { sendICP: jest.Mock<any, any> } => ({
       sendICP: mockSendICP,
+    }),
+    createTokenActor: (): { meta: jest.Mock<any, any> } => ({
+      meta: jest.fn(() => ({ symbol: 'XTC', decimal: 5, name: 'XTC' })),
     }),
   };
 });
@@ -401,27 +410,21 @@ describe('Plug KeyRing', () => {
       await keyRing.registerToken('aanaa-xaaaa-aaaah-aaeiq-cai', 2); // register XTC
 
       const { wallets } = await keyRing.getState();
-      expect(wallets[0].registeredTokens).toEqual([
-        'aanaa-xaaaa-aaaah-aaeiq-cai',
-      ]);
-      expect(wallets[1].registeredTokens).toEqual([
-        'aanaa-xaaaa-aaaah-aaeiq-cai',
-      ]);
-      expect(wallets[2].registeredTokens).toEqual([
-        'aanaa-xaaaa-aaaah-aaeiq-cai',
-      ]);
+      expect(wallets[0].registeredTokens).toEqual([XTC_MOCK]);
+      expect(wallets[1].registeredTokens).toEqual([XTC_MOCK]);
+      expect(wallets[2].registeredTokens).toEqual([XTC_MOCK]);
     });
-    it('should fail to register an invalid canister id', async () => {
+    test('should fail to register an invalid canister id', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      expect(() => keyRing.registerToken('test')).toThrow(
-        ERRORS.INVALID_CANISTER_ID
+      await expect(() => keyRing.registerToken('test')).rejects.toEqual(
+        new Error(ERRORS.INVALID_CANISTER_ID)
       );
-      expect(() =>
+      await expect(() =>
         keyRing.registerToken(
           'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe'
         )
-      ).toThrow(ERRORS.INVALID_CANISTER_ID);
+      ).rejects.toEqual(new Error(ERRORS.INVALID_CANISTER_ID));
     });
     xit('should fail to register a canister ID that does not support the standard', async () => {
       // TODO: confirm behavior

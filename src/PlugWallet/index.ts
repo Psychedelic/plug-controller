@@ -2,10 +2,11 @@ import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 
 import { ERRORS } from '../errors';
-import { validateCanisterId } from '../PlugKeyRing/utils';
+import { StandardToken } from '../interfaces/token';
+import { validateCanisterId, validateToken } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
-import { createAgent, createLedgerActor } from '../utils/dfx';
+import { createAgent, createLedgerActor, createTokenActor } from '../utils/dfx';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
 
@@ -14,7 +15,7 @@ interface PlugWalletArgs {
   walletNumber: number;
   mnemonic: string;
   icon?: string;
-  registeredTokens?: Array<string>;
+  registeredTokens?: Array<StandardToken>;
 }
 
 interface JSONWallet {
@@ -23,7 +24,7 @@ interface JSONWallet {
   principal: string;
   accountId: string;
   icon?: string;
-  registeredTokens?: Array<string>;
+  registeredTokens?: Array<StandardToken>;
 }
 
 class PlugWallet {
@@ -37,7 +38,7 @@ class PlugWallet {
 
   principal: string;
 
-  registeredTokens: Array<string>;
+  registeredTokens: Array<StandardToken>;
 
   private identity: Secp256k1KeyIdentity;
 
@@ -67,11 +68,20 @@ class PlugWallet {
     this.icon = val;
   }
 
-  public registerToken = (canisterId: string): Array<string> => {
+  public registerToken = async (
+    canisterId: string
+  ): Promise<Array<StandardToken>> => {
+    const { secretKey } = this.identity.getKeyPair();
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    this.registeredTokens.push(canisterId);
+    const tokenActor = await createTokenActor(canisterId, secretKey);
+    const metadata = await tokenActor.meta();
+    if (!validateToken(metadata)) {
+      throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
+    }
+    const tokenDescriptor = { ...metadata, canisterId };
+    this.registeredTokens.push(tokenDescriptor);
     return this.registeredTokens;
   };
 

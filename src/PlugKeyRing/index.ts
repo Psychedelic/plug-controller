@@ -10,6 +10,7 @@ import { SendOpts } from '../utils/dfx/ledger/methods';
 import Storage from '../utils/storage';
 import mockStore from '../utils/storage/mock';
 import { validatePrincipalId, validateSubaccount } from './utils';
+import { StandardToken } from '../interfaces/token';
 
 interface PlugState {
   wallets: Array<PlugWallet>;
@@ -161,17 +162,17 @@ class PlugKeyRing {
     this.saveEncryptedState({ wallets }, this.state.password);
   };
 
-  public registerToken = (
+  public registerToken = async (
     canisterId: string,
     subAccount = 0
-  ): Array<string> => {
+  ): Promise<Array<StandardToken>> => {
     this.checkUnlocked();
     const index = subAccount || this.state.currentWalletId || 0;
     const { wallets } = this.state;
 
     validateSubaccount(index, this.state.wallets.length);
     const wallet = wallets[index];
-    const registeredTokens = wallet.registerToken(canisterId);
+    const registeredTokens = await wallet.registerToken(canisterId);
     wallets.splice(subAccount, 1, wallet);
 
     this.state.wallets = wallets;
