@@ -17,3 +17,9 @@ export interface AccountCredentialsFromPem {
   identity: Secp256k1KeyIdentity;
   accountId: string;
 }
+
+export interface AccountCredentialsFromPrivateKey {
+  privateKey: string;
+  identity: Secp256k1KeyIdentity;
+  accountId: string;
+}

@@ -4,6 +4,8 @@ import { BinaryBlob } from '@dfinity/candid';
 import {
   createAccountFromMnemonic,
   createAccountFromPem,
+  createAccountFromPrivateKey,
+  verifyMnemonic,
 } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
@@ -11,11 +13,33 @@ import { SendOpts } from '../utils/dfx/ledger/methods';
 import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
 
 interface PlugWalletArgs {
-  name?: string;
+  identity: Secp256k1KeyIdentity;
+  accountId: string;
   walletNumber: number;
-  mnemonic?: string;
+  name?: string;
   icon?: string;
-  pem?: string;
+  mnemonic?: string;
+}
+
+interface PlugWalletArgsFromPem {
+  pem: string;
+  walletNumber: number;
+  name?: string;
+  icon?: string;
+}
+
+interface PlugWalletArgsFromMnemonic {
+  mnemonic: string;
+  walletNumber: number;
+  name?: string;
+  icon?: string;
+}
+
+interface PlugWalletArgsFromPrivateKey {
+  privateKey: string;
+  walletNumber: number;
+  name?: string;
+  icon?: string;
 }
 
 interface JSONWallet {
@@ -37,24 +61,75 @@ class PlugWallet {
 
   principal: string;
 
-  private identity: Secp256k1KeyIdentity;
+  public identity: Secp256k1KeyIdentity;
 
   constructor({
     name,
     icon,
     walletNumber,
-    mnemonic = '',
-    pem = '',
+    identity,
+    accountId,
   }: PlugWalletArgs) {
     this.name = name || 'Main IC Wallet';
     this.icon = icon;
     this.walletNumber = walletNumber;
-    const { identity, accountId } = !pem.length
-      ? createAccountFromPem(pem, walletNumber)
-      : createAccountFromMnemonic(mnemonic, walletNumber);
     this.identity = identity;
     this.accountId = accountId;
     this.principal = identity.getPrincipal().toText();
+  }
+
+  public static fromPem({
+    pem,
+    name,
+    walletNumber,
+    icon,
+  }: PlugWalletArgsFromPem): PlugWallet {
+    const { identity, accountId } = createAccountFromPem(pem, walletNumber);
+    return new PlugWallet({
+      name,
+      icon,
+      walletNumber,
+      identity,
+      accountId,
+    });
+  }
+
+  public static fromMnemonic({
+    mnemonic,
+    name,
+    walletNumber,
+    icon,
+  }: PlugWalletArgsFromMnemonic): PlugWallet {
+    const { identity, accountId } = createAccountFromMnemonic(
+      mnemonic,
+      walletNumber
+    );
+    return new PlugWallet({
+      name,
+      icon,
+      walletNumber,
+      identity,
+      accountId,
+    });
+  }
+
+  public static fromPrivateKey({
+    privateKey,
+    name,
+    walletNumber,
+    icon,
+  }: PlugWalletArgsFromPrivateKey): PlugWallet {
+    const { identity, accountId } = createAccountFromPrivateKey(
+      privateKey,
+      walletNumber
+    );
+    return new PlugWallet({
+      name,
+      icon,
+      walletNumber,
+      identity,
+      accountId,
+    });
   }
 
   public setName(val: string): void {

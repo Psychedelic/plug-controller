@@ -1,4 +1,5 @@
 export const ERRORS = {
+  MNEMONIC_PEM_NEEDED: 'Pem or Mnemonic is needed',
   INVALID_MNEMONIC: 'The provided mnemonic is invalid',
   INVALID_PEM: 'The provided pem is invalid',
   INVALID_ACC_ID: 'The account ID should be a positive integer',

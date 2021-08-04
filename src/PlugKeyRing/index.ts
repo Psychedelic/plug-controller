@@ -24,6 +24,7 @@ interface PlugState {
   currentWalletId?: number;
   password?: string;
   mnemonic?: string;
+  privateKey: string;
 }
 
 const store = process.env.NODE_ENV === 'test' ? mockStore : new Storage();
@@ -36,7 +37,7 @@ class PlugKeyRing {
   public isInitialized = false;
 
   public constructor() {
-    this.state = { wallets: [], currentWalletId: 0 };
+    this.state = { wallets: [], currentWalletId: 0, privateKey: '' };
     this.isUnlocked = false;
     this.isInitialized = false;
   }
@@ -63,12 +64,11 @@ class PlugKeyRing {
     const { vault, isInitialized } = ((await store.get()) || {}) as StorageData;
     if (isInitialized && vault) {
       const decrypted = this.decryptState(vault, password);
-      const wallets = decrypted.wallets.map(
-        wallet =>
-          new PlugWallet({
-            ...wallet,
-            mnemonic: decrypted.mnemonic as string,
-          })
+      const wallets = decrypted.wallets.map(wallet =>
+        PlugWallet.fromPrivateKey({
+          ...wallet,
+          privateKey: decrypted.privateKey,
+        })
       );
       this.state = { ...decrypted, wallets };
       this.isInitialized = isInitialized;
@@ -111,8 +111,8 @@ class PlugKeyRing {
   public createPrincipal = async (): Promise<PlugWallet> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    const wallet = new PlugWallet({
-      mnemonic: this.state.mnemonic as string,
+    const wallet = PlugWallet.fromPrivateKey({
+      privateKey: this.state.privateKey as string,
       walletNumber: this.state.wallets.length,
     });
     const wallets = [...this.state.wallets, wallet];
@@ -152,6 +152,7 @@ class PlugKeyRing {
       await store.set({ isUnlocked: this.isUnlocked });
       return this.isUnlocked;
     } catch (e) {
+      console.log('ERROR', e);
       this.isUnlocked = false;
       return false;
     }
@@ -159,7 +160,7 @@ class PlugKeyRing {
 
   public lock = async (): Promise<void> => {
     this.isUnlocked = false;
-    this.state = { wallets: [] };
+    this.state = { wallets: [], privateKey: '' };
     await store.set({ isUnlocked: this.isUnlocked });
   };
 
@@ -235,12 +236,19 @@ class PlugKeyRing {
     pem?: string;
   }): Promise<PlugWallet> => {
     if (!password) throw new Error(ERRORS.PASSWORD_REQUIRED);
-    const wallet = new PlugWallet({ pem, mnemonic, walletNumber: 0 });
+    if (!mnemonic && !pem) throw new Error(ERRORS.MNEMONIC_PEM_NEEDED);
+    const wallet = pem
+      ? PlugWallet.fromPem({ pem, walletNumber: 0 })
+      : PlugWallet.fromMnemonic({
+          mnemonic: mnemonic as string,
+          walletNumber: 0,
+        });
     const data = {
       wallets: [wallet.toJSON()],
       currentWalletId: 0,
       password,
       mnemonic,
+      privateKey: wallet.identity.getKeyPair().secretKey.toString('hex'),
     };
     this.isInitialized = true;
     await store.set({ isInitialized: true, isUnlocked: false });

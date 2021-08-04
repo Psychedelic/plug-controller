@@ -1,6 +1,6 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
-import { Principal } from '@dfinity/agent';
+import { Principal, blobFromHex } from '@dfinity/agent';
 
 import { ERRORS } from '../../errors';
 
@@ -8,6 +8,7 @@ import {
   AccountCredentials,
   AccountCredentialsFromMnemonic,
   AccountCredentialsFromPem,
+  AccountCredentialsFromPrivateKey,
 } from '../../interfaces/account';
 import { ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO } from './constants';
 import {
@@ -84,6 +85,20 @@ const getAccountCredentialsFromPem = (
   };
 };
 
+const getAccountCredentialsFromPrivateKey = (
+  privateKey: string,
+  subAccount?: number
+): AccountCredentialsFromPrivateKey => {
+  // Identity has boths keys via getKeyPair and PID via getPrincipal
+  const identity = Secp256k1KeyIdentity.fromSecretKey(blobFromHex(privateKey));
+  const accountId = getAccountId(identity.getPrincipal(), subAccount);
+  return {
+    privateKey,
+    identity,
+    accountId,
+  };
+};
+
 export const createAccount = (): AccountCredentialsFromMnemonic => {
   const mnemonic = bip39.generateMnemonic();
   return getAccountCredentialsMnemonic(mnemonic, 0);
@@ -111,4 +126,30 @@ export const createAccountFromMnemonic = (
     throw new Error(ERRORS.INVALID_ACC_ID);
   }
   return getAccountCredentialsMnemonic(mnemonic, accountId);
+};
+
+export const createAccountFromPrivateKey = (
+  privateKey: string,
+  accountId: number
+): AccountCredentials => {
+  if (!privateKey || !privateKey.length) {
+    throw new Error(ERRORS.INVALID_MNEMONIC);
+  }
+  if (typeof accountId !== 'number' || accountId < 0) {
+    throw new Error(ERRORS.INVALID_ACC_ID);
+  }
+  return getAccountCredentialsFromPrivateKey(privateKey, accountId);
+};
+
+export const verifyMnemonic = (
+  mnemonic: string,
+  privateKey: string,
+  accountId: number
+): boolean => {
+  try {
+    const { identity } = getAccountCredentialsMnemonic(mnemonic, accountId);
+    return identity.getKeyPair().secretKey.toString('hex') === privateKey;
+  } catch (e) {
+    return false;
+  }
 };

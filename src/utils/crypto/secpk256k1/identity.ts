@@ -19,16 +19,15 @@ const PEM_BEGIN = '-----BEGIN PRIVATE KEY-----';
 
 const PEM_END = '-----END PRIVATE KEY-----';
 
-const PRIV_KEY_INIT =
-  '308184020100301006072a8648ce3d020106052b8104000a046d306b0201010420';
+const PRIV_KEY_INIT = '3053020101300506032b657004220420';
 
-const KEY_SEPARATOR = 'a144034200';
+const KEY_SEPARATOR = 'a123032100';
 
 class Secp256k1KeyIdentity extends SignIdentity {
   public static fromParsedJson(obj: [string, string]): Secp256k1KeyIdentity {
     const [publicKeyRaw, privateKeyRaw] = obj;
     return new Secp256k1KeyIdentity(
-      Secp256k1PublicKey.fromRaw(blobFromHex(publicKeyRaw)),
+      Secp256k1PublicKey.fromDer(blobFromHex(publicKeyRaw)),
       blobFromHex(privateKeyRaw)
     );
   }
@@ -101,7 +100,7 @@ class Secp256k1KeyIdentity extends SignIdentity {
       .trim();
     const data = Buffer.from(buffer64, 'base64').toString('hex');
     const keyPair = data.replace(PRIV_KEY_INIT, '').split(KEY_SEPARATOR);
-    return Secp256k1KeyIdentity.fromParsedJson([keyPair[1], keyPair[0]]);
+    return Secp256k1KeyIdentity.fromSecretKey(blobFromHex(keyPair[0]));
   }
 
   protected _publicKey: Secp256k1PublicKey;
@@ -129,7 +128,7 @@ class Secp256k1KeyIdentity extends SignIdentity {
     return `${PEM_BEGIN}\n${Buffer.from(
       `${PRIV_KEY_INIT}${this._privateKey.toString(
         'hex'
-      )}${KEY_SEPARATOR}${this._publicKey.toRaw().toString('hex')}`,
+      )}${KEY_SEPARATOR}${this._publicKey.toDer().toString('hex')}`,
       'hex'
     ).toString('base64')}\n${PEM_END}`;
   }
