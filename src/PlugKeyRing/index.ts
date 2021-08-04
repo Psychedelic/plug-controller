@@ -9,16 +9,9 @@ import { createAccount, getAccountId } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import Storage from '../utils/storage';
 import mockStore from '../utils/storage/mock';
-import { PRINCIPAL_REGEX } from '../utils/dfx/constants';
-import { validateSubaccount } from './utils';
+import { validatePrincipalId, validateSubaccount } from './utils';
+import { StandardToken } from '../interfaces/token';
 
-export const validatePrincipalId = (text: string): boolean => {
-  try {
-    return Boolean(PRINCIPAL_REGEX.test(text) && Principal.fromText(text));
-  } catch (e) {
-    return false;
-  }
-};
 interface PlugState {
   wallets: Array<PlugWallet>;
   currentWalletId?: number;
@@ -167,6 +160,24 @@ class PlugKeyRing {
 
     this.state.wallets = wallets;
     this.saveEncryptedState({ wallets }, this.state.password);
+  };
+
+  public registerToken = async (
+    canisterId: string,
+    subAccount = 0
+  ): Promise<Array<StandardToken>> => {
+    this.checkUnlocked();
+    const index = subAccount || this.state.currentWalletId || 0;
+    const { wallets } = this.state;
+
+    validateSubaccount(index, this.state.wallets.length);
+    const wallet = wallets[index];
+    const registeredTokens = await wallet.registerToken(canisterId);
+    wallets.splice(subAccount, 1, wallet);
+
+    this.state.wallets = wallets;
+    this.saveEncryptedState({ wallets }, this.state.password);
+    return registeredTokens;
   };
 
   public getBalance = async (subAccount?: number): Promise<bigint> => {
