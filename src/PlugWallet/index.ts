@@ -1,6 +1,8 @@
 import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 
+import { ERRORS } from '../errors';
+import { validateCanisterId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
@@ -12,6 +14,7 @@ interface PlugWalletArgs {
   walletNumber: number;
   mnemonic: string;
   icon?: string;
+  registeredTokens?: Array<string>;
 }
 
 interface JSONWallet {
@@ -20,6 +23,7 @@ interface JSONWallet {
   principal: string;
   accountId: string;
   icon?: string;
+  registeredTokens?: Array<string>;
 }
 
 class PlugWallet {
@@ -33,12 +37,15 @@ class PlugWallet {
 
   principal: string;
 
+  registeredTokens: Array<string>;
+
   private identity: Secp256k1KeyIdentity;
 
   constructor({ name, icon, walletNumber, mnemonic }: PlugWalletArgs) {
     this.name = name || 'Main IC Wallet';
     this.icon = icon;
     this.walletNumber = walletNumber;
+    this.registeredTokens = [];
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -60,12 +67,21 @@ class PlugWallet {
     this.icon = val;
   }
 
+  public registerToken = (canisterId: string): Array<string> => {
+    if (!validateCanisterId(canisterId)) {
+      throw new Error(ERRORS.INVALID_CANISTER_ID);
+    }
+    this.registeredTokens.push(canisterId);
+    return this.registeredTokens;
+  };
+
   public toJSON = (): JSONWallet => ({
     name: this.name,
     walletNumber: this.walletNumber,
     principal: this.identity.getPrincipal().toText(),
     accountId: this.accountId,
     icon: this.icon,
+    registeredTokens: this.registeredTokens,
   });
 
   public getBalance = async (): Promise<bigint> => {
