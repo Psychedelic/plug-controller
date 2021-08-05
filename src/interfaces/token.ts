@@ -45,7 +45,6 @@ export default interface _SERVICE {
   'transfer' : (
       arg_0: {
         'to' : Principal,
-        'notify' : [] | [NotifyArgs],
         'from' : [] | [Principal],
         'amount' : bigint,
       },

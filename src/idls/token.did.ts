@@ -50,7 +50,6 @@ export default ({ IDL }) => {
       [
         IDL.Record({
           to: IDL.Principal,
-          notify: IDL.Opt(NotifyArgs),
           from: IDL.Opt(IDL.Principal),
           amount: IDL.Nat,
         }),
