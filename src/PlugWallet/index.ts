@@ -81,8 +81,9 @@ class PlugWallet {
       throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
     }
     const tokenDescriptor = { ...metadata, canisterId };
-    this.registeredTokens.push(tokenDescriptor);
-    return this.registeredTokens;
+    const newTokens = [...this.registeredTokens, tokenDescriptor];
+    this.registeredTokens = newTokens;
+    return newTokens;
   };
 
   public toJSON = (): JSONWallet => ({
@@ -105,15 +106,18 @@ class PlugWallet {
     // Get Custom Token Balances
     this.registeredTokens.forEach(async token => {
       const tokenActor = await createTokenActor(token.canisterId, secretKey);
+
+      console.log('fetching balances', balances);
       const tokenBalance = await tokenActor.balance([
         this.identity.getPrincipal(),
       ]);
       balances.push({
         name: token.name,
         symbol: token.symbol,
-        amount: tokenBalance.amount,
+        amount: tokenBalance,
       });
     });
+    console.log('fetched balances', balances);
     return balances;
   };
 
@@ -133,7 +137,7 @@ class PlugWallet {
     const tokenBalance = await tokenActor.balance([
       this.identity.getPrincipal(),
     ]);
-    return { token: { ...meta, canisterId }, amount: tokenBalance.amount };
+    return { token: { ...meta, canisterId }, amount: tokenBalance };
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
