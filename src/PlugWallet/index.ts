@@ -117,6 +117,25 @@ class PlugWallet {
     return balances;
   };
 
+  public getTokenInfo = async (
+    canisterId
+  ): Promise<{ token: StandardToken; amount: bigint }> => {
+    const { secretKey } = this.identity.getKeyPair();
+    if (!validateCanisterId(canisterId)) {
+      throw new Error(ERRORS.INVALID_CANISTER_ID);
+    }
+    const tokenActor = await createTokenActor(canisterId, secretKey);
+    const metadata = await tokenActor.meta();
+    if (!validateToken(metadata)) {
+      throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
+    }
+    const meta = await tokenActor.meta();
+    const tokenBalance = await tokenActor.balance([
+      this.identity.getPrincipal(),
+    ]);
+    return { token: { ...meta, canisterId }, amount: tokenBalance.amount };
+  };
+
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
     return getTransactions(this.accountId);
   };

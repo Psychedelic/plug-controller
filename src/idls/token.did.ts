@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/camelcase */
-
 export default ({ IDL }) => {
   const TokenMetaData = IDL.Record({
     features: IDL.Vec(IDL.Text),
@@ -61,6 +60,6 @@ export default ({ IDL }) => {
     ),
   });
 };
-export const init = ({ IDL }) => {
+export const init = () => {
   return [];
 };
