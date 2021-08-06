@@ -2,7 +2,7 @@ import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 
 import { ERRORS } from '../errors';
-import { StandardToken } from '../interfaces/token';
+import { StandardToken, TokenBalance } from '../interfaces/token';
 import { validateCanisterId, validateToken } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
@@ -42,11 +42,17 @@ class PlugWallet {
 
   private identity: Secp256k1KeyIdentity;
 
-  constructor({ name, icon, walletNumber, mnemonic }: PlugWalletArgs) {
+  constructor({
+    name,
+    icon,
+    walletNumber,
+    mnemonic,
+    registeredTokens,
+  }: PlugWalletArgs) {
     this.name = name || 'Main IC Wallet';
     this.icon = icon;
     this.walletNumber = walletNumber;
-    this.registeredTokens = [];
+    this.registeredTokens = registeredTokens || [];
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -81,8 +87,12 @@ class PlugWallet {
       throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
     }
     const tokenDescriptor = { ...metadata, canisterId };
-    this.registeredTokens.push(tokenDescriptor);
-    return this.registeredTokens;
+    const newTokens = [...this.registeredTokens, tokenDescriptor];
+    const unique = [
+      ...new Map(newTokens.map(token => [token.symbol, token])).values(),
+    ];
+    this.registeredTokens = unique;
+    return unique;
   };
 
   public toJSON = (): JSONWallet => ({
@@ -94,12 +104,49 @@ class PlugWallet {
     registeredTokens: this.registeredTokens,
   });
 
-  public getBalance = async (): Promise<bigint> => {
+  public getBalance = async (): Promise<Array<TokenBalance>> => {
     const { secretKey } = this.identity.getKeyPair();
+    // Get ICP Balance
     const agent = await createAgent({ secretKey });
     const ledger = await createLedgerActor(agent);
+    const icpBalance = await ledger.getBalance(this.accountId);
+    // Get Custom Token Balances
+    const tokenBalances = await Promise.all(
+      this.registeredTokens.map(async token => {
+        const tokenActor = await createTokenActor(token.canisterId, secretKey);
+        const tokenBalance = await tokenActor.balance([
+          this.identity.getPrincipal(),
+        ]);
+        return {
+          name: token.name,
+          symbol: token.symbol,
+          amount: tokenBalance,
+        };
+      })
+    );
+    return [
+      { name: 'ICP', symbol: 'ICP', amount: icpBalance },
+      ...tokenBalances,
+    ];
+  };
 
-    return ledger.getBalance(this.accountId);
+  public getTokenInfo = async (
+    canisterId
+  ): Promise<{ token: StandardToken; amount: bigint }> => {
+    const { secretKey } = this.identity.getKeyPair();
+    if (!validateCanisterId(canisterId)) {
+      throw new Error(ERRORS.INVALID_CANISTER_ID);
+    }
+    const tokenActor = await createTokenActor(canisterId, secretKey);
+    const metadata = await tokenActor.meta();
+    if (!validateToken(metadata)) {
+      throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
+    }
+    const meta = await tokenActor.meta();
+    const tokenBalance = await tokenActor.balance([
+      this.identity.getPrincipal(),
+    ]);
+    return { token: { ...meta, canisterId }, amount: tokenBalance };
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {

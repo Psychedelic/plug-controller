@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/camelcase */
-
 export default ({ IDL }) => {
   const TokenMetaData = IDL.Record({
     features: IDL.Vec(IDL.Text),
@@ -23,30 +22,9 @@ export default ({ IDL }) => {
     Err: TransferError,
   });
   return IDL.Service({
-    allowance: IDL.Func(
-      [
-        IDL.Record({
-          account: IDL.Principal,
-          spender: IDL.Opt(IDL.Principal),
-        }),
-      ],
-      [IDL.Nat],
-      ['query']
-    ),
-    approval: IDL.Func(
-      [IDL.Record({ amount: IDL.Nat, spender: IDL.Principal })],
-      [],
-      []
-    ),
-    balance: IDL.Func(
-      [IDL.Opt(IDL.Principal)],
-      [IDL.Record({ amount: IDL.Nat })],
-      ['query']
-    ),
-    compute_fee: IDL.Func([IDL.Nat], [IDL.Nat], ['query']),
     meta: IDL.Func([], [TokenMetaData], ['query']),
     meta_certified: IDL.Func([], [TokenMetaData], []),
-    total_supply: IDL.Func([], [IDL.Nat], ['query']),
+    balance: IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Nat64], []),
     transfer: IDL.Func(
       [
         IDL.Record({
@@ -61,6 +39,6 @@ export default ({ IDL }) => {
     ),
   });
 };
-export const init = ({ IDL }) => {
+export const init = () => {
   return [];
 };

@@ -13,7 +13,16 @@ export interface TokenMetaData {
   'decimal' : number,
   'symbol' : string,
 }
-export type StandardToken = TokenMetaData;
+export interface StandardToken extends TokenMetaData {
+  canisterId: string;
+}
+
+export interface TokenBalance {
+  name: string;
+  symbol: string;
+  amount: bigint;
+}
+
 export type TransactionId = bigint;
 export type TransferError = { 'CallFailed' : null } |
   { 'InsufficientBalance' : null } |
@@ -22,17 +31,9 @@ export type TransferError = { 'CallFailed' : null } |
 export type TransferResult = { 'Ok' : TransactionId } |
   { 'Err' : TransferError };
 export default interface _SERVICE {
-  'allowance' : (
-      arg_0: { 'account' : Principal, 'spender' : [] | [Principal] },
-    ) => Promise<bigint>,
-  'approval' : (arg_0: { 'amount' : bigint, 'spender' : Principal }) => Promise<
-      undefined
-    >,
-  'balance' : (arg_0: [] | [Principal]) => Promise<{ 'amount' : bigint }>,
-  'compute_fee' : (arg_0: bigint) => Promise<bigint>,
   'meta' : () => Promise<TokenMetaData>,
   'meta_certified' : () => Promise<TokenMetaData>,
-  'total_supply' : () => Promise<bigint>,
+  'balance' : (arg_0: [] | [Principal]) => Promise<bigint>,
   'transfer' : (
       arg_0: {
         'to' : Principal,
