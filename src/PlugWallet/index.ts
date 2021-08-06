@@ -42,11 +42,17 @@ class PlugWallet {
 
   private identity: Secp256k1KeyIdentity;
 
-  constructor({ name, icon, walletNumber, mnemonic }: PlugWalletArgs) {
+  constructor({
+    name,
+    icon,
+    walletNumber,
+    mnemonic,
+    registeredTokens,
+  }: PlugWalletArgs) {
     this.name = name || 'Main IC Wallet';
     this.icon = icon;
     this.walletNumber = walletNumber;
-    this.registeredTokens = [];
+    this.registeredTokens = registeredTokens || [];
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -82,8 +88,11 @@ class PlugWallet {
     }
     const tokenDescriptor = { ...metadata, canisterId };
     const newTokens = [...this.registeredTokens, tokenDescriptor];
-    this.registeredTokens = newTokens;
-    return newTokens;
+    const unique = [
+      ...new Map(newTokens.map(token => [token.symbol, token])).values(),
+    ];
+    this.registeredTokens = unique;
+    return unique;
   };
 
   public toJSON = (): JSONWallet => ({
@@ -97,28 +106,28 @@ class PlugWallet {
 
   public getBalance = async (): Promise<Array<TokenBalance>> => {
     const { secretKey } = this.identity.getKeyPair();
-    const balances: Array<TokenBalance> = [];
     // Get ICP Balance
     const agent = await createAgent({ secretKey });
     const ledger = await createLedgerActor(agent);
     const icpBalance = await ledger.getBalance(this.accountId);
-    balances.push({ name: 'ICP', symbol: 'ICP', amount: icpBalance });
     // Get Custom Token Balances
-    this.registeredTokens.forEach(async token => {
-      const tokenActor = await createTokenActor(token.canisterId, secretKey);
-
-      console.log('fetching balances', balances);
-      const tokenBalance = await tokenActor.balance([
-        this.identity.getPrincipal(),
-      ]);
-      balances.push({
-        name: token.name,
-        symbol: token.symbol,
-        amount: tokenBalance,
-      });
-    });
-    console.log('fetched balances', balances);
-    return balances;
+    const tokenBalances = await Promise.all(
+      this.registeredTokens.map(async token => {
+        const tokenActor = await createTokenActor(token.canisterId, secretKey);
+        const tokenBalance = await tokenActor.balance([
+          this.identity.getPrincipal(),
+        ]);
+        return {
+          name: token.name,
+          symbol: token.symbol,
+          amount: tokenBalance,
+        };
+      })
+    );
+    return [
+      { name: 'ICP', symbol: 'ICP', amount: icpBalance },
+      ...tokenBalances,
+    ];
   };
 
   public getTokenInfo = async (
