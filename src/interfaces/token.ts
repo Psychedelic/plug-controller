@@ -30,7 +30,26 @@ export type TransferError = { 'CallFailed' : null } |
   { 'AmountTooLarge' : null };
 export type TransferResult = { 'Ok' : TransactionId } |
   { 'Err' : TransferError };
-export default interface _SERVICE {
+
+  export interface Event {
+    'fee' : bigint,
+    'kind' : EventDetail,
+    'timestamp' : bigint,
+    'cycles' : bigint,
+  }
+  export type EventDetail = {
+      'ChargingStationDeployed' : { 'canister' : Principal }
+    } |
+    { 'Burn' : { 'to' : Principal, 'from' : Principal } } |
+    { 'Mint' : { 'to' : Principal } } |
+    { 'CanisterCreated' : { 'canister' : Principal } } |
+    { 'CanisterCalled' : { 'method_name' : string, 'canister' : Principal } } |
+    { 'Transfer' : { 'to' : Principal, 'from' : Principal } };
+  export interface EventsConnection {
+    'data' : Array<Event>,
+    'next_canister_id' : [] | [Principal],
+  }
+  export default interface _SERVICE {
   'meta' : () => Promise<TokenMetaData>,
   'meta_certified' : () => Promise<TokenMetaData>,
   'balance' : (arg_0: [] | [Principal]) => Promise<bigint>,
@@ -42,4 +61,8 @@ export default interface _SERVICE {
         'amount' : bigint,
       },
     ) => Promise<TransferResult>,
+  'events' : (arg_0: { 'after' : [] | [bigint], 'limit' : number }) => Promise<
+    EventsConnection
+  >,
 }
+

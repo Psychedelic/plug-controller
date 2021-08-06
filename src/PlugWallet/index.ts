@@ -8,7 +8,10 @@ import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor, createTokenActor } from '../utils/dfx';
 import { SendOpts } from '../utils/dfx/ledger/methods';
-import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
+import {
+  getICPTransactions,
+  GetTransactionsResponse,
+} from '../utils/dfx/rosetta';
 
 interface PlugWalletArgs {
   name?: string;
@@ -150,7 +153,37 @@ class PlugWallet {
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
-    return getTransactions(this.accountId);
+    const { secretKey } = this.identity.getKeyPair();
+    const icpTransactions = await getICPTransactions(this.accountId);
+    const tokenTransactions = await Promise.all(
+      this.registeredTokens
+        .filter(token => token.features.includes('history'))
+        .map(async token => {
+          const tokenActor = await createTokenActor(
+            token.canisterId,
+            secretKey
+          );
+          console.log('fetching history for', token.symbol);
+          const history = await tokenActor.events({
+            after: [BigInt(512)],
+            limit: 1000,
+          });
+          console.log('all trx', history, history.data.length);
+          return history.data.filter(
+            val =>
+              ('Transfer' in val.kind &&
+                (val.kind.Transfer.from.toText() === this.principal ||
+                  val.kind.Transfer.to.toText() === this.principal)) ||
+              ('Mint' in val.kind &&
+                val.kind.Mint.to.toText() === this.principal) ||
+              ('Burn' in val.kind &&
+                (val.kind.Burn.from.toText() === this.principal ||
+                  val.kind.Burn.to.toText() === this.principal))
+          );
+        })
+    );
+    console.log('token transactions', tokenTransactions);
+    return icpTransactions; // , ...tokenTransactions.flat()] as any;
   };
 
   public sendICP = async (

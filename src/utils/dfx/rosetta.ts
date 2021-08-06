@@ -81,7 +81,7 @@ const getTransactionInfo = (
   return { ...transaction, hash, timestamp } as InferredTransaction;
 };
 
-export const getTransactions = async (
+export const getICPTransactions = async (
   accountId: string
 ): Promise<GetTransactionsResponse> => {
   const response = await fetch(`${ROSETTA_URL}/search/transactions`, {

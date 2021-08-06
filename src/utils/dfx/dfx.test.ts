@@ -1,6 +1,4 @@
-import fetch from 'cross-fetch';
-
-import { getTransactions } from './rosetta';
+import { getICPTransactions } from './rosetta';
 import {
   mockRosettaTransaction,
   mockTransactionResult,
@@ -13,9 +11,9 @@ jest.mock('cross-fetch', () =>
 
 describe('DFX Utils', () => {
   describe('rosetta', () => {
-    describe('getTransactions', () => {
+    describe('getICPTransactions', () => {
       it('get correct info', async () => {
-        expect(await getTransactions(mockAccountID)).toMatchObject(
+        expect(await getICPTransactions(mockAccountID)).toMatchObject(
           mockTransactionResult
         );
       });
