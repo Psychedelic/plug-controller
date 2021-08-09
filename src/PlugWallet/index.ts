@@ -121,11 +121,12 @@ class PlugWallet {
           name: token.name,
           symbol: token.symbol,
           amount: tokenBalance,
+          canisterId: token.canisterId
         };
       })
     );
     return [
-      { name: 'ICP', symbol: 'ICP', amount: icpBalance },
+      { name: 'ICP', symbol: 'ICP', amount: icpBalance, canisterId: null },
       ...tokenBalances,
     ];
   };
