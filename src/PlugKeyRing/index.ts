@@ -212,9 +212,10 @@ class PlugKeyRing {
     if (!this.isInitialized) throw new Error(ERRORS.NOT_INITIALIZED);
   };
 
-  public sendICP = async (
+  public send = async (
     to: string,
     amount: bigint,
+    canisterId?: string,
     opts?: SendOpts
   ): Promise<bigint> => {
     this.checkUnlocked();
@@ -223,12 +224,18 @@ class PlugKeyRing {
     if (validatePrincipalId(to)) {
       account = getAccountId(Principal.fromText(to));
     }
-    return this.state.wallets[currentWalletNumber || 0].sendICP(
+    return this.state.wallets[currentWalletNumber || 0].send(
       account,
       amount,
+      canisterId,
       opts
     );
   };
+
+  public get currentWallet(): PlugWallet {
+    this.checkUnlocked();
+    return this.state.wallets[this.state.currentWalletId || 0];
+  }
 
   public getPemFile = (walletNumber?: number): string => {
     this.checkUnlocked();

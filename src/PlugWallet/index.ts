@@ -1,4 +1,4 @@
-import { PublicKey } from '@dfinity/agent';
+import { Principal, PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 
 import { ERRORS } from '../errors';
@@ -121,11 +121,12 @@ class PlugWallet {
           name: token.name,
           symbol: token.symbol,
           amount: tokenBalance,
+          canisterId: token.canisterId,
         };
       })
     );
     return [
-      { name: 'ICP', symbol: 'ICP', amount: icpBalance },
+      { name: 'ICP', symbol: 'ICP', amount: icpBalance, canisterId: null },
       ...tokenBalances,
     ];
   };
@@ -153,15 +154,31 @@ class PlugWallet {
     return getTransactions(this.accountId);
   };
 
-  public sendICP = async (
+  public send = async (
     to: string,
     amount: bigint,
+    canisterId?: string,
     opts?: SendOpts
   ): Promise<bigint> => {
     const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
-    const ledger = await createLedgerActor(agent);
-    return ledger.sendICP({ to, amount, opts });
+    if (canisterId) {
+      const tokenActor = await createTokenActor(canisterId, secretKey);
+      const result = await tokenActor.transfer({
+        to: Principal.fromText(to),
+        from: [this.identity.getPrincipal()],
+        amount,
+      });
+
+      if ('Ok' in result) {
+        return result.Ok;
+      }
+
+      throw new Error(Object.keys(result.Err)[0]);
+    } else {
+      const agent = await createAgent({ secretKey });
+      const ledger = await createLedgerActor(agent);
+      return ledger.sendICP({ to, amount, opts });
+    }
   };
 
   public get publicKey(): PublicKey {

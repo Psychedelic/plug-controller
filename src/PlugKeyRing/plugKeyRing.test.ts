@@ -7,7 +7,7 @@ import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/rosetta';
 import PlugWallet from '../PlugWallet';
-import { createAgent } from '../utils/dfx';
+import { createAgent, createTokenActor } from '../utils/dfx';
 import store from '../utils/storage/mock';
 import { getAccountId } from '../utils/account';
 
@@ -526,7 +526,7 @@ describe('Plug KeyRing', () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = wallets[ind].principal;
 
-      await keyRing.sendICP(to.toString(), amount);
+      await keyRing.send(to.toString(), amount);
       expect(createAgent).toHaveBeenCalled();
     });
     it('call sendICP with to account', async () => {
@@ -535,7 +535,7 @@ describe('Plug KeyRing', () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = getAccountId(Principal.fromText(wallets[ind].principal));
 
-      await keyRing.sendICP(to, amount);
+      await keyRing.send(to, amount);
       expect(createAgent).toHaveBeenCalled();
       expect(mockSendICP.mock.calls[0][0].amount).toEqual(amount);
       expect(mockSendICP.mock.calls[0][0].to).toEqual(to);
@@ -547,13 +547,30 @@ describe('Plug KeyRing', () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = wallets[ind].principal;
 
-      await keyRing.sendICP(to.toString(), amount);
+      await keyRing.send(to.toString(), amount);
       expect(createAgent).toHaveBeenCalled();
       expect(mockSendICP.mock.calls[0][0].amount).toEqual(amount);
       expect(mockSendICP.mock.calls[0][0].to).toEqual(
         getAccountId(Principal.fromText(to))
       );
     });
+
+    /*
+    it('call sendICP with token canister id', async () => {
+      const { wallets } = await keyRing.getState();
+      const amount = RandomBigInt(32);
+      const ind = Math.round(Math.random() * (walletsCreated - 1));
+      const to = wallets[ind].principal;
+
+      await keyRing.send(to.toString(), amount, XTC_MOCK.canisterId);
+      expect(createTokenActor).toHaveBeenCalled();
+
+      expect(mockSendICP.mock.calls[0][0].amount).toEqual(amount);
+      expect(mockSendICP.mock.calls[0][0].to).toEqual(
+        getAccountId(Principal.fromText(to))
+      );
+    });
+    */
 
     afterEach(() => {
       jest.clearAllMocks();
