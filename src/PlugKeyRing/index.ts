@@ -232,6 +232,11 @@ class PlugKeyRing {
     );
   };
 
+  public get currentWallet(): PlugWallet {
+    this.checkUnlocked();
+    return this.state.wallets[this.state.currentWalletId || 0];
+  }
+
   public getPemFile = (walletNumber?: number): string => {
     this.checkUnlocked();
     const currentWalletNumber = walletNumber || this.state.currentWalletId || 0;

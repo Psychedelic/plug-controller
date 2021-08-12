@@ -121,11 +121,12 @@ class PlugWallet {
           name: token.name,
           symbol: token.symbol,
           amount: tokenBalance,
+          canisterId: token.canisterId,
         };
       })
     );
     return [
-      { name: 'ICP', symbol: 'ICP', amount: icpBalance },
+      { name: 'ICP', symbol: 'ICP', amount: icpBalance, canisterId: null },
       ...tokenBalances,
     ];
   };
@@ -160,26 +161,23 @@ class PlugWallet {
     opts?: SendOpts
   ): Promise<bigint> => {
     const { secretKey } = this.identity.getKeyPair();
-
-    if (!canisterId) {
-      const agent = await createAgent({ secretKey });
-      const ledger = await createLedgerActor(agent);
-      return ledger.sendICP({ to, amount, opts });
-    }
-    else {
+    if (canisterId) {
       const tokenActor = await createTokenActor(canisterId, secretKey);
       const result = await tokenActor.transfer({
         to: Principal.fromText(to),
         from: [this.identity.getPrincipal()],
-        amount
+        amount,
       });
 
       if ('Ok' in result) {
-        return result.Ok
+        return result.Ok;
       }
-      else {
-        throw new Error(Object.keys(result.Err)[0]);
-      }
+
+      throw new Error(Object.keys(result.Err)[0]);
+    } else {
+      const agent = await createAgent({ secretKey });
+      const ledger = await createLedgerActor(agent);
+      return ledger.sendICP({ to, amount, opts });
     }
   };
 
