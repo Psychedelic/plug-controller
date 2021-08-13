@@ -103,9 +103,9 @@ class PlugKeyRing {
     return wallet;
   };
 
-  public setCurrentPrincipal = async (wallet: PlugWallet): Promise<void> => {
+  public setCurrentPrincipal = async (walletNumber: number): Promise<void> => {
     await this.checkInitialized();
-    this.state.currentWalletId = wallet.walletNumber;
+    this.state.currentWalletId = walletNumber;
   };
 
   public getState = async (): Promise<PlugState> => {

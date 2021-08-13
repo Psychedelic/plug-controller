@@ -7,7 +7,7 @@ import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/rosetta';
 import PlugWallet from '../PlugWallet';
-import { createAgent, createTokenActor } from '../utils/dfx';
+import { createAgent } from '../utils/dfx';
 import store from '../utils/storage/mock';
 import { getAccountId } from '../utils/account';
 
@@ -83,7 +83,7 @@ describe('Plug KeyRing', () => {
   describe('initialization', () => {
     it('should be empty and locked if not initialized', async () => {
       await expect(() =>
-        keyRing.setCurrentPrincipal(testWallet)
+        keyRing.setCurrentPrincipal(testWallet.walletNumber)
       ).rejects.toEqual(Error(ERRORS.NOT_INITIALIZED));
       await expect(() => keyRing.unlock(TEST_PASSWORD)).rejects.toEqual(
         Error(ERRORS.NOT_INITIALIZED)
@@ -347,7 +347,7 @@ describe('Plug KeyRing', () => {
       const wallet = await keyRing.createPrincipal();
       const state = await keyRing.getState();
       expect(state.currentWalletId).toEqual(0);
-      await keyRing.setCurrentPrincipal(wallet);
+      await keyRing.setCurrentPrincipal(wallet.walletNumber);
       expect(state.currentWalletId).toEqual(wallet.walletNumber);
     });
     it('should create new wallets with a default name', async () => {
