@@ -9,7 +9,7 @@ import { createAccount, getAccountId } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import Storage from '../utils/storage';
 import mockStore from '../utils/storage/mock';
-import { validatePrincipalId, validateSubaccount } from './utils';
+import { validatePrincipalId } from './utils';
 import { StandardToken, TokenBalance } from '../interfaces/token';
 
 interface PlugState {
@@ -42,7 +42,7 @@ class PlugKeyRing {
 
   public getPublicKey = async (subaccount = 0): Promise<PublicKey> => {
     await this.checkInitialized();
-    validateSubaccount(subaccount, this.state.wallets.length);
+    this.validateSubaccount(subaccount);
     const wallet = this.state.wallets[subaccount];
     return wallet.publicKey;
   };
@@ -103,9 +103,10 @@ class PlugKeyRing {
     return wallet;
   };
 
-  public setCurrentPrincipal = async (wallet: PlugWallet): Promise<void> => {
+  public setCurrentPrincipal = async (walletNumber: number): Promise<void> => {
     await this.checkInitialized();
-    this.state.currentWalletId = wallet.walletNumber;
+    this.validateSubaccount(walletNumber);
+    this.state.currentWalletId = walletNumber;
   };
 
   public getState = async (): Promise<PlugState> => {
@@ -119,7 +120,7 @@ class PlugKeyRing {
     subaccount = 0
   ): Promise<BinaryBlob> => {
     this.checkUnlocked();
-    validateSubaccount(subaccount, this.state.wallets.length);
+    this.validateSubaccount(subaccount);
     const wallet = this.state.wallets[subaccount];
     const signed = await wallet.sign(payload);
     return signed;
@@ -151,7 +152,7 @@ class PlugKeyRing {
   ): Promise<void> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    validateSubaccount(walletNumber, this.state.wallets.length);
+    this.validateSubaccount(walletNumber);
     const wallet = this.state.wallets[walletNumber];
     if (name) wallet.setName(name);
     if (emoji) wallet.setIcon(emoji);
@@ -170,7 +171,7 @@ class PlugKeyRing {
     const index = subAccount || this.state.currentWalletId || 0;
     const { wallets } = this.state;
 
-    validateSubaccount(index, this.state.wallets.length);
+    this.validateSubaccount(index);
     const wallet = wallets[index];
     const registeredTokens = await wallet.registerToken(canisterId);
     wallets.splice(subAccount, 1, wallet);
@@ -184,7 +185,7 @@ class PlugKeyRing {
   ): Promise<Array<TokenBalance>> => {
     this.checkUnlocked();
     const index = subAccount || this.state.currentWalletId || 0;
-    validateSubaccount(index, this.state.wallets.length);
+    this.validateSubaccount(index);
     return this.state.wallets[index].getBalance();
   };
 
@@ -194,7 +195,7 @@ class PlugKeyRing {
   ): Promise<{ token: StandardToken; amount: bigint }> => {
     this.checkUnlocked();
     const index = subAccount || this.state.currentWalletId || 0;
-    validateSubaccount(index, this.state.wallets.length);
+    this.validateSubaccount(index);
     return this.state.wallets[index].getTokenInfo(canisterId);
   };
 
@@ -203,9 +204,19 @@ class PlugKeyRing {
   ): Promise<GetTransactionsResponse> => {
     this.checkUnlocked();
     const index = subAccount || this.state.currentWalletId || 0;
-    validateSubaccount(index, this.state.wallets.length);
+    this.validateSubaccount(index);
     return this.state.wallets[index].getTransactions();
   };
+
+  private validateSubaccount(subaccount: number): void {
+    if (
+      subaccount < 0 ||
+      !Number.isInteger(subaccount) ||
+      subaccount >= (this.state.wallets.length || 0)
+    ) {
+      throw new Error(ERRORS.INVALID_WALLET_NUMBER);
+    }
+  }
 
   private checkInitialized = async (): Promise<void> => {
     await this.init();
@@ -240,7 +251,7 @@ class PlugKeyRing {
   public getPemFile = (walletNumber?: number): string => {
     this.checkUnlocked();
     const currentWalletNumber = walletNumber || this.state.currentWalletId || 0;
-    validateSubaccount(currentWalletNumber, this.state.wallets.length);
+    this.validateSubaccount(currentWalletNumber);
     return this.state.wallets[currentWalletNumber].pemFile;
   };
 
