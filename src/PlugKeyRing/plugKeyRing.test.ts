@@ -372,6 +372,26 @@ describe('Plug KeyRing', () => {
       });
       expect(newWallet.name).toEqual('Main IC Wallet');
     });
+    it('should create new wallets with a correct name and emoji', async () => {
+      const { wallet } = await keyRing.create({ password: TEST_PASSWORD });
+      await keyRing.unlock(TEST_PASSWORD);
+      const wallet2 = await keyRing.createPrincipal({
+        name: 'My new wallet',
+        icon: ':smile:',
+      }); // TODO: TS does not like emojis, but they are unicode strings
+      expect(wallet2.name).toEqual('My new wallet');
+      expect(wallet2.icon).toEqual(':smile:');
+      const wallet3 = await keyRing.createPrincipal({
+        name: 'My third wallet',
+      }); // TODO: TS does not like emojis, but they are unicode strings
+      expect(wallet3.name).toEqual('My third wallet');
+      expect(wallet3.icon).toEqual(wallet.icon);
+      const wallet4 = await keyRing.createPrincipal({
+        icon: ':crying:',
+      }); // TODO: TS does not like emojis, but they are unicode strings
+      expect(wallet4.name).toEqual(wallet.name);
+      expect(wallet4.icon).toEqual(':crying:');
+    });
     it('should change the wallets name correctly', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
