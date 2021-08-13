@@ -1,23 +1,9 @@
 import { Principal } from '@dfinity/agent';
-import { ERRORS } from '../errors';
+
 import { PRINCIPAL_REGEX, CANISTER_MAX_LENGTH } from '../utils/dfx/constants';
 
-export const isValidPrincipal = text =>
+export const isValidPrincipal = (text: string): boolean =>
   Principal.fromText(text).toText() === text;
-
-// eslint-disable-next-line
-export const validateSubaccount = (
-  subaccount: number,
-  walletCount: number
-) => {
-  if (
-    subaccount < 0 ||
-    !Number.isInteger(subaccount) ||
-    subaccount >= walletCount
-  ) {
-    throw new Error(ERRORS.INVALID_WALLET_NUMBER);
-  }
-};
 
 export const validatePrincipalId = (text: string): boolean => {
   try {

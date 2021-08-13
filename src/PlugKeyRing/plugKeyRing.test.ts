@@ -350,6 +350,19 @@ describe('Plug KeyRing', () => {
       await keyRing.setCurrentPrincipal(wallet.walletNumber);
       expect(state.currentWalletId).toEqual(wallet.walletNumber);
     });
+    it('should fail to set invalid current principal ', async () => {
+      await keyRing.create({ password: TEST_PASSWORD });
+      await keyRing.unlock(TEST_PASSWORD);
+      await expect(() => keyRing.setCurrentPrincipal(1)).rejects.toEqual(
+        new Error(ERRORS.INVALID_WALLET_NUMBER)
+      );
+      await expect(() => keyRing.setCurrentPrincipal(-2)).rejects.toEqual(
+        new Error(ERRORS.INVALID_WALLET_NUMBER)
+      );
+      await expect(() => keyRing.setCurrentPrincipal(1.2)).rejects.toEqual(
+        new Error(ERRORS.INVALID_WALLET_NUMBER)
+      );
+    });
     it('should create new wallets with a default name', async () => {
       const { wallet } = await keyRing.create({ password: TEST_PASSWORD });
       expect(wallet.name).toEqual('Main IC Wallet');
