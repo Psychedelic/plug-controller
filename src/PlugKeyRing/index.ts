@@ -90,12 +90,16 @@ class PlugKeyRing {
   };
 
   // Assumes the state is already initialized
-  public createPrincipal = async (): Promise<PlugWallet> => {
+  public createPrincipal = async (opts?: {
+    name?: string;
+    icon?: string;
+  }): Promise<PlugWallet> => {
     await this.checkInitialized();
     this.checkUnlocked();
     const wallet = new PlugWallet({
       mnemonic: this.state.mnemonic as string,
       walletNumber: this.state.wallets.length,
+      ...opts,
     });
     const wallets = [...this.state.wallets, wallet];
     await this.saveEncryptedState({ wallets }, this.state.password);
