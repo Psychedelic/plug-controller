@@ -74,25 +74,26 @@ class PlugWallet {
     this.icon = val;
   }
 
-  public registerToken = async (
-    canisterId: string
-  ): Promise<Array<StandardToken>> => {
+  public registerToken = async (canisterId: string): Promise<any> => {
     const { secretKey } = this.identity.getKeyPair();
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
+    console.log('HELLOOO');
     const tokenActor = await createTokenActor(canisterId, secretKey);
-    const metadata = await tokenActor.meta();
-    if (!validateToken(metadata)) {
-      throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
-    }
-    const tokenDescriptor = { ...metadata, canisterId };
-    const newTokens = [...this.registeredTokens, tokenDescriptor];
-    const unique = [
-      ...new Map(newTokens.map(token => [token.symbol, token])).values(),
-    ];
-    this.registeredTokens = unique;
-    return unique;
+    console.log('EXT TOKEN ACTOR', tokenActor);
+
+    // const metadata = await tokenActor.meta();
+    // if (!validateToken(metadata)) {
+    //   throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
+    // }
+    // const tokenDescriptor = { ...metadata, canisterId };
+    // const newTokens = [...this.registeredTokens, tokenDescriptor];
+    // const unique = [
+    //   ...new Map(newTokens.map(token => [token.symbol, token])).values(),
+    // ];
+    // this.registeredTokens = unique;
+    // return unique;
   };
 
   public toJSON = (): JSONWallet => ({
@@ -131,23 +132,23 @@ class PlugWallet {
     ];
   };
 
-  public getTokenInfo = async (
-    canisterId
-  ): Promise<{ token: StandardToken; amount: bigint }> => {
+  public getTokenInfo = async (canisterId: string) => {
     const { secretKey } = this.identity.getKeyPair();
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
+    console.log('HELLOOO');
     const tokenActor = await createTokenActor(canisterId, secretKey);
-    const metadata = await tokenActor.meta();
-    if (!validateToken(metadata)) {
-      throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
-    }
-    const meta = await tokenActor.meta();
-    const tokenBalance = await tokenActor.balance([
-      this.identity.getPrincipal(),
-    ]);
-    return { token: { ...meta, canisterId }, amount: tokenBalance };
+    console.log('EXT TOKEN ACTOR', tokenActor);
+    // const metadata = await tokenActor.meta();
+    // if (!validateToken(metadata)) {
+    //   throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
+    // }
+    // const meta = await tokenActor.meta();
+    // const tokenBalance = await tokenActor.balance([
+    //   this.identity.getPrincipal(),
+    // ]);
+    // return { token: { ...meta, canisterId }, amount: tokenBalance };
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
