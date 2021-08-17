@@ -8,5 +8,7 @@ export const ERRORS = {
   GET_TRANSACTIONS_FAILS: 'Get transactions fails',
   INVALID_CANISTER_ID: 'The provided canister id is invalid',
   TOKEN_NOT_SUPPORTED:
-    'The provided canister does not implement Psychedelic token interface. Please refer to "https://github.com/Psychedelic/token-standard" for further information.',
+    'The provided canister does not implement common extensions from EXT token interface. Please refer to "https://github.com/Toniq-Labs/extendable-token" for further information.',
+  NON_FUNGIBLE_TOKEN_NOT_SUPPORTED:
+    'Non fungible tokens are note supported yet',
 };
