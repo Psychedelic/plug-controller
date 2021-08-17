@@ -10,6 +10,7 @@ import tokenIDLFactory from '../../idls/ext.did';
 // import TokenService from '../../interfaces/token';
 import { IC_HOST } from './constants';
 import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
+import TokenService from '../../interfaces/token';
 
 if (process.env.NODE_ENV !== 'production') config();
 
@@ -40,12 +41,15 @@ export const createAgent = async ({
 export const createTokenActor = async (
   canisterId: string,
   secretKey: Uint8Array
-): Promise<ActorSubclass<any>> => {
+): Promise<ActorSubclass<TokenService>> => {
   const agent = await createAgent({ secretKey });
-  const actor = Actor.createActor<ActorSubclass<any>>(tokenIDLFactory, {
-    agent,
-    canisterId,
-  });
+  const actor = Actor.createActor<ActorSubclass<TokenService>>(
+    tokenIDLFactory,
+    {
+      agent,
+      canisterId,
+    }
+  );
   return actor;
 };
 

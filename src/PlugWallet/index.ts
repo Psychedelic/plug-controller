@@ -1,9 +1,10 @@
 import { Principal, PublicKey } from '@dfinity/agent';
-import { BinaryBlob } from '@dfinity/candid';
+
+import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
 
 import { ERRORS } from '../errors';
 import { StandardToken, TokenBalance } from '../interfaces/token';
-import { validateCanisterId, validateToken } from '../PlugKeyRing/utils';
+import { validateCanisterId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor, createTokenActor } from '../utils/dfx';
@@ -83,17 +84,34 @@ class PlugWallet {
     const tokenActor = await createTokenActor(canisterId, secretKey);
     console.log('EXT TOKEN ACTOR', tokenActor);
 
-    // const metadata = await tokenActor.meta();
-    // if (!validateToken(metadata)) {
-    //   throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
-    // }
-    // const tokenDescriptor = { ...metadata, canisterId };
-    // const newTokens = [...this.registeredTokens, tokenDescriptor];
-    // const unique = [
-    //   ...new Map(newTokens.map(token => [token.symbol, token])).values(),
-    // ];
-    // this.registeredTokens = unique;
-    // return unique;
+    const extensions = await tokenActor.extensions();
+
+    console.log('EXT TOKEN.extensions', extensions);
+
+    if (!extensions.includes('@ext/common')) {
+      throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
+    }
+
+    const metadataResult = await tokenActor.metadata(canisterId);
+
+    if (!('ok' in metadataResult)) {
+      throw new Error(Object.keys(metadataResult.error)[0]);
+    }
+
+    const metadata = metadataResult.ok;
+
+    console.log('EXT TOKEN.metadata', metadata);
+
+    if (!('fungible' in metadata)) {
+      throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
+    }
+    const tokenDescriptor = { ...metadata.fungible, canisterId };
+    const newTokens = [...this.registeredTokens, tokenDescriptor];
+    const unique = [
+      ...new Map(newTokens.map(token => [token.symbol, token])).values(),
+    ];
+    this.registeredTokens = unique;
+    return unique;
   };
 
   public toJSON = (): JSONWallet => ({
@@ -115,13 +133,17 @@ class PlugWallet {
     const tokenBalances = await Promise.all(
       this.registeredTokens.map(async token => {
         const tokenActor = await createTokenActor(token.canisterId, secretKey);
-        const tokenBalance = await tokenActor.balance([
-          this.identity.getPrincipal(),
-        ]);
+        const tokenBalance = await tokenActor.balance({
+          user: { principal: this.identity.getPrincipal() },
+          token: token.canisterId,
+        });
+        if (!('ok' in tokenBalance)) {
+          throw new Error(Object.keys(tokenBalance.error)[0]);
+        }
         return {
           name: token.name,
           symbol: token.symbol,
-          amount: tokenBalance,
+          amount: tokenBalance.ok,
           canisterId: token.canisterId,
         };
       })
@@ -164,17 +186,21 @@ class PlugWallet {
     const { secretKey } = this.identity.getKeyPair();
     if (canisterId) {
       const tokenActor = await createTokenActor(canisterId, secretKey);
+      const dummyMemmo = new Uint8Array();
       const result = await tokenActor.transfer({
-        to: Principal.fromText(to),
-        from: [this.identity.getPrincipal()],
+        to: { principal: Principal.fromText(to) },
+        from: { principal: this.identity.getPrincipal() },
         amount,
+        token: canisterId,
+        memo: blobFromUint8Array(dummyMemmo),
+        notify: false,
       });
 
-      if ('Ok' in result) {
-        return result.Ok;
+      if (typeof result === 'bigint') {
+        return result;
       }
 
-      throw new Error(Object.keys(result.Err)[0]);
+      throw new Error(Object.keys(result)[0]);
     } else {
       const agent = await createAgent({ secretKey });
       const ledger = await createLedgerActor(agent);
