@@ -9,7 +9,7 @@ export default ({ IDL }) => {
   const AccountIdentifier_2 = IDL.Text;
   const AccountIdentifier = AccountIdentifier_2;
   const AccountIdentifier_3 = AccountIdentifier;
-  const Fee = IDL.Nat64;
+  const Fee = IDL.Nat;
   const Settlement = IDL.Record({
     subaccount: SubAccount_3,
     seller: IDL.Principal,
@@ -111,7 +111,7 @@ export default ({ IDL }) => {
     memo: Memo,
     subaccount: IDL.Opt(SubAccount),
     amount: Balance,
-    fee: IDL.Opt(Fee),
+    fee: Fee,
   });
   const TransferRequest = TransferRequest_2;
   const Result = IDL.Variant({
