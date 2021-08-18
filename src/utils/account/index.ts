@@ -58,7 +58,7 @@ const getAccountCredentials = (
     keyPair.publicKey.toRaw(),
     keyPair.secretKey
   );
-  const accountId = getAccountId(identity.getPrincipal(), subAccount);
+  const accountId = getAccountId(identity.getPrincipal());
   return {
     mnemonic,
     identity,

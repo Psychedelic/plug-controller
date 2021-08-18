@@ -12,7 +12,9 @@ export type Balance = bigint;
 
 export type SubAccount = number[];
 
-export type Memo = BinaryBlob;
+export type Memo = number[];
+
+export type Fee = bigint;
 
 export type User =
   | {
@@ -79,10 +81,11 @@ export interface TransferRequest {
   to: User;
   from: User;
   token: TokenIdentifier;
-  amount: Balance;
+  amount: number;
   memo: Memo;
   notify: boolean;
   subacount?: SubAccount;
+  fee: Fee;
 }
 export type TransferResponse = Result<Balance, TransferError>;
 

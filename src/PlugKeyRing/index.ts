@@ -233,7 +233,7 @@ class PlugKeyRing {
     this.checkUnlocked();
     const currentWalletNumber = this.state.currentWalletId;
     let account = to;
-    if (validatePrincipalId(to)) {
+    if (!canisterId && validatePrincipalId(to)) {
       account = getAccountId(Principal.fromText(to));
     }
     return this.state.wallets[currentWalletNumber || 0].send(

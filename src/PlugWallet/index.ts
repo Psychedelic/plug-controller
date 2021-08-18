@@ -159,18 +159,28 @@ class PlugWallet {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    console.log('HELLOOO');
     const tokenActor = await createTokenActor(canisterId, secretKey);
-    console.log('EXT TOKEN ACTOR', tokenActor);
-    // const metadata = await tokenActor.meta();
-    // if (!validateToken(metadata)) {
-    //   throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
-    // }
-    // const meta = await tokenActor.meta();
-    // const tokenBalance = await tokenActor.balance([
-    //   this.identity.getPrincipal(),
-    // ]);
-    // return { token: { ...meta, canisterId }, amount: tokenBalance };
+    const extensions = await tokenActor.extensions();
+    if (!extensions.includes('@ext/common')) {
+      throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
+    }
+    const metadataResult = await tokenActor.metadata(canisterId);
+    if (!('ok' in metadataResult)) {
+      throw new Error(Object.keys(metadataResult.error)[0]);
+    }
+    const metadata = metadataResult.ok;
+    if (!('fungible' in metadata)) {
+      throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
+    }
+    const tokenBalance = await tokenActor.balance({
+      user: { principal: this.identity.getPrincipal() },
+      token: canisterId,
+    });
+    const token = { ...metadata.fungible, canisterId };
+    if (!('ok' in tokenBalance)) {
+      throw new Error(Object.keys(tokenBalance.error)[0]);
+    }
+    return { token, amount: tokenBalance?.ok };
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
@@ -184,18 +194,23 @@ class PlugWallet {
     opts?: SendOpts
   ): Promise<bigint> => {
     const { secretKey } = this.identity.getKeyPair();
+    console.log('controller sending');
     if (canisterId) {
       const tokenActor = await createTokenActor(canisterId, secretKey);
-      const dummyMemmo = new Uint8Array();
-      const result = await tokenActor.transfer({
+      const dummyMemmo = new Array(32).fill(0);
+      const data = {
         to: { principal: Principal.fromText(to) },
         from: { principal: this.identity.getPrincipal() },
-        amount,
+        amount: parseInt(amount.toString(), 10),
         token: canisterId,
-        memo: blobFromUint8Array(dummyMemmo),
+        memo: dummyMemmo,
         notify: false,
-      });
-
+        subaccount: [],
+        fee: BigInt(0),
+      };
+      console.log('data to send', data);
+      const result = await tokenActor.transfer(data);
+      console.log('sent to canister', canisterId, result);
       if (typeof result === 'bigint') {
         return result;
       }
