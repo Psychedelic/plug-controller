@@ -1,6 +1,7 @@
 import CryptoJS from 'crypto-js';
-import { Principal, PublicKey } from '@dfinity/agent';
+import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
+import { Principal } from '@dfinity/principal';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/rosetta';

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/class-name-casing */
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/camelcase */
-import { Principal } from '@dfinity/agent';
+import { Principal } from '@dfinity/principal';
 import { BinaryBlob } from '@dfinity/candid';
 
 export type AccountIdentifier = string;
@@ -81,7 +81,7 @@ export interface TransferRequest {
   to: User;
   from: User;
   token: TokenIdentifier;
-  amount: number;
+  amount: Balance;
   memo: Memo;
   notify: boolean;
   subacount?: SubAccount;

@@ -1,4 +1,4 @@
-import type { Principal } from '@dfinity/agent/lib/cjs';
+import type { Principal } from '@dfinity/principal';
 export interface AllowanceRule {
   'max_portion' : [] | [bigint],
   'max_allowed_calls_per_day' : [] | [number],

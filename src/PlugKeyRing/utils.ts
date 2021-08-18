@@ -1,4 +1,4 @@
-import { Principal } from '@dfinity/agent';
+import { Principal } from '@dfinity/principal';
 
 import { PRINCIPAL_REGEX, CANISTER_MAX_LENGTH } from '../utils/dfx/constants';
 

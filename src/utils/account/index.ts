@@ -1,6 +1,6 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
-import { Principal } from '@dfinity/agent';
+import { Principal } from '@dfinity/principal';
 
 import { ERRORS } from '../../errors';
 
@@ -28,7 +28,7 @@ export const getAccountId = (
 ): string => {
   const sha = CryptoJS.algo.SHA224.create();
   sha.update(ACCOUNT_DOMAIN_SEPERATOR); // Internally parsed with UTF-8, like go does
-  sha.update(byteArrayToWordArray(Uint8Array.from(principal.toBlob())));
+  sha.update(byteArrayToWordArray(principal.toUint8Array()));
   const subBuffer = Buffer.from(SUB_ACCOUNT_ZERO);
   if (subAccount) {
     subBuffer.writeUInt32BE(subAccount);

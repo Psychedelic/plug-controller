@@ -1,4 +1,4 @@
-import { Principal } from '@dfinity/agent';
+import { Principal } from '@dfinity/principal';
 
 export interface AccountBalanceArgs {
   account: AccountIdentifier;

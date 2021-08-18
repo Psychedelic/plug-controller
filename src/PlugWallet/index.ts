@@ -1,6 +1,6 @@
-import { Principal, PublicKey } from '@dfinity/agent';
-
-import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
+import { PublicKey } from '@dfinity/agent';
+import { BinaryBlob } from '@dfinity/candid';
+import { Principal } from '@dfinity/principal';
 
 import { ERRORS } from '../errors';
 import { StandardToken, TokenBalance } from '../interfaces/token';
@@ -80,13 +80,9 @@ class PlugWallet {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    console.log('HELLOOO');
     const tokenActor = await createTokenActor(canisterId, secretKey);
-    console.log('EXT TOKEN ACTOR', tokenActor);
 
     const extensions = await tokenActor.extensions();
-
-    console.log('EXT TOKEN.extensions', extensions);
 
     if (!extensions.includes('@ext/common')) {
       throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
@@ -99,8 +95,6 @@ class PlugWallet {
     }
 
     const metadata = metadataResult.ok;
-
-    console.log('EXT TOKEN.metadata', metadata);
 
     if (!('fungible' in metadata)) {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
@@ -196,19 +190,19 @@ class PlugWallet {
     const { secretKey } = this.identity.getKeyPair();
     console.log('controller sending');
     if (canisterId) {
+      console.log('SENDING CUSTOM TOKEN');
       const tokenActor = await createTokenActor(canisterId, secretKey);
       const dummyMemmo = new Array(32).fill(0);
       const data = {
         to: { principal: Principal.fromText(to) },
         from: { principal: this.identity.getPrincipal() },
-        amount: parseInt(amount.toString(), 10),
+        amount: BigInt(amount),
         token: canisterId,
         memo: dummyMemmo,
         notify: false,
         subaccount: [],
-        fee: BigInt(0),
+        fee: BigInt(1),
       };
-      console.log('data to send', data);
       const result = await tokenActor.transfer(data);
       console.log('sent to canister', canisterId, result);
       if (typeof result === 'bigint') {
@@ -217,6 +211,7 @@ class PlugWallet {
 
       throw new Error(Object.keys(result)[0]);
     } else {
+      console.log('SENDING ICP TOKEN');
       const agent = await createAgent({ secretKey });
       const ledger = await createLedgerActor(agent);
       return ledger.sendICP({ to, amount, opts });

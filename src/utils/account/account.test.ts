@@ -1,4 +1,4 @@
-import { Principal } from '@dfinity/agent';
+import { Principal } from '@dfinity/principal';
 import { ERRORS } from '../../errors';
 import { AccountCredentials } from '../../interfaces/account';
 import { Secp256k1KeyPair } from '../crypto/keys';

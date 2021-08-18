@@ -1,7 +1,7 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import RandomBigInt from 'random-bigint';
-import { Principal } from '@dfinity/agent';
+import { Principal } from '@dfinity/principal';
 
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
