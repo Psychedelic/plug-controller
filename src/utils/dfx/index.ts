@@ -10,7 +10,7 @@ import tokenIDLFactory from '../../idls/ext.did';
 // import TokenService from '../../interfaces/token';
 import { IC_HOST } from './constants';
 import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
-import TokenService from '../../interfaces/token';
+import TokenService from '../../interfaces/ext';
 
 if (process.env.NODE_ENV !== 'production') config();
 
