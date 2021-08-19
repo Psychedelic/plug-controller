@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/camelcase */
 import { Principal } from '@dfinity/principal';
 import { ActorSubclass } from '@dfinity/agent';
 
@@ -37,6 +38,7 @@ const metadata = async (
   };
 };
 
-const burn = async (actor: ActorSubclass<XtcService>, params) => actor.burn(params);
+const burn = async (actor: ActorSubclass<XtcService>, { to, amount }) =>
+  actor.burn({ canister_id: to, amount });
 
 export default { send, balance, metadata, burn };

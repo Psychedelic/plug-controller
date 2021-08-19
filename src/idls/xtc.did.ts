@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/camelcase */
 export default ({ IDL }) => {
-  const TransactionId = IDL.Nat;
+  const TransactionId = IDL.Nat64;
   const BurnError = IDL.Variant({
     InsufficientBalance: IDL.Null,
     InvalidTokenContract: IDL.Null,

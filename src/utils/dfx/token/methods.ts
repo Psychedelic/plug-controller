@@ -17,7 +17,7 @@ export interface TokenServiceExtended {
   send: (to: string, from: string, amount: bigint) => Promise<SendResponse>;
   getMetadata: () => Promise<Metadata>;
   getBalance: (user: Principal) => Promise<bigint>;
-  burn: (to: Principal, amount: bigint) => Promise<BurnResult>;
+  burnXTC: (params: { to: Principal; amount: bigint }) => Promise<BurnResult>;
 }
 
 const send = async (
@@ -81,9 +81,8 @@ const getBalance = async (
   }
 };
 
-const burn = async (actor, params) => {
+const burnXTC = async (actor, params) => {
   const token = Actor.canisterIdOf(actor).toText();
-  console.log('burning token', token);
   switch (token) {
     case XTC_ID:
       return xtcMethods.burn(actor as ActorSubclass<XtcService>, params);
@@ -92,4 +91,4 @@ const burn = async (actor, params) => {
   }
 };
 
-export default { send, getMetadata, getBalance, burn };
+export default { send, getMetadata, getBalance, burnXTC };
