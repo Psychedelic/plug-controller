@@ -28,6 +28,8 @@ interface JSONWallet {
   registeredTokens?: Array<StandardToken>;
 }
 
+type SendResposne = { height: bigint } | { amount: bigint };
+
 class PlugWallet {
   name: string;
 
@@ -186,35 +188,21 @@ class PlugWallet {
     amount: bigint,
     canisterId?: string,
     opts?: SendOpts
-  ): Promise<bigint> => {
+  ): Promise<SendResposne> => {
     const { secretKey } = this.identity.getKeyPair();
     console.log('controller sending');
-    if (canisterId) {
-      console.log('SENDING CUSTOM TOKEN');
-      const tokenActor = await createTokenActor(canisterId, secretKey);
-      const dummyMemmo = new Array(32).fill(0);
-      const data = {
-        to: { principal: Principal.fromText(to) },
-        from: { principal: this.identity.getPrincipal() },
-        amount: BigInt(amount),
-        token: canisterId,
-        memo: dummyMemmo,
-        notify: false,
-        subaccount: [],
-        fee: BigInt(1),
-      };
-      const result = await tokenActor.transfer(data);
-      console.log('sent to canister', canisterId, result);
-      if (typeof result === 'bigint') {
-        return result;
-      }
 
-      throw new Error(Object.keys(result)[0]);
-    } else {
-      console.log('SENDING ICP TOKEN');
-      const agent = await createAgent({ secretKey });
-      const ledger = await createLedgerActor(agent);
-      return ledger.sendICP({ to, amount, opts });
+    switch (canisterId) {
+      case undefined:
+        const resultICP = await this.sendICP(to, amount, opts);
+        return { height: resultICP };
+      default:
+        const resultCustomToken = await this.sendCustomToken(
+          to,
+          amount,
+          canisterId
+        );
+        return { amount: resultCustomToken };
     }
   };
 
@@ -224,6 +212,48 @@ class PlugWallet {
 
   public get pemFile(): string {
     return this.identity.getPem();
+  }
+
+  private async sendICP(
+    to: string,
+    amount: bigint,
+    opts?: SendOpts
+  ): Promise<bigint> {
+    const { secretKey } = this.identity.getKeyPair();
+
+    console.log('SENDING ICP TOKEN');
+    const agent = await createAgent({ secretKey });
+    const ledger = await createLedgerActor(agent);
+    return ledger.sendICP({ to, amount, opts });
+  }
+
+  private async sendCustomToken(
+    to: string,
+    amount: bigint,
+    canisterId: string
+  ): Promise<bigint> {
+    const { secretKey } = this.identity.getKeyPair();
+
+    console.log('SENDING CUSTOM TOKEN');
+    const tokenActor = await createTokenActor(canisterId, secretKey);
+    const dummyMemmo = new Array(32).fill(0);
+    const data = {
+      to: { principal: Principal.fromText(to) },
+      from: { principal: this.identity.getPrincipal() },
+      amount: BigInt(amount),
+      token: canisterId,
+      memo: dummyMemmo,
+      notify: false,
+      subaccount: [],
+      fee: BigInt(1),
+    };
+    const result = await tokenActor.transfer(data);
+    console.log('sent to canister', canisterId, result);
+    if ('ok' in result) {
+      return result.ok;
+    }
+
+    throw new Error(Object.keys(result)[0]);
   }
 }
 
