@@ -1,8 +1,9 @@
-import { PublicKey, DerEncodedBlob } from '@dfinity/agent';
+import { PublicKey } from '@dfinity/agent';
 import {
   BinaryBlob,
   blobFromUint8Array,
   derBlobFromBlob,
+  DerEncodedBlob,
 } from '@dfinity/candid';
 
 // This implementation is adjusted from the Ed25519PublicKey.

@@ -34,6 +34,7 @@ const sendICP = async (
     fee: BigInt(10000),
     memo: RandomBigInt(32),
   };
+
   return actor.send_dfx({
     to,
     fee: { e8s: opts?.fee || defaultArgs.fee },

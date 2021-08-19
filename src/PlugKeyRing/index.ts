@@ -1,16 +1,18 @@
 import CryptoJS from 'crypto-js';
-import { Principal, PublicKey } from '@dfinity/agent';
+import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
+import { Principal } from '@dfinity/principal';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/rosetta';
 import PlugWallet from '../PlugWallet';
 import { createAccount, getAccountId } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
+import { SendResponse } from '../utils/dfx/token';
 import Storage from '../utils/storage';
 import mockStore from '../utils/storage/mock';
 import { validatePrincipalId } from './utils';
-import { StandardToken, TokenBalance } from '../interfaces/token';
+import { StandardToken, TokenBalance } from '../interfaces/ext';
 
 interface PlugState {
   wallets: Array<PlugWallet>;
@@ -193,10 +195,7 @@ class PlugKeyRing {
     return this.state.wallets[index].getBalance();
   };
 
-  public getTokenInfo = async (
-    canisterId: string,
-    subAccount?: number
-  ): Promise<{ token: StandardToken; amount: bigint }> => {
+  public getTokenInfo = async (canisterId: string, subAccount?: number) => {
     this.checkUnlocked();
     const index = subAccount || this.state.currentWalletId || 0;
     this.validateSubaccount(index);
@@ -232,11 +231,11 @@ class PlugKeyRing {
     amount: bigint,
     canisterId?: string,
     opts?: SendOpts
-  ): Promise<bigint> => {
+  ): Promise<SendResponse> => {
     this.checkUnlocked();
     const currentWalletNumber = this.state.currentWalletId;
     let account = to;
-    if (validatePrincipalId(to)) {
+    if (!canisterId && validatePrincipalId(to)) {
       account = getAccountId(Principal.fromText(to));
     }
     return this.state.wallets[currentWalletNumber || 0].send(

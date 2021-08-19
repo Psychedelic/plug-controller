@@ -1,10 +1,10 @@
 {
   "dependencies": {
     "@babel/preset-env": "^7.14.4",
-    "@dfinity/agent": "^0.8.9",
-    "@dfinity/candid": "^0.9.1",
-    "@dfinity/identity": "^0.8.9",
-    "@dfinity/principal": "^0.9.1",
+    "@dfinity/agent": "^0.9.3",
+    "@dfinity/candid": "^0.9.3",
+    "@dfinity/identity": "^0.9.3",
+    "@dfinity/principal": "^0.9.3",
     "@types/secp256k1": "^4.0.3",
     "babel-jest": "^25.5.1",
     "bip39": "^3.0.4",
@@ -56,7 +56,7 @@
     "typescript": "^3.8.3"
   },
   "name": "@psychedelic/plug-controller",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Internet Computer Plug wallet's controller",
   "main": "dist/index.js",
   "scripts": {

@@ -6,8 +6,8 @@ import { config } from 'dotenv';
 import { HttpAgent, Actor, ActorSubclass } from '@dfinity/agent';
 import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
 
-import tokenIDLFactory from '../../idls/token.did';
-import TokenService from '../../interfaces/token';
+import tokenIDLFactory from '../../idls/ext.did';
+// import TokenService from '../../interfaces/token';
 import { IC_HOST } from './constants';
 import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
 
@@ -34,18 +34,6 @@ export const createAgent = async ({
     return ag;
   });
   return agent;
-};
-
-export const createTokenActor = async (
-  canisterId: string,
-  secretKey: Uint8Array
-): Promise<ActorSubclass<TokenService>> => {
-  const agent = await createAgent({ secretKey });
-  const actor = Actor.createActor<ActorSubclass<TokenService>>(
-    tokenIDLFactory,
-    { agent, canisterId }
-  );
-  return actor;
 };
 
 export { createLedgerActor } from './ledger';

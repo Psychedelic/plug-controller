@@ -1,10 +1,5 @@
-import {
-  HttpAgent,
-  Actor,
-  ActorMethod,
-  IDL,
-  ActorSubclass,
-} from '@dfinity/agent';
+import { HttpAgent, Actor, ActorMethod, ActorSubclass } from '@dfinity/agent';
+import { IDL } from '@dfinity/candid';
 
 type ExtendedActorConstructor = new () => ActorSubclass;
 

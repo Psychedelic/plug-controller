@@ -9,3 +9,4 @@ export const ROSETTA_URL = 'https://rosetta-api.internetcomputer.org';
 export const PRINCIPAL_REGEX = /(\w{5}-){10}\w{3}/;
 export const CANISTER_REGEX = /(\w{5}-){4}\w{3}/;
 export const CANISTER_MAX_LENGTH = 27;
+export const XTC_ID = '';

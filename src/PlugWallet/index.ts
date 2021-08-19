@@ -1,14 +1,17 @@
-import { Principal, PublicKey } from '@dfinity/agent';
+import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 
 import { ERRORS } from '../errors';
-import { StandardToken, TokenBalance } from '../interfaces/token';
-import { validateCanisterId, validateToken } from '../PlugKeyRing/utils';
+import { StandardToken, TokenBalance } from '../interfaces/ext';
+import { validateCanisterId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
-import { createAgent, createLedgerActor, createTokenActor } from '../utils/dfx';
+import { createAgent, createLedgerActor } from '../utils/dfx';
+import { createTokenActor, SendResponse } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
+import TOKENS from '../constants/tokens';
+import { uniqueByObjKey } from '../utils/array';
 
 interface PlugWalletArgs {
   name?: string;
@@ -47,12 +50,15 @@ class PlugWallet {
     icon,
     walletNumber,
     mnemonic,
-    registeredTokens,
+    registeredTokens = [],
   }: PlugWalletArgs) {
     this.name = name || 'Main IC Wallet';
     this.icon = icon;
     this.walletNumber = walletNumber;
-    this.registeredTokens = registeredTokens || [];
+    this.registeredTokens = uniqueByObjKey(
+      [...registeredTokens, TOKENS.XTC],
+      'symbol'
+    ) as StandardToken[];
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -76,21 +82,21 @@ class PlugWallet {
 
   public registerToken = async (
     canisterId: string
-  ): Promise<Array<StandardToken>> => {
+  ): Promise<StandardToken[]> => {
     const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey });
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const tokenActor = await createTokenActor(canisterId, secretKey);
-    const metadata = await tokenActor.meta();
-    if (!validateToken(metadata)) {
-      throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
+    const tokenActor = await createTokenActor(canisterId, agent);
+    const metadata = await tokenActor.metadata(tokenActor);
+
+    if (!('fungible' in metadata)) {
+      throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
     }
-    const tokenDescriptor = { ...metadata, canisterId };
+    const tokenDescriptor = { ...metadata.fungible, canisterId };
     const newTokens = [...this.registeredTokens, tokenDescriptor];
-    const unique = [
-      ...new Map(newTokens.map(token => [token.symbol, token])).values(),
-    ];
+    const unique = uniqueByObjKey(newTokens, 'symbol') as StandardToken[];
     this.registeredTokens = unique;
     return unique;
   };
@@ -113,10 +119,11 @@ class PlugWallet {
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
       this.registeredTokens.map(async token => {
-        const tokenActor = await createTokenActor(token.canisterId, secretKey);
-        const tokenBalance = await tokenActor.balance([
-          this.identity.getPrincipal(),
-        ]);
+        const tokenActor = await createTokenActor(token.canisterId, agent);
+        const tokenBalance = await tokenActor.balance(
+          this.identity.getPrincipal()
+        );
+
         return {
           name: token.name,
           symbol: token.symbol,
@@ -132,22 +139,25 @@ class PlugWallet {
   };
 
   public getTokenInfo = async (
-    canisterId
+    canisterId: string
   ): Promise<{ token: StandardToken; amount: bigint }> => {
     const { secretKey } = this.identity.getKeyPair();
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const tokenActor = await createTokenActor(canisterId, secretKey);
-    const metadata = await tokenActor.meta();
-    if (!validateToken(metadata)) {
-      throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
+    const agent = await createAgent({ secretKey });
+    const tokenActor = await createTokenActor(canisterId, agent);
+
+    const metadataResult = await tokenActor.metadata(tokenActor);
+
+    const metadata = metadataResult;
+    if (!('fungible' in metadata)) {
+      throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
     }
-    const meta = await tokenActor.meta();
-    const tokenBalance = await tokenActor.balance([
-      this.identity.getPrincipal(),
-    ]);
-    return { token: { ...meta, canisterId }, amount: tokenBalance };
+    const tokenBalance = await tokenActor.balance(this.identity.getPrincipal());
+    const token = { ...metadata.fungible, canisterId };
+
+    return { token, amount: tokenBalance };
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
@@ -159,26 +169,10 @@ class PlugWallet {
     amount: bigint,
     canisterId?: string,
     opts?: SendOpts
-  ): Promise<bigint> => {
-    const { secretKey } = this.identity.getKeyPair();
-    if (canisterId) {
-      const tokenActor = await createTokenActor(canisterId, secretKey);
-      const result = await tokenActor.transfer({
-        to: Principal.fromText(to),
-        from: [this.identity.getPrincipal()],
-        amount,
-      });
-
-      if ('Ok' in result) {
-        return result.Ok;
-      }
-
-      throw new Error(Object.keys(result.Err)[0]);
-    } else {
-      const agent = await createAgent({ secretKey });
-      const ledger = await createLedgerActor(agent);
-      return ledger.sendICP({ to, amount, opts });
-    }
+  ): Promise<SendResponse> => {
+    return canisterId
+      ? this.sendCustomToken(to, amount, canisterId)
+      : { height: await this.sendICP(to, amount, opts) };
   };
 
   public get publicKey(): PublicKey {
@@ -187,6 +181,35 @@ class PlugWallet {
 
   public get pemFile(): string {
     return this.identity.getPem();
+  }
+
+  private async sendICP(
+    to: string,
+    amount: bigint,
+    opts?: SendOpts
+  ): Promise<bigint> {
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey });
+    const ledger = await createLedgerActor(agent);
+    return ledger.sendICP({ to, amount, opts });
+  }
+
+  private async sendCustomToken(
+    to: string,
+    amount: bigint,
+    canisterId: string
+  ): Promise<SendResponse> {
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey });
+    const tokenActor = await createTokenActor(canisterId, agent);
+
+    const result = await tokenActor.send(
+      to,
+      this.identity.getPrincipal().toString(),
+      amount
+    );
+
+    return result;
   }
 }
 

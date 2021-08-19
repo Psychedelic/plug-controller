@@ -928,42 +928,41 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@dfinity/agent@^0.8.9":
-  version "0.8.9"
-  resolved "https://registry.npmjs.org/@dfinity/agent/-/agent-0.8.9.tgz"
-  integrity sha512-4D2ohuoR7ukfmHYMKADALh26/bf3OdZm4z2CLEn0BPTWdnHRv/T2KIFzo/jpuvL3U8KEgr6WxFCxlufuhXjZDQ==
+"@dfinity/agent@^0.9.3":
+  version "0.9.3"
+  resolved "https://registry.yarnpkg.com/@dfinity/agent/-/agent-0.9.3.tgz#e49f07d6749e534c4c30aa2df2bba59e3fa9570f"
+  integrity sha512-vR0t5Uf+srbUHTdGunJxek3a4jCmBKU+B2yYEX0/aSGQfJmEf5X5snuNcnrIDOCfHeK7uxmOqs65BdI8Lhn4fg==
   dependencies:
     base64-arraybuffer "^0.2.0"
     bignumber.js "^9.0.0"
     borc "^2.1.1"
-    buffer "^5.4.3"
-    buffer-pipe "0.0.4"
+    buffer "^6.0.3"
+    buffer-pipe "^0.0.4"
     js-sha256 "0.9.0"
     simple-cbor "^0.4.1"
 
-"@dfinity/candid@^0.9.1":
-  version "0.9.1"
-  resolved "https://registry.yarnpkg.com/@dfinity/candid/-/candid-0.9.1.tgz#2085f79de3145b32aeb6065b612c21f96c9955b5"
-  integrity sha512-5P2Ic3hAf9935qW3uCLDN5FFRTBO3SA7c0n56W9GzIEZZnNXdclO5/3WAnDCfhSjZslRjGfvR225Grd/ekCUoA==
+"@dfinity/candid@^0.9.3":
+  version "0.9.3"
+  resolved "https://registry.yarnpkg.com/@dfinity/candid/-/candid-0.9.3.tgz#96b2a5339da634ccc5546a0560f48f5ceef70dfe"
+  integrity sha512-VMovKFrExqN0mwcn1/aut4Ou4cA9IA2+QrBjV+Ro4eVCpVvGpVRqn4jizlV9QnJjcuEBG1yImIG5RKMdZ2ejQQ==
   dependencies:
     buffer "^6.0.3"
     buffer-pipe "^0.0.4"
 
-"@dfinity/identity@^0.8.9":
-  version "0.8.9"
-  resolved "https://registry.npmjs.org/@dfinity/identity/-/identity-0.8.9.tgz"
-  integrity sha512-xXJBibb+vWUZtfzEo/b7l3RWwUq0M5CO1V5+KgRPhyHpDjsLR2awSTxHWSIRAzEi9Emtafv4lO9TUtqZJQx5Ew==
+"@dfinity/identity@^0.9.3":
+  version "0.9.3"
+  resolved "https://registry.yarnpkg.com/@dfinity/identity/-/identity-0.9.3.tgz#7d65d1ee7655d9028034bf22a92c21eea8b24028"
+  integrity sha512-8mEpkLqGW74QMsVJzuewwN0tO1fdShAT+vyfQM08VOX/u4IHckH8zZ+qGTeXKaGzuwiJRa5WZT2U7L32LDfJJg==
   dependencies:
-    "@dfinity/agent" "^0.8.9"
     borc "^2.1.1"
-    buffer "^5.4.3"
+    buffer "^6.0.3"
     buffer-pipe "0.0.4"
     tweetnacl "^1.0.1"
 
-"@dfinity/principal@^0.9.1":
-  version "0.9.1"
-  resolved "https://registry.yarnpkg.com/@dfinity/principal/-/principal-0.9.1.tgz#166d4c5014101d9f9d6a3ed1f9b70e102c0bb9be"
-  integrity sha512-PWDvGPbSGMotxJhXEvttbwsSyn6gpEqqHVF957LqAqrDwGvWPLvfddJElSIikrook/U49HmtJslE7opWrjvRkA==
+"@dfinity/principal@^0.9.3":
+  version "0.9.3"
+  resolved "https://registry.yarnpkg.com/@dfinity/principal/-/principal-0.9.3.tgz#52e4980bac8dd35e7a6bb2564bea89df97383e06"
+  integrity sha512-DSL3b/gGm+f57+3XkFjlK4DigtKXe9MVO8UYXDQWkVIhy0UF1KYjRNGs6awc1GTQoOTxeQ8UTFwXuvnEvJ1hpQ==
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
@@ -2092,7 +2091,7 @@ buffer-pipe@0.0.4, buffer-pipe@^0.0.4:
   dependencies:
     safe-buffer "^5.1.2"
 
-buffer@^5.4.3, buffer@^5.5.0:
+buffer@^5.5.0:
   version "5.7.1"
   resolved "https://registry.npmjs.org/buffer/-/buffer-5.7.1.tgz"
   integrity sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==
