@@ -83,11 +83,8 @@ class PlugWallet {
   public registerToken = async (
     canisterId: string
   ): Promise<StandardToken[]> => {
-    console.log('registering token');
     const { secretKey } = this.identity.getKeyPair();
-    console.log('creating agent');
     const agent = await createAgent({ secretKey });
-    console.log('agent', agent, secretKey);
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }

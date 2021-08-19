@@ -11,9 +11,8 @@ import { GetTransactionsResponse } from '../utils/dfx/rosetta';
 import PlugWallet from '../PlugWallet';
 import { createAgent } from '../utils/dfx';
 import store from '../utils/storage/mock';
-import { getAccountId, createAccount } from '../utils/account';
+import { getAccountId } from '../utils/account';
 import tokens from '../constants/tokens';
-import { IC_HOST } from '../utils/dfx/constants';
 
 const mockSendICP = jest.fn();
 
@@ -23,8 +22,15 @@ jest.mock('../utils/dfx', () => {
     createLedgerActor: (): { sendICP: jest.Mock<any, any> } => ({
       sendICP: mockSendICP,
     }),
-    createTokenActor: (): { meta: jest.Mock<any, any> } => ({
-      meta: jest.fn(() => ({ symbol: 'XTC', decimal: 5, name: 'XTC' })),
+  };
+});
+
+jest.mock('../utils/dfx/token', () => {
+  return {
+    createTokenActor: (): { metadata: jest.Mock<any, any> } => ({
+      metadata: jest.fn(() => ({
+        fungible: { symbol: 'WTC', decimals: 5, name: 'Wrapped Cycles' },
+      })),
     }),
   };
 });
@@ -291,7 +297,7 @@ describe('Plug KeyRing', () => {
       );
       expect(isInitialized).toEqual(true);
     });
-    it.only('should persist data encypted correctly after registering a new token', async () => {
+    it('should persist data encypted correctly after registering a new token', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai'); // register XTC
@@ -436,8 +442,9 @@ describe('Plug KeyRing', () => {
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.createPrincipal();
       await keyRing.createPrincipal();
-      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 1); // register XTC to other subaccounts
-      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 2); // register XTC
+      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 1); // register WTC to other subaccounts
+      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 2); // register WTC
+      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 2); // register WTC twice
 
       const { wallets } = await keyRing.getState();
       expect(wallets[0].registeredTokens).toEqual([tokens.XTC]);
