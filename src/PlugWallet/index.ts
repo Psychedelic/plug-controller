@@ -78,12 +78,14 @@ class PlugWallet {
   public registerToken = async (canisterId: string): Promise<any> => {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
+
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
+
     const tokenActor = await createTokenActor(canisterId, agent);
 
-    const metadata = await tokenActor.metadata();
+    const metadata = await tokenActor.getMetadata();
 
     if (!('fungible' in metadata)) {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
@@ -116,7 +118,7 @@ class PlugWallet {
     const tokenBalances = await Promise.all(
       this.registeredTokens.map(async token => {
         const tokenActor = await createTokenActor(token.canisterId, agent);
-        const tokenBalance = await tokenActor.balance(
+        const tokenBalance = await tokenActor.getBalance(
           this.identity.getPrincipal()
         );
 
@@ -142,13 +144,15 @@ class PlugWallet {
     const agent = await createAgent({ secretKey });
     const tokenActor = await createTokenActor(canisterId, agent);
 
-    const metadataResult = await tokenActor.metadata();
+    const metadataResult = await tokenActor.getMetadata();
 
     const metadata = metadataResult;
     if (!('fungible' in metadata)) {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
     }
-    const tokenBalance = await tokenActor.balance(this.identity.getPrincipal());
+    const tokenBalance = await tokenActor.getBalance(
+      this.identity.getPrincipal()
+    );
     const token = { ...metadata.fungible, canisterId };
 
     return { token, amount: tokenBalance };

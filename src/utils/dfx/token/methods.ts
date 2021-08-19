@@ -15,8 +15,8 @@ export type SendResponse =
 
 export interface TokenServiceExtended {
   send: (to: string, from: string, amount: bigint) => Promise<SendResponse>;
-  metadata: () => Promise<Metadata>;
-  balance: (user: Principal) => Promise<bigint>;
+  getMetadata: () => Promise<Metadata>;
+  getBalance: (user: Principal) => Promise<bigint>;
 }
 
 const send = async (
@@ -50,7 +50,7 @@ const send = async (
   }
 };
 
-const metadata = async (
+const getMetadata = async (
   actor: ActorSubclass<ExtService | XtcService>
 ): Promise<Metadata> => {
   const token = Actor.canisterIdOf(actor).toText();
@@ -63,7 +63,7 @@ const metadata = async (
   }
 };
 
-const balance = async (
+const getBalance = async (
   actor: ActorSubclass<ExtService | XtcService>,
   user: Principal
 ): Promise<bigint> => {
@@ -81,4 +81,4 @@ const balance = async (
   }
 };
 
-export default { send, metadata, balance };
+export default { send, getMetadata, getBalance };
