@@ -5,13 +5,14 @@ import { Principal } from '@dfinity/principal';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/rosetta';
-import PlugWallet, { SendResposne } from '../PlugWallet';
+import PlugWallet from '../PlugWallet';
 import { createAccount, getAccountId } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
+import { SendResponse } from '../utils/dfx/token';
 import Storage from '../utils/storage';
 import mockStore from '../utils/storage/mock';
 import { validatePrincipalId } from './utils';
-import { StandardToken, TokenBalance } from '../interfaces/token';
+import { StandardToken, TokenBalance } from '../interfaces/ext';
 
 interface PlugState {
   wallets: Array<PlugWallet>;
@@ -230,7 +231,7 @@ class PlugKeyRing {
     amount: bigint,
     canisterId?: string,
     opts?: SendOpts
-  ): Promise<SendResposne> => {
+  ): Promise<SendResponse> => {
     this.checkUnlocked();
     const currentWalletNumber = this.state.currentWalletId;
     let account = to;

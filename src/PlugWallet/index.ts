@@ -1,13 +1,13 @@
 import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
-import { Principal } from '@dfinity/principal';
 
 import { ERRORS } from '../errors';
-import { StandardToken, TokenBalance } from '../interfaces/token';
+import { StandardToken, TokenBalance } from '../interfaces/ext';
 import { validateCanisterId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
-import { createAgent, createLedgerActor, createTokenActor } from '../utils/dfx';
+import { createAgent, createLedgerActor } from '../utils/dfx';
+import { createTokenActor, SendResponse } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
 
@@ -27,8 +27,6 @@ interface JSONWallet {
   icon?: string;
   registeredTokens?: Array<StandardToken>;
 }
-
-export type SendResposne = { height: bigint } | { amount: bigint };
 
 class PlugWallet {
   name: string;
@@ -79,10 +77,11 @@ class PlugWallet {
 
   public registerToken = async (canisterId: string): Promise<any> => {
     const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey });
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const tokenActor = await createTokenActor(canisterId, secretKey);
+    const tokenActor = await createTokenActor(canisterId, agent);
 
     const extensions = await tokenActor.extensions();
 
@@ -128,7 +127,7 @@ class PlugWallet {
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
       this.registeredTokens.map(async token => {
-        const tokenActor = await createTokenActor(token.canisterId, secretKey);
+        const tokenActor = await createTokenActor(token.canisterId, agent);
         const tokenBalance = await tokenActor.balance({
           user: { principal: this.identity.getPrincipal() },
           token: token.canisterId,
@@ -155,7 +154,8 @@ class PlugWallet {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const tokenActor = await createTokenActor(canisterId, secretKey);
+    const agent = await createAgent({ secretKey });
+    const tokenActor = await createTokenActor(canisterId, agent);
     const extensions = await tokenActor.extensions();
     if (!extensions.includes('@ext/common')) {
       throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
@@ -188,21 +188,14 @@ class PlugWallet {
     amount: bigint,
     canisterId?: string,
     opts?: SendOpts
-  ): Promise<SendResposne> => {
-    const { secretKey } = this.identity.getKeyPair();
+  ): Promise<SendResponse> => {
     console.log('controller sending');
 
     switch (canisterId) {
       case undefined:
-        const resultICP = await this.sendICP(to, amount, opts);
-        return { height: resultICP };
+        return { height: await this.sendICP(to, amount, opts) };
       default:
-        const resultCustomToken = await this.sendCustomToken(
-          to,
-          amount,
-          canisterId
-        );
-        return { amount: resultCustomToken };
+        return this.sendCustomToken(to, amount, canisterId);
     }
   };
 
@@ -231,29 +224,20 @@ class PlugWallet {
     to: string,
     amount: bigint,
     canisterId: string
-  ): Promise<bigint> {
+  ): Promise<SendResponse> {
     const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey });
 
     console.log('SENDING CUSTOM TOKEN');
-    const tokenActor = await createTokenActor(canisterId, secretKey);
-    const dummyMemmo = new Array(32).fill(0);
-    const data = {
-      to: { principal: Principal.fromText(to) },
-      from: { principal: this.identity.getPrincipal() },
-      amount: BigInt(amount),
-      token: canisterId,
-      memo: dummyMemmo,
-      notify: false,
-      subaccount: [],
-      fee: BigInt(1),
-    };
-    const result = await tokenActor.transfer(data);
-    console.log('sent to canister', canisterId, result);
-    if ('ok' in result) {
-      return result.ok;
-    }
+    const tokenActor = await createTokenActor(canisterId, agent);
 
-    throw new Error(Object.keys(result)[0]);
+    const result = await tokenActor.send(
+      to,
+      this.identity.getPrincipal().toString(),
+      amount
+    );
+
+    return result;
   }
 }
 
