@@ -10,6 +10,8 @@ import { createAgent, createLedgerActor } from '../utils/dfx';
 import { createTokenActor, SendResponse } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
+import TOKENS from '../constants/tokens';
+import { uniqueByObjKey } from '../utils/array';
 
 interface PlugWalletArgs {
   name?: string;
@@ -48,12 +50,15 @@ class PlugWallet {
     icon,
     walletNumber,
     mnemonic,
-    registeredTokens,
+    registeredTokens = [],
   }: PlugWalletArgs) {
     this.name = name || 'Main IC Wallet';
     this.icon = icon;
     this.walletNumber = walletNumber;
-    this.registeredTokens = registeredTokens || [];
+    this.registeredTokens = uniqueByObjKey(
+      [...registeredTokens, TOKENS.XTC],
+      'symbol'
+    ) as StandardToken[];
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -75,24 +80,23 @@ class PlugWallet {
     this.icon = val;
   }
 
-  public registerToken = async (canisterId: string): Promise<any> => {
+  public registerToken = async (
+    canisterId: string
+  ): Promise<StandardToken[]> => {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
     const tokenActor = await createTokenActor(canisterId, agent);
-
-    const metadata = await tokenActor.metadata();
+    const metadata = await tokenActor.metadata(tokenActor);
 
     if (!('fungible' in metadata)) {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
     }
     const tokenDescriptor = { ...metadata.fungible, canisterId };
     const newTokens = [...this.registeredTokens, tokenDescriptor];
-    const unique = [
-      ...new Map(newTokens.map(token => [token.symbol, token])).values(),
-    ];
+    const unique = uniqueByObjKey(newTokens, 'symbol') as StandardToken[];
     this.registeredTokens = unique;
     return unique;
   };
@@ -134,7 +138,9 @@ class PlugWallet {
     ];
   };
 
-  public getTokenInfo = async (canisterId: string) => {
+  public getTokenInfo = async (
+    canisterId: string
+  ): Promise<{ token: StandardToken; amount: bigint }> => {
     const { secretKey } = this.identity.getKeyPair();
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
@@ -142,7 +148,7 @@ class PlugWallet {
     const agent = await createAgent({ secretKey });
     const tokenActor = await createTokenActor(canisterId, agent);
 
-    const metadataResult = await tokenActor.metadata();
+    const metadataResult = await tokenActor.metadata(tokenActor);
 
     const metadata = metadataResult;
     if (!('fungible' in metadata)) {
@@ -164,8 +170,6 @@ class PlugWallet {
     canisterId?: string,
     opts?: SendOpts
   ): Promise<SendResponse> => {
-    console.log('controller sending');
-
     return canisterId
       ? this.sendCustomToken(to, amount, canisterId)
       : { height: await this.sendICP(to, amount, opts) };
@@ -185,8 +189,6 @@ class PlugWallet {
     opts?: SendOpts
   ): Promise<bigint> {
     const { secretKey } = this.identity.getKeyPair();
-
-    console.log('SENDING ICP TOKEN');
     const agent = await createAgent({ secretKey });
     const ledger = await createLedgerActor(agent);
     return ledger.sendICP({ to, amount, opts });
@@ -199,8 +201,6 @@ class PlugWallet {
   ): Promise<SendResponse> {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
-
-    console.log('SENDING CUSTOM TOKEN');
     const tokenActor = await createTokenActor(canisterId, agent);
 
     const result = await tokenActor.send(
