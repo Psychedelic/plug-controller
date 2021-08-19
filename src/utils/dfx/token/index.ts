@@ -14,7 +14,6 @@ export const createTokenActor = async (
     canisterId,
     extIDL
   ))() as unknown) as ActorSubclass<TokenServiceExtended>;
-
   return actor;
 };
 

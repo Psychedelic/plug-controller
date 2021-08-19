@@ -54,7 +54,6 @@ const getMetadata = async (
   actor: ActorSubclass<ExtService | XtcService>
 ): Promise<Metadata> => {
   const token = Actor.canisterIdOf(actor).toText();
-
   switch (token) {
     case XTC_ID:
       return xtcMethods.metadata(actor as ActorSubclass<XtcService>);
