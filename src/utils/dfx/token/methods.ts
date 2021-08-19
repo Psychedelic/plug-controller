@@ -15,7 +15,7 @@ export type SendResponse =
 
 export interface TokenServiceExtended {
   send: (to: string, from: string, amount: bigint) => Promise<SendResponse>;
-  metadata: () => Promise<Metadata>;
+  metadata: (actor: ActorSubclass<TokenServiceExtended>) => Promise<Metadata>;
   balance: (user: Principal) => Promise<bigint>;
 }
 
@@ -54,7 +54,6 @@ const metadata = async (
   actor: ActorSubclass<ExtService | XtcService>
 ): Promise<Metadata> => {
   const token = Actor.canisterIdOf(actor).toText();
-
   switch (token) {
     case XTC_ID:
       return xtcMethods.metadata(actor as ActorSubclass<XtcService>);

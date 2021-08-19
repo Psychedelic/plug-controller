@@ -80,15 +80,19 @@ class PlugWallet {
     this.icon = val;
   }
 
-  public registerToken = async (canisterId: string): Promise<any> => {
+  public registerToken = async (
+    canisterId: string
+  ): Promise<StandardToken[]> => {
+    console.log('registering token');
     const { secretKey } = this.identity.getKeyPair();
+    console.log('creating agent');
     const agent = await createAgent({ secretKey });
+    console.log('agent', agent, secretKey);
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
     const tokenActor = await createTokenActor(canisterId, agent);
-
-    const metadata = await tokenActor.metadata();
+    const metadata = await tokenActor.metadata(tokenActor);
 
     if (!('fungible' in metadata)) {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
@@ -147,7 +151,7 @@ class PlugWallet {
     const agent = await createAgent({ secretKey });
     const tokenActor = await createTokenActor(canisterId, agent);
 
-    const metadataResult = await tokenActor.metadata();
+    const metadataResult = await tokenActor.metadata(tokenActor);
 
     const metadata = metadataResult;
     if (!('fungible' in metadata)) {
@@ -169,8 +173,6 @@ class PlugWallet {
     canisterId?: string,
     opts?: SendOpts
   ): Promise<SendResponse> => {
-    console.log('controller sending');
-
     return canisterId
       ? this.sendCustomToken(to, amount, canisterId)
       : { height: await this.sendICP(to, amount, opts) };
@@ -190,8 +192,6 @@ class PlugWallet {
     opts?: SendOpts
   ): Promise<bigint> {
     const { secretKey } = this.identity.getKeyPair();
-
-    console.log('SENDING ICP TOKEN');
     const agent = await createAgent({ secretKey });
     const ledger = await createLedgerActor(agent);
     return ledger.sendICP({ to, amount, opts });
@@ -204,8 +204,6 @@ class PlugWallet {
   ): Promise<SendResponse> {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
-
-    console.log('SENDING CUSTOM TOKEN');
     const tokenActor = await createTokenActor(canisterId, agent);
 
     const result = await tokenActor.send(

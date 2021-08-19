@@ -25,6 +25,7 @@ export const createAgent = async ({
   secretKey,
   defaultIdentity,
 }: CreateAgentArgs): Promise<HttpAgent> => {
+  console.log('creating agnet');
   const identity =
     defaultIdentity || createIdentity(blobFromUint8Array(secretKey));
   const agent = await Promise.resolve(
@@ -33,6 +34,7 @@ export const createAgent = async ({
     await ag.fetchRootKey();
     return ag;
   });
+  console.log('creating agent', agent);
   return agent;
 };
 

@@ -2,21 +2,24 @@ import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import RandomBigInt from 'random-bigint';
 import { Principal } from '@dfinity/principal';
+import fetch from 'cross-fetch';
 
+import { HttpAgent } from '@dfinity/agent';
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/rosetta';
 import PlugWallet from '../PlugWallet';
 import { createAgent } from '../utils/dfx';
 import store from '../utils/storage/mock';
-import { getAccountId } from '../utils/account';
+import { getAccountId, createAccount } from '../utils/account';
 import tokens from '../constants/tokens';
+import { IC_HOST } from '../utils/dfx/constants';
 
 const mockSendICP = jest.fn();
 
 jest.mock('../utils/dfx', () => {
   return {
-    createAgent: jest.fn(),
+    createAgent: jest.fn(() => ({})),
     createLedgerActor: (): { sendICP: jest.Mock<any, any> } => ({
       sendICP: mockSendICP,
     }),
@@ -288,7 +291,7 @@ describe('Plug KeyRing', () => {
       );
       expect(isInitialized).toEqual(true);
     });
-    it('should persist data encypted correctly after registering a new token', async () => {
+    it.only('should persist data encypted correctly after registering a new token', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai'); // register XTC
