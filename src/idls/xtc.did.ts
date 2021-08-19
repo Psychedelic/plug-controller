@@ -1,5 +1,16 @@
 /* eslint-disable @typescript-eslint/camelcase */
 export default ({ IDL }) => {
+  const TransactionId = IDL.Nat;
+  const BurnError = IDL.Variant({
+    InsufficientBalance: IDL.Null,
+    InvalidTokenContract: IDL.Null,
+    NotSufficientLiquidity: IDL.Null,
+  });
+
+  const BurnResult = IDL.Variant({
+    Ok: TransactionId,
+    Err: BurnError,
+  });
   const TokenMetaData = IDL.Record({
     features: IDL.Vec(IDL.Text),
     name: IDL.Text,
@@ -10,7 +21,6 @@ export default ({ IDL }) => {
     canister_id: IDL.Principal,
     method_name: IDL.Text,
   });
-  const TransactionId = IDL.Nat;
   const TransferError = IDL.Variant({
     CallFailed: IDL.Null,
     InsufficientBalance: IDL.Null,
@@ -25,6 +35,11 @@ export default ({ IDL }) => {
     meta: IDL.Func([], [TokenMetaData], ['query']),
     meta_certified: IDL.Func([], [TokenMetaData], []),
     balance: IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Nat64], []),
+    burn: IDL.Func(
+      [IDL.Record({ canister_id: IDL.Principal, amount: IDL.Nat64 })],
+      [BurnResult],
+      []
+    ),
     transfer: IDL.Func(
       [
         IDL.Record({
