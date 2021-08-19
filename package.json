@@ -1,10 +1,10 @@
 {
   "dependencies": {
     "@babel/preset-env": "^7.14.4",
-    "@dfinity/agent": "^0.9.1",
-    "@dfinity/candid": "^0.9.1",
-    "@dfinity/identity": "^0.9.1",
-    "@dfinity/principal": "^0.9.1",
+    "@dfinity/agent": "^0.9.3",
+    "@dfinity/candid": "^0.9.3",
+    "@dfinity/identity": "^0.9.3",
+    "@dfinity/principal": "^0.9.3",
     "@types/secp256k1": "^4.0.3",
     "babel-jest": "^25.5.1",
     "bip39": "^3.0.4",
