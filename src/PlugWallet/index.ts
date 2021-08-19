@@ -28,7 +28,7 @@ interface JSONWallet {
   registeredTokens?: Array<StandardToken>;
 }
 
-type SendResposne = { height: bigint } | { amount: bigint };
+export type SendResposne = { height: bigint } | { amount: bigint };
 
 class PlugWallet {
   name: string;

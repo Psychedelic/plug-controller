@@ -5,7 +5,7 @@ import { Principal } from '@dfinity/principal';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/rosetta';
-import PlugWallet from '../PlugWallet';
+import PlugWallet, { SendResposne } from '../PlugWallet';
 import { createAccount, getAccountId } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import Storage from '../utils/storage';
@@ -230,7 +230,7 @@ class PlugKeyRing {
     amount: bigint,
     canisterId?: string,
     opts?: SendOpts
-  ): Promise<bigint> => {
+  ): Promise<SendResposne> => {
     this.checkUnlocked();
     const currentWalletNumber = this.state.currentWalletId;
     let account = to;
