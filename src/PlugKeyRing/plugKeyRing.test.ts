@@ -14,7 +14,7 @@ import { getAccountId } from '../utils/account';
 const mockSendICP = jest.fn();
 const XTC_MOCK = {
   canisterId: 'aanaa-xaaaa-aaaah-aaeiq-cai',
-  decimal: 5,
+  decimals: 5,
   name: 'XTC',
   symbol: 'XTC',
 };
@@ -25,8 +25,15 @@ jest.mock('../utils/dfx', () => {
     createLedgerActor: (): { sendICP: jest.Mock<any, any> } => ({
       sendICP: mockSendICP,
     }),
-    createTokenActor: (): { meta: jest.Mock<any, any> } => ({
-      meta: jest.fn(() => ({ symbol: 'XTC', decimal: 5, name: 'XTC' })),
+  };
+});
+
+jest.mock('../utils/dfx/token', () => {
+  return {
+    createTokenActor: (): { metadata: jest.Mock<any, any> } => ({
+      metadata: jest.fn(() => ({
+        fungible: { symbol: 'XTC', decimals: 5, name: 'XTC' },
+      })),
     }),
   };
 });
