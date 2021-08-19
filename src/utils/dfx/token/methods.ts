@@ -1,42 +1,23 @@
 import { Actor, ActorSubclass } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
 
-import ExtService from '../../../interfaces/ext';
+import extMethods from './extMethods';
+import xtcMethods from './xtcMethods';
+
+import ExtService, { Metadata } from '../../../interfaces/ext';
 import XtcService from '../../../interfaces/xtc';
 import { XTC_ID } from '../constants';
 
-export type SendResponse = { height: bigint } | { amount: bigint };
+export type SendResponse =
+  | { height: bigint }
+  | { amount: bigint }
+  | { transactionId: bigint };
 
-export interface TokenServiceExtended extends ExtService {
+export interface TokenServiceExtended {
   send: (to: string, from: string, amount: bigint) => Promise<SendResponse>;
+  metadata: () => Promise<Metadata>;
+  balance: (user: Principal) => Promise<bigint>;
 }
-
-const sendCustomToken = async (
-  actor: ActorSubclass<ExtService | XtcService>,
-  to: string,
-  from: string,
-  amount: bigint,
-  token: string
-): Promise<bigint> => {
-  const dummyMemmo = new Array(32).fill(0);
-
-  const data = {
-    to: { principal: Principal.fromText(to) },
-    from: { principal: Principal.from(from) },
-    amount,
-    token,
-    memo: dummyMemmo,
-    notify: false,
-    subaccount: [],
-    fee: BigInt(1),
-  };
-
-  const result = await (actor as ActorSubclass<ExtService>).transfer(data);
-
-  if ('ok' in result) return result.ok;
-
-  throw Error();
-};
 
 const send = async (
   actor: ActorSubclass<ExtService | XtcService>,
@@ -48,10 +29,56 @@ const send = async (
 
   switch (token) {
     case XTC_ID:
-      return { height: BigInt(1) };
+      return {
+        transactionId: await xtcMethods.send(
+          actor as ActorSubclass<XtcService>,
+          Principal.fromText(to),
+          Principal.fromText(from),
+          amount
+        ),
+      };
     default:
-      return { amount: await sendCustomToken(actor, to, from, amount, token) };
+      return {
+        amount: await extMethods.send(
+          actor as ActorSubclass<ExtService>,
+          to,
+          from,
+          amount,
+          token
+        ),
+      };
   }
 };
 
-export default { send };
+const metadata = async (
+  actor: ActorSubclass<ExtService | XtcService>
+): Promise<Metadata> => {
+  const token = Actor.canisterIdOf(actor).toText();
+
+  switch (token) {
+    case XTC_ID:
+      return xtcMethods.metadata(actor as ActorSubclass<XtcService>);
+    default:
+      return extMethods.metadata(actor as ActorSubclass<ExtService>, token);
+  }
+};
+
+const balance = async (
+  actor: ActorSubclass<ExtService | XtcService>,
+  user: Principal
+): Promise<bigint> => {
+  const token = Actor.canisterIdOf(actor).toText();
+
+  switch (token) {
+    case XTC_ID:
+      return xtcMethods.balance(actor as ActorSubclass<XtcService>, user);
+    default:
+      return extMethods.balance(
+        actor as ActorSubclass<ExtService>,
+        token,
+        user
+      );
+  }
+};
+
+export default { send, metadata, balance };

@@ -88,19 +88,7 @@ class PlugWallet {
     }
     const tokenActor = await createTokenActor(canisterId, agent);
 
-    const extensions = await tokenActor.extensions();
-
-    if (!extensions.includes('@ext/common')) {
-      throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
-    }
-
-    const metadataResult = await tokenActor.metadata(canisterId);
-
-    if (!('ok' in metadataResult)) {
-      throw new Error(Object.keys(metadataResult.error)[0]);
-    }
-
-    const metadata = metadataResult.ok;
+    const metadata = await tokenActor.metadata();
 
     if (!('fungible' in metadata)) {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
@@ -131,17 +119,14 @@ class PlugWallet {
     const tokenBalances = await Promise.all(
       this.registeredTokens.map(async token => {
         const tokenActor = await createTokenActor(token.canisterId, agent);
-        const tokenBalance = await tokenActor.balance({
-          user: { principal: this.identity.getPrincipal() },
-          token: token.canisterId,
-        });
-        if (!('ok' in tokenBalance)) {
-          throw new Error(Object.keys(tokenBalance.error)[0]);
-        }
+        const tokenBalance = await tokenActor.balance(
+          this.identity.getPrincipal()
+        );
+
         return {
           name: token.name,
           symbol: token.symbol,
-          amount: tokenBalance.ok,
+          amount: tokenBalance,
           canisterId: token.canisterId,
         };
       })
@@ -161,27 +146,17 @@ class PlugWallet {
     }
     const agent = await createAgent({ secretKey });
     const tokenActor = await createTokenActor(canisterId, agent);
-    const extensions = await tokenActor.extensions();
-    if (!extensions.includes('@ext/common')) {
-      throw new Error(ERRORS.TOKEN_NOT_SUPPORTED);
-    }
-    const metadataResult = await tokenActor.metadata(canisterId);
-    if (!('ok' in metadataResult)) {
-      throw new Error(Object.keys(metadataResult.error)[0]);
-    }
-    const metadata = metadataResult.ok;
+
+    const metadataResult = await tokenActor.metadata();
+
+    const metadata = metadataResult;
     if (!('fungible' in metadata)) {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
     }
-    const tokenBalance = await tokenActor.balance({
-      user: { principal: this.identity.getPrincipal() },
-      token: canisterId,
-    });
+    const tokenBalance = await tokenActor.balance(this.identity.getPrincipal());
     const token = { ...metadata.fungible, canisterId };
-    if (!('ok' in tokenBalance)) {
-      throw new Error(Object.keys(tokenBalance.error)[0]);
-    }
-    return { token, amount: tokenBalance?.ok };
+
+    return { token, amount: tokenBalance };
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
@@ -196,12 +171,9 @@ class PlugWallet {
   ): Promise<SendResponse> => {
     console.log('controller sending');
 
-    switch (canisterId) {
-      case undefined:
-        return { height: await this.sendICP(to, amount, opts) };
-      default:
-        return this.sendCustomToken(to, amount, canisterId);
-    }
+    return canisterId
+      ? this.sendCustomToken(to, amount, canisterId)
+      : { height: await this.sendICP(to, amount, opts) };
   };
 
   public get publicKey(): PublicKey {

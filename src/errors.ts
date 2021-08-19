@@ -11,4 +11,6 @@ export const ERRORS = {
     'The provided canister does not implement common extensions from EXT token interface. Please refer to "https://github.com/Toniq-Labs/extendable-token" for further information.',
   NON_FUNGIBLE_TOKEN_NOT_SUPPORTED:
     'Non fungible tokens are note supported yet',
+  TOKEN_NOT_SUPPORT_METADATA:
+    'The provided canister does not implement commont extension',
 };
