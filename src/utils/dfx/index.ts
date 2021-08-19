@@ -10,7 +10,6 @@ import tokenIDLFactory from '../../idls/ext.did';
 // import TokenService from '../../interfaces/token';
 import { IC_HOST } from './constants';
 import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
-import TokenService from '../../interfaces/ext';
 
 if (process.env.NODE_ENV !== 'production') config();
 
@@ -35,22 +34,6 @@ export const createAgent = async ({
     return ag;
   });
   return agent;
-};
-
-// TODO: find EXT ts bindings to remove `any`
-export const createTokenActor = async (
-  canisterId: string,
-  secretKey: Uint8Array
-): Promise<ActorSubclass<TokenService>> => {
-  const agent = await createAgent({ secretKey });
-  const actor = Actor.createActor<ActorSubclass<TokenService>>(
-    tokenIDLFactory,
-    {
-      agent,
-      canisterId,
-    }
-  );
-  return actor;
 };
 
 export { createLedgerActor } from './ledger';

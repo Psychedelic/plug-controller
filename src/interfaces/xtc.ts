@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/class-name-casing */
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/camelcase */
-import type { Principal } from '@dfinity/agent';
+import type { Principal } from '@dfinity/principal';
 
 export interface NotifyArgs {
   'canister_id': Principal,
