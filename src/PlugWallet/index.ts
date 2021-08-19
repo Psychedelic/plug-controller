@@ -10,6 +10,8 @@ import { createAgent, createLedgerActor } from '../utils/dfx';
 import { createTokenActor, SendResponse } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
+import TOKENS from '../constants/tokens';
+import { uniqueByObjKey } from '../utils/array';
 
 interface PlugWalletArgs {
   name?: string;
@@ -48,12 +50,15 @@ class PlugWallet {
     icon,
     walletNumber,
     mnemonic,
-    registeredTokens,
+    registeredTokens = [],
   }: PlugWalletArgs) {
     this.name = name || 'Main IC Wallet';
     this.icon = icon;
     this.walletNumber = walletNumber;
-    this.registeredTokens = registeredTokens || [];
+    this.registeredTokens = uniqueByObjKey(
+      [...registeredTokens, TOKENS.XTC],
+      'symbol'
+    ) as StandardToken[];
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -102,9 +107,7 @@ class PlugWallet {
     }
     const tokenDescriptor = { ...metadata.fungible, canisterId };
     const newTokens = [...this.registeredTokens, tokenDescriptor];
-    const unique = [
-      ...new Map(newTokens.map(token => [token.symbol, token])).values(),
-    ];
+    const unique = uniqueByObjKey(newTokens, 'symbol') as StandardToken[];
     this.registeredTokens = unique;
     return unique;
   };
@@ -149,7 +152,9 @@ class PlugWallet {
     ];
   };
 
-  public getTokenInfo = async (canisterId: string) => {
+  public getTokenInfo = async (
+    canisterId: string
+  ): Promise<{ token: StandardToken; amount: bigint }> => {
     const { secretKey } = this.identity.getKeyPair();
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
