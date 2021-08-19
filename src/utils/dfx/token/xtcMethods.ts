@@ -37,4 +37,6 @@ const metadata = async (
   };
 };
 
-export default { send, balance, metadata };
+const burn = async (actor: ActorSubclass<XtcService>, params) => actor.burn(params);
+
+export default { send, balance, metadata, burn };
