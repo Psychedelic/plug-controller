@@ -25,6 +25,12 @@ export interface TokenBalance {
 }
 
 export type TransactionId = bigint;
+export type BurnError = { 'InsufficientBalance': null } |
+  { 'InvalidTokenContract': null } |
+  { 'NotSufficientLiquidity': null }
+
+export type BurnResult = { 'Ok': TransactionId } | { 'Err': BurnError };
+
 export type TransferError = { 'CallFailed': null } |
 { 'InsufficientBalance': null } |
 { 'Unknown': null } |
@@ -35,6 +41,10 @@ export default interface _SERVICE {
   'meta': () => Promise<TokenMetaData>,
   'meta_certified': () => Promise<TokenMetaData>,
   'balance': (arg_0: [] | [Principal]) => Promise<bigint>,
+  'burn': (arg_0: {
+    canister_id: Principal,
+    amount: bigint
+  }) => Promise<BurnResult>
   'transfer': (
     arg_0: {
       'to': Principal,

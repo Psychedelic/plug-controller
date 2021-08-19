@@ -1,5 +1,6 @@
 import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
+import { Principal } from '@dfinity/principal';
 
 import { ERRORS } from '../errors';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
@@ -112,6 +113,20 @@ class PlugWallet {
     icon: this.icon,
     registeredTokens: this.registeredTokens,
   });
+
+  public burnXTC = async (to: string, amount: bigint) => {
+    if (!validateCanisterId(to)) {
+      throw new Error(ERRORS.INVALID_CANISTER_ID);
+    }
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey });
+    const xtcActor = await createTokenActor(to, agent);
+    const burnResult = await xtcActor.burnXTC({
+      to: Principal.fromText(to),
+      amount,
+    });
+    return burnResult;
+  };
 
   public getBalance = async (): Promise<Array<TokenBalance>> => {
     const { secretKey } = this.identity.getKeyPair();

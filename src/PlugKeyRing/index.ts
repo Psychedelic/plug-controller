@@ -13,6 +13,7 @@ import Storage from '../utils/storage';
 import mockStore from '../utils/storage/mock';
 import { validatePrincipalId } from './utils';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
+import { BurnResult } from '../interfaces/xtc';
 
 interface PlugState {
   wallets: Array<PlugWallet>;
@@ -68,6 +69,23 @@ class PlugKeyRing {
       this.state = { ...decrypted, wallets };
       this.isInitialized = isInitialized;
     }
+  };
+
+  public burnXTC = async ({
+    to,
+    amount,
+    subAccount,
+  }: {
+    to: string;
+    amount: bigint;
+    subAccount: number;
+  }): Promise<BurnResult> => {
+    this.checkUnlocked();
+    const index = subAccount || this.state.currentWalletId || 0;
+    const { wallets } = this.state;
+    this.validateSubaccount(index);
+    const wallet = wallets[index];
+    return wallet.burnXTC(to, amount);
   };
 
   public create = async ({
