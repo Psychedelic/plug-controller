@@ -10,7 +10,7 @@ export default ({ IDL }) => {
     canister_id: IDL.Principal,
     method_name: IDL.Text,
   });
-  const TransactionId = IDL.Nat;
+  const TransactionId = IDL.Nat64;
   const TransferError = IDL.Variant({
     CallFailed: IDL.Null,
     InsufficientBalance: IDL.Null,
@@ -30,7 +30,7 @@ export default ({ IDL }) => {
         IDL.Record({
           to: IDL.Principal,
           from: IDL.Opt(IDL.Principal),
-          amount: IDL.Nat,
+          amount: IDL.Nat64,
         }),
       ],
       [TransferResult],

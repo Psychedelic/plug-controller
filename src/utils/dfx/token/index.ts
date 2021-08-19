@@ -3,16 +3,19 @@ import { HttpAgent, ActorSubclass } from '@dfinity/agent';
 import { createExtendedActorClass } from '../actorFactory';
 import tokenMethods, { TokenServiceExtended } from './methods';
 import extIDL from '../../../idls/ext.did';
+import xtcIDL from '../../../idls/xtc.did';
+import { XTC_ID } from '../constants';
 
 export const createTokenActor = async (
   canisterId: string,
   agent: HttpAgent
 ): Promise<ActorSubclass<TokenServiceExtended>> => {
+  const idl = canisterId === XTC_ID ? xtcIDL : extIDL;
   const actor = (new (createExtendedActorClass(
     agent,
     tokenMethods,
     canisterId,
-    extIDL
+    idl
   ))() as unknown) as ActorSubclass<TokenServiceExtended>;
   return actor;
 };
