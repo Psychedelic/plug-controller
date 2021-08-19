@@ -45,7 +45,7 @@ export default ({ IDL }) => {
         IDL.Record({
           to: IDL.Principal,
           from: IDL.Opt(IDL.Principal),
-          amount: IDL.Nat,
+          amount: IDL.Nat64,
         }),
       ],
       [TransferResult],
