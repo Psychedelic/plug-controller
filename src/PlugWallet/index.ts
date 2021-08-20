@@ -53,7 +53,7 @@ class PlugWallet {
     mnemonic,
     registeredTokens = [],
   }: PlugWalletArgs) {
-    this.name = name || 'Main IC Wallet';
+    this.name = name || 'Account 1';
     this.icon = icon;
     this.walletNumber = walletNumber;
     this.registeredTokens = uniqueByObjKey(
