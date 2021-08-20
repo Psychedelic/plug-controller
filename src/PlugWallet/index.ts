@@ -189,7 +189,13 @@ class PlugWallet {
     const xtcTransactions = await getXTCTransactions(this.principal);
     // merge and format all trx. sort by timestamp
     // TODO: any custom token impelmenting archive should be queried. (0.4.0)
-    return icpTrxs;
+    return {
+      total: icpTrxs.total + xtcTransactions.total,
+      transactions: [
+        ...icpTrxs.transactions,
+        ...xtcTransactions.transactions,
+      ].sort((a, b) => a.timestamp - b.timestamp),
+    };
   };
 
   public send = async (
