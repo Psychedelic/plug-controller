@@ -2,12 +2,10 @@ import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import RandomBigInt from 'random-bigint';
 import { Principal } from '@dfinity/principal';
-import fetch from 'cross-fetch';
 
-import { HttpAgent } from '@dfinity/agent';
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
-import { GetTransactionsResponse } from '../utils/dfx/rosetta';
+import { GetTransactionsResponse } from '../utils/dfx/history/rosetta';
 import PlugWallet from '../PlugWallet';
 import { createAgent } from '../utils/dfx';
 import store from '../utils/storage/mock';

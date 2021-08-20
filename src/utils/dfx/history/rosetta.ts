@@ -2,8 +2,8 @@
 /* eslint-disable @typescript-eslint/camelcase */
 
 import fetch from 'cross-fetch';
-import { ERRORS } from '../../errors';
-import { NET_ID, ROSETTA_URL } from './constants';
+import { ERRORS } from '../../../errors';
+import { NET_ID, ROSETTA_URL } from '../constants';
 
 interface Operation {
   account: {
@@ -81,7 +81,7 @@ const getTransactionInfo = (
   return { ...transaction, hash, timestamp } as InferredTransaction;
 };
 
-export const getTransactions = async (
+export const getICPTransactions = async (
   accountId: string
 ): Promise<GetTransactionsResponse> => {
   const response = await fetch(`${ROSETTA_URL}/search/transactions`, {

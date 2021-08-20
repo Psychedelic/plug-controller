@@ -10,9 +10,13 @@ import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
 import { createTokenActor, SendResponse } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
-import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
+import {
+  getICPTransactions,
+  GetTransactionsResponse,
+} from '../utils/dfx/history/rosetta';
 import TOKENS from '../constants/tokens';
 import { uniqueByObjKey } from '../utils/array';
+import { getXTCTransactions } from '../utils/dfx/history/xtcHistory';
 
 interface PlugWalletArgs {
   name?: string;
@@ -181,7 +185,11 @@ class PlugWallet {
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
-    return getTransactions(this.accountId);
+    const icpTrxs = await getICPTransactions(this.accountId);
+    const xtcTransactions = await getXTCTransactions(this.principal);
+    // merge and format all trx. sort by timestamp
+    // TODO: any custom token impelmenting archive should be queried. (0.4.0)
+    return icpTrxs;
   };
 
   public send = async (
