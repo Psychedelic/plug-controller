@@ -2,7 +2,7 @@ export default {
   XTC: {
     symbol: 'XTC',
     canisterId: 'aanaa-xaaaa-aaaah-aaeiq-cai',
-    name: 'XTC',
+    name: 'Cycles',
     decimals: 5,
   },
   WTC: {
