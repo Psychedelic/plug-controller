@@ -1,6 +1,7 @@
 import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
+import randomColor from 'random-color';
 
 import { ERRORS } from '../errors';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
@@ -53,7 +54,7 @@ class PlugWallet {
     mnemonic,
     registeredTokens = [],
   }: PlugWalletArgs) {
-    this.name = name || 'Main IC Wallet';
+    this.name = name || 'Account 1';
     this.icon = icon;
     this.walletNumber = walletNumber;
     this.registeredTokens = uniqueByObjKey(
@@ -98,7 +99,8 @@ class PlugWallet {
     if (!('fungible' in metadata)) {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
     }
-    const tokenDescriptor = { ...metadata.fungible, canisterId };
+    const color = randomColor({ luminosity: 'light' });
+    const tokenDescriptor = { ...metadata.fungible, canisterId, color };
     const newTokens = [...this.registeredTokens, tokenDescriptor];
     const unique = uniqueByObjKey(newTokens, 'symbol') as StandardToken[];
     this.registeredTokens = unique;
@@ -134,6 +136,14 @@ class PlugWallet {
     const agent = await createAgent({ secretKey });
     const ledger = await createLedgerActor(agent);
     const icpBalance = await ledger.getBalance(this.accountId);
+    // Add XTC if it was not in the first place (backwards compatibility)
+    if (
+      !this.registeredTokens.some(
+        token => token.canisterId === TOKENS.XTC.canisterId
+      )
+    ) {
+      this.registeredTokens.push(TOKENS.XTC);
+    }
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
       this.registeredTokens.map(async token => {
