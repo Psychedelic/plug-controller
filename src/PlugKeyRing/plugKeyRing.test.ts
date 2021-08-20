@@ -25,8 +25,8 @@ jest.mock('../utils/dfx', () => {
 
 jest.mock('../utils/dfx/token', () => {
   return {
-    createTokenActor: (): { metadata: jest.Mock<any, any> } => ({
-      metadata: jest.fn(() => ({
+    createTokenActor: (): { getMetadata: jest.Mock<any, any> } => ({
+      getMetadata: jest.fn(() => ({
         fungible: { symbol: 'WTC', decimals: 5, name: 'Wrapped Cycles' },
       })),
     }),
