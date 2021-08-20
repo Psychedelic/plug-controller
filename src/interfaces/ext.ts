@@ -44,6 +44,7 @@ export interface TokenMetaData {
 }
 export interface StandardToken extends TokenMetaData {
   canisterId: string;
+  color?: string;
 }
 
 export type CommonError =

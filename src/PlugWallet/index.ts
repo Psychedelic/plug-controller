@@ -1,6 +1,7 @@
 import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
+import randomColor from 'random-color';
 
 import { ERRORS } from '../errors';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
@@ -98,7 +99,8 @@ class PlugWallet {
     if (!('fungible' in metadata)) {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
     }
-    const tokenDescriptor = { ...metadata.fungible, canisterId };
+    const color = randomColor({ luminosity: 'light' });
+    const tokenDescriptor = { ...metadata.fungible, canisterId, color };
     const newTokens = [...this.registeredTokens, tokenDescriptor];
     const unique = uniqueByObjKey(newTokens, 'symbol') as StandardToken[];
     this.registeredTokens = unique;
