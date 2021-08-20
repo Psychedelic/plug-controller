@@ -134,6 +134,14 @@ class PlugWallet {
     const agent = await createAgent({ secretKey });
     const ledger = await createLedgerActor(agent);
     const icpBalance = await ledger.getBalance(this.accountId);
+    // Add XTC if it was not in the first place (backwards compatibility)
+    if (
+      !this.registeredTokens.some(
+        token => token.canisterId === TOKENS.XTC.canisterId
+      )
+    ) {
+      this.registeredTokens.push(TOKENS.XTC);
+    }
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
       this.registeredTokens.map(async token => {
