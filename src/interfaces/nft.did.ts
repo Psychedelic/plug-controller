@@ -20,7 +20,7 @@ export interface HttpResponse {
   'status_code' : number,
 }
 export interface ICPTs { 'e8s' : bigint }
-export interface ICPunk {
+export interface NFTService {
   'add_genesis_record' : () => Promise<bigint>,
   'data_of' : (arg_0: bigint) => Promise<TokenDesc>,
   'delist' : (arg_0: bigint) => Promise<boolean>,
@@ -31,7 +31,7 @@ export interface ICPunk {
   'list' : (arg_0: bigint, arg_1: bigint) => Promise<boolean>,
   'name' : () => Promise<string>,
   'owner' : () => Promise<Principal>,
-  'owner_of' : (arg_0: bigint) => Promise<[] | [Principal]>,
+  'owner_of' : (arg_0: bigint) => Promise<Principal>,
   'set_owner' : (arg_0: Principal) => Promise<boolean>,
   'set_storage_canister_id' : (arg_0: [] | [Principal]) => Promise<boolean>,
   'symbol' : () => Promise<string>,
@@ -85,4 +85,10 @@ export interface TransactionNotification {
   'amount' : ICPTs,
   'block_height' : bigint,
 }
-export default ICPunk;
+export interface StandardNFT {
+  name: string;
+  symbol: string;
+  totalSupply: number;
+  canisterId: string;
+}
+export default NFTService;

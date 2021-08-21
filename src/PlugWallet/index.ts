@@ -1,4 +1,4 @@
-import { PublicKey } from '@dfinity/agent';
+import { Actor, ActorSubclass, PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import randomColor from 'random-color';
@@ -12,8 +12,11 @@ import { createAgent, createLedgerActor } from '../utils/dfx';
 import { createTokenActor, SendResponse } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
-import TOKENS from '../constants/tokens';
+import { TOKENS, NFTs } from '../constants/tokens';
 import { uniqueByObjKey } from '../utils/array';
+import NFTidl from '../idls/nft';
+import { StandardNFT } from '../interfaces/nft.did';
+import createNFTActor from '../utils/dfx/nft';
 
 interface PlugWalletArgs {
   name?: string;
@@ -21,6 +24,7 @@ interface PlugWalletArgs {
   mnemonic: string;
   icon?: string;
   registeredTokens?: Array<StandardToken>;
+  registeredNFTs?: Array<StandardNFT>;
 }
 
 interface JSONWallet {
@@ -30,6 +34,7 @@ interface JSONWallet {
   accountId: string;
   icon?: string;
   registeredTokens?: Array<StandardToken>;
+  registeredNFTs?: Array<StandardNFT>;
 }
 
 class PlugWallet {
@@ -44,6 +49,8 @@ class PlugWallet {
   principal: string;
 
   registeredTokens: Array<StandardToken>;
+
+  registeredNFTs: Array<StandardNFT>;
 
   private identity: Secp256k1KeyIdentity;
 
@@ -61,6 +68,7 @@ class PlugWallet {
       [...registeredTokens, TOKENS.XTC],
       'symbol'
     ) as StandardToken[];
+    this.registeredNFTs = [NFTs.IC_PUNKS];
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -82,16 +90,24 @@ class PlugWallet {
     this.icon = val;
   }
 
+  public getPunks = async () => {
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey });
+    const ICPunks = createNFTActor(agent, NFTs.IC_PUNKS.canisterId);
+    const myPunks = await ICPunks.user_tokens(Principal.from(this.principal));
+    const firstPunk = await ICPunks.data_of(BigInt(1));
+    console.log('myPunks', this.principal, myPunks);
+    console.log('first punk', firstPunk);
+  };
+
   public registerToken = async (
     canisterId: string
   ): Promise<StandardToken[]> => {
-    const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
-
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey });
     const tokenActor = await createTokenActor(canisterId, agent);
 
     const metadata = await tokenActor.getMetadata();

@@ -67,7 +67,7 @@ export default ({ IDL }) => {
     block_height: IDL.Nat64,
   });
   const Result = IDL.Variant({ Ok: IDL.Text, Err: IDL.Text });
-  const ICPunk = IDL.Service({
+  const NFTService = IDL.Service({
     add_genesis_record: IDL.Func([], [IDL.Nat], []),
     data_of: IDL.Func([IDL.Nat], [TokenDesc], ['query']),
     delist: IDL.Func([IDL.Nat], [IDL.Bool], []),
@@ -78,7 +78,7 @@ export default ({ IDL }) => {
     list: IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], []),
     name: IDL.Func([], [IDL.Text], ['query']),
     owner: IDL.Func([], [IDL.Principal], ['query']),
-    owner_of: IDL.Func([IDL.Nat], [IDL.Opt(IDL.Principal)], ['query']),
+    owner_of: IDL.Func([IDL.Nat], [IDL.Principal], ['query']),
     set_owner: IDL.Func([IDL.Principal], [IDL.Bool], []),
     set_storage_canister_id: IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Bool], []),
     symbol: IDL.Func([], [IDL.Text], ['query']),
@@ -87,7 +87,7 @@ export default ({ IDL }) => {
     transfer_to: IDL.Func([IDL.Principal, IDL.Nat], [IDL.Bool], []),
     user_tokens: IDL.Func([IDL.Principal], [IDL.Vec(IDL.Nat)], ['query']),
   });
-  return ICPunk;
+  return NFTService;
 };
 export const init = ({ IDL }) => {
   return [IDL.Text, IDL.Text, IDL.Nat, IDL.Principal];
