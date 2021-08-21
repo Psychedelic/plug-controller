@@ -2,9 +2,7 @@ import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import RandomBigInt from 'random-bigint';
 import { Principal } from '@dfinity/principal';
-import fetch from 'cross-fetch';
 
-import { HttpAgent } from '@dfinity/agent';
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/rosetta';
@@ -27,12 +25,24 @@ jest.mock('../utils/dfx', () => {
 
 jest.mock('../utils/dfx/token', () => {
   return {
-    createTokenActor: (): { metadata: jest.Mock<any, any> } => ({
+    createTokenActor: (): {
+      metadata: jest.Mock<any, any>;
+      getMetadata: jest.Mock<any, any>;
+    } => ({
       metadata: jest.fn(() => ({
+        fungible: {
+          metadata: { symbol: 'WTC', decimals: 5, name: 'Wrapped Cycles' },
+        },
+      })),
+      getMetadata: jest.fn(() => ({
         fungible: { symbol: 'WTC', decimals: 5, name: 'Wrapped Cycles' },
       })),
     }),
   };
+});
+
+jest.mock('../utils/dfx/token/methods', () => {
+  return {};
 });
 
 const TEST_PASSWORD = 'Somepassword1234';
@@ -297,7 +307,7 @@ describe('Plug KeyRing', () => {
       );
       expect(isInitialized).toEqual(true);
     });
-    it('should persist data encypted correctly after registering a new token', async () => {
+    it.only('should persist data encypted correctly after registering a new token', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai'); // register XTC
