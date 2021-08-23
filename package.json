@@ -58,7 +58,7 @@
     "typescript": "^3.8.3"
   },
   "name": "@psychedelic/plug-controller",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Internet Computer Plug wallet's controller",
   "main": "dist/index.js",
   "scripts": {
