@@ -4,7 +4,6 @@ import axios from 'axios';
 
 import { GetTransactionsResponse, InferredTransaction } from './rosetta';
 
-const MILI_PER_SECOND = 1_000_000;
 const KYASHU_URL = 'https://hwy253x090.execute-api.us-west-2.amazonaws.com/dev';
 
 type TransactionKind =
@@ -80,7 +79,7 @@ const formatMint = (
   const transaction: any = { status: 'COMPLETED', fee: {} };
   transaction.from = 'Mint';
   transaction.to = event.kind.Mint.to;
-  transaction.type = 'MINT';
+  transaction.type = 'RECEIVE';
 
   return transaction as InferredTransaction;
 };
@@ -152,27 +151,38 @@ export const getXTCTransactions = async (
   const url = `${KYASHU_URL}/txns/${principalId}${
     txnIds?.length ? `?txnIds=[${txnIds.join(',')}]` : ''
   }`;
-  const response = await axios.get(url);
-  return {
-    total: response.data.length,
-    transactions: response.data.map(transaction =>
-      formatXTCTrancaction(principalId, transaction)
-    ),
-  } as GetTransactionsResponse;
+  try {
+    const response = await axios.get(url);
+    return {
+      total: response.data.length,
+      transactions: response.data.map(transaction =>
+        formatXTCTrancaction(principalId, transaction)
+      ),
+    } as GetTransactionsResponse;
+  } catch (e) {
+    return {
+      total: 0,
+      transactions: [],
+    };
+  }
 };
 
 export const requestCacheUpdate = async (
   principalId: string,
   txnIds?: Array<bigint>
 ): Promise<boolean> => {
-  const response = await axios.post(`${KYASHU_URL}/txn/${principalId}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: '*/*',
-    },
-    data: JSON.stringify({
-      txnIds: txnIds?.map(tx => tx.toString()),
-    }),
-  });
-  return response.data;
+  try {
+    const response = await axios.post(`${KYASHU_URL}/txn/${principalId}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: '*/*',
+      },
+      data: JSON.stringify({
+        txnIds: txnIds?.map(tx => tx.toString()),
+      }),
+    });
+    return !!response.data;
+  } catch (e) {
+    return false;
+  }
 };
