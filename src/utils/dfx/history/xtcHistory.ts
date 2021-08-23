@@ -79,7 +79,7 @@ const formatMint = (
   const transaction: any = { status: 'COMPLETED', fee: {} };
   transaction.from = 'Mint';
   transaction.to = event.kind.Mint.to;
-  transaction.type = 'RECEIVE';
+  transaction.type = 'MINT';
 
   return transaction as InferredTransaction;
 };
