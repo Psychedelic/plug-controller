@@ -198,7 +198,7 @@ class PlugKeyRing {
     this.validateSubaccount(index);
     const wallet = wallets[index];
     const registeredTokens = await wallet.registerToken(canisterId);
-    wallets.splice(subAccount, 1, wallet);
+    wallets.splice(index, 1, wallet);
     this.state.wallets = wallets;
     await this.saveEncryptedState({ wallets }, this.state.password);
     return registeredTokens;
