@@ -381,12 +381,12 @@ describe('Plug KeyRing', () => {
     });
     it('should create new wallets with a default name', async () => {
       const { wallet } = await keyRing.create({ password: TEST_PASSWORD });
-      expect(wallet.name).toEqual('Main IC Wallet');
+      expect(wallet.name).toEqual('Account 1');
       const { wallet: newWallet } = await keyRing.importMnemonic({
         mnemonic: TEST_MNEMONIC,
         password: TEST_PASSWORD,
       });
-      expect(newWallet.name).toEqual('Main IC Wallet');
+      expect(newWallet.name).toEqual('Account 1');
     });
     it('should create new wallets with a correct name and emoji', async () => {
       const { wallet } = await keyRing.create({ password: TEST_PASSWORD });
