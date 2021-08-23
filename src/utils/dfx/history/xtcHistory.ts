@@ -177,12 +177,13 @@ export const requestCacheUpdate = async (
         'Content-Type': 'application/json',
         Accept: '*/*',
       },
-      data: JSON.stringify({
+      body: {
         txnIds: txnIds?.map(tx => tx.toString()),
-      }),
+      },
     });
     return !!response.data;
   } catch (e) {
+    console.log('kyasshuu error', e);
     return false;
   }
 };

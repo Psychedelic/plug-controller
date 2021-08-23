@@ -17,10 +17,7 @@ import {
 } from '../utils/dfx/history/rosetta';
 import TOKENS from '../constants/tokens';
 import { uniqueByObjKey } from '../utils/array';
-import {
-  getXTCTransactions,
-  requestCacheUpdate,
-} from '../utils/dfx/history/xtcHistory';
+import { getXTCTransactions } from '../utils/dfx/history/xtcHistory';
 
 interface PlugWalletArgs {
   name?: string;
@@ -134,14 +131,14 @@ class PlugWallet {
       to: Principal.fromText(to),
       amount,
     });
-    try {
-      if ('Ok' in burnResult) {
-        const trxId = burnResult.Ok;
-        await requestCacheUpdate(to, [trxId]);
-      }
-    } catch (e) {
-      console.log('Kyasshu error');
-    }
+    // try {
+    //   if ('Ok' in burnResult) {
+    //     const trxId = burnResult.Ok;
+    //     await requestCacheUpdate(this.principal, [trxId]);
+    //   }
+    // } catch (e) {
+    //   console.log('Kyasshu error');
+    // }
     return burnResult;
   };
 
@@ -263,16 +260,16 @@ class PlugWallet {
       this.identity.getPrincipal().toString(),
       amount
     );
-    if (canisterId === TOKENS.XTC.canisterId) {
-      try {
-        if ('transactionId' in result) {
-          const trxId = result.transactionId;
-          await requestCacheUpdate(to, [trxId]);
-        }
-      } catch (e) {
-        console.log('Kyasshu error');
-      }
-    }
+    // if (canisterId === TOKENS.XTC.canisterId) {
+    //   try {
+    //     if ('transactionId' in result) {
+    //       const trxId = result.transactionId;
+    //       await requestCacheUpdate(this.principal, [trxId]);
+    //     }
+    //   } catch (e) {
+    //     console.log('Kyasshu error');
+    //   }
+    // }
 
     return result;
   }
