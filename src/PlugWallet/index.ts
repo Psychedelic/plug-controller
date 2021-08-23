@@ -126,7 +126,7 @@ class PlugWallet {
     }
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
-    const xtcActor = await createTokenActor(to, agent);
+    const xtcActor = await createTokenActor(TOKENS.XTC.canisterId, agent);
     const burnResult = await xtcActor.burnXTC({
       to: Principal.fromText(to),
       amount,
