@@ -4,7 +4,7 @@ import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 
 import { ERRORS } from '../errors';
-import { GetTransactionsResponse } from '../utils/dfx/rosetta';
+import { GetTransactionsResponse } from '../utils/dfx/history/rosetta';
 import PlugWallet from '../PlugWallet';
 import { createAccount, getAccountId } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
