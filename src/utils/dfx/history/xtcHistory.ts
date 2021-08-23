@@ -1,37 +1,37 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-underscore-dangle */
-import fetch from 'cross-fetch';
-import { Principal } from '@dfinity/principal';
+import axios from 'axios';
 
 import { GetTransactionsResponse, InferredTransaction } from './rosetta';
 
-const KYASHU_URL = 'https://ikbsza5one.execute-api.us-west-2.amazonaws.com/dev';
+const MILI_PER_SECOND = 1_000_000;
+const KYASHU_URL = 'https://hwy253x090.execute-api.us-west-2.amazonaws.com/dev';
 
 type TransactionKind =
   | {
       Burn: {
-        to: { _isPrincipal: boolean; _arr: Uint8Array };
-        from: { _isPrincipal: boolean; _arr: Uint8Array };
+        to: string;
+        from: string;
       };
     }
-  | { Mint: { to: { _isPrincipal: boolean; _arr: Uint8Array } } }
+  | { Mint: { to: string } }
   | {
       CanisterCreated: {
-        from: { _isPrincipal: boolean; _arr: Uint8Array };
-        canister: { _isPrincipal: boolean; _arr: Uint8Array };
+        from: string;
+        canister: string;
       };
     }
   | {
       CanisterCalled: {
-        from: { _isPrincipal: boolean; _arr: Uint8Array };
+        from: string;
         method_name: string;
-        canister: { _isPrincipal: boolean; _arr: Uint8Array };
+        canister: string;
       };
     }
   | {
       Transfer: {
-        to: { _isPrincipal: boolean; _arr: Uint8Array };
-        from: Principal;
+        to: string;
+        from: string;
       };
     };
 
@@ -51,10 +51,8 @@ const formatTransfer = (
 ): InferredTransaction => {
   if (!('Transfer' in event.kind)) throw Error();
   const transaction: any = { status: 'COMPLETED', fee: {} };
-  transaction.from = Principal.from(event.kind.Transfer.from).toString(); // check with @b0xtch how to instance Principal from api answer
-  transaction.to = Principal.fromUint8Array(
-    event.kind.Transfer.to._arr
-  ).toString();
+  transaction.from = event.kind.Transfer.from; // check with @b0xtch how to instance Principal from api answer
+  transaction.to = event.kind.Transfer.to;
   transaction.type = transaction.to === principalId ? 'RECEIVE' : 'SEND';
 
   return transaction as InferredTransaction;
@@ -66,10 +64,9 @@ const formatBurn = (
 ): InferredTransaction => {
   if (!('Burn' in event.kind)) throw Error();
   const transaction: any = { status: 'COMPLETED', fee: {} };
-  transaction.from = Principal.fromUint8Array(
-    event.kind.Burn.from._arr
-  ).toString();
-  transaction.to = 'Burn';
+  transaction.from = event.kind.Burn.from;
+
+  transaction.to = event.kind.Burn.to;
   transaction.type = 'BURN';
 
   return transaction as InferredTransaction;
@@ -82,7 +79,7 @@ const formatMint = (
   if (!('Mint' in event.kind)) throw Error();
   const transaction: any = { status: 'COMPLETED', fee: {} };
   transaction.from = 'Mint';
-  transaction.to = Principal.fromUint8Array(event.kind.Mint.to._arr).toString();
+  transaction.to = event.kind.Mint.to;
   transaction.type = 'MINT';
 
   return transaction as InferredTransaction;
@@ -94,12 +91,8 @@ const formatCanisterCalled = (
 ): InferredTransaction => {
   if (!('CanisterCalled' in event.kind)) throw Error();
   const transaction: any = { status: 'COMPLETED', fee: {} };
-  transaction.from = Principal.fromUint8Array(
-    event.kind.CanisterCalled.from._arr
-  ).toString();
-  transaction.to = `${Principal.fromUint8Array(
-    event.kind.CanisterCalled.canister._arr
-  ).toString()}_${event.kind.CanisterCalled.method_name}`;
+  transaction.from = event.kind.CanisterCalled.from;
+  transaction.to = `${event.kind.CanisterCalled.canister}_${event.kind.CanisterCalled.method_name}`;
   transaction.type = 'CANISTER_CALLED';
 
   return transaction as InferredTransaction;
@@ -111,12 +104,8 @@ const formatCanisterCreated = (
 ): InferredTransaction => {
   if (!('CanisterCreated' in event.kind)) throw Error();
   const transaction: any = { status: 'COMPLETED', fee: {} };
-  transaction.from = Principal.fromUint8Array(
-    event.kind.CanisterCreated.from._arr
-  ).toString();
-  transaction.to = Principal.fromUint8Array(
-    event.kind.CanisterCreated.canister._arr
-  ).toString();
+  transaction.from = event.kind.CanisterCreated.from;
+  transaction.to = event.kind.CanisterCreated.canister;
   transaction.type = 'CANISTER_CREATED';
 
   return transaction as InferredTransaction;
@@ -132,7 +121,7 @@ const formatXTCTrancaction = (
   transaction.amount = BigInt(transactionEvent.cycles);
   transaction.currency = { symbol: 'XTC', decimals: 5 };
   transaction.fee.amount = BigInt(transactionEvent.fee);
-  transaction.fee.currency = { symbol: 'ICP', decimals: 8 };
+  transaction.fee.currency = { symbol: 'XTC', decimals: 5 };
   transaction.timestamp = xtcTransaction.event.timestamp;
   switch (Object.keys(transactionEvent.kind)[0]) {
     case 'Transfer':
@@ -160,22 +149,13 @@ export const getXTCTransactions = async (
   principalId: string,
   txnIds?: Array<bigint>
 ): Promise<GetTransactionsResponse> => {
-  const response = await fetch(
-    `${KYASHU_URL}/txns/${principalId}${
-      txnIds?.length ? `?txnIds=[${txnIds.join(',')}]` : ''
-    }`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: '*/*',
-      },
-    }
-  );
-  const transactions = await response.json();
+  const url = `${KYASHU_URL}/txns/${principalId}${
+    txnIds?.length ? `?txnIds=[${txnIds.join(',')}]` : ''
+  }`;
+  const response = await axios.get(url);
   return {
-    total: transactions.length,
-    transactions: transactions.map(transaction =>
+    total: response.data.length,
+    transactions: response.data.map(transaction =>
       formatXTCTrancaction(principalId, transaction)
     ),
   } as GetTransactionsResponse;
@@ -185,15 +165,14 @@ export const requestCacheUpdate = async (
   principalId: string,
   txnIds?: Array<bigint>
 ): Promise<boolean> => {
-  const response = await fetch(`${KYASHU_URL}/txn/${principalId}`, {
-    method: 'POST',
+  const response = await axios.post(`${KYASHU_URL}/txn/${principalId}`, {
     headers: {
       'Content-Type': 'application/json',
       Accept: '*/*',
     },
-    body: JSON.stringify({
+    data: JSON.stringify({
       txnIds: txnIds?.map(tx => tx.toString()),
     }),
   });
-  return response.ok;
+  return response.data;
 };

@@ -62,6 +62,20 @@ const createManyTransactions = (): GetTransactionsResponse => {
       status: 'COMPLETED',
       type: 'SEND',
     });
+    transactions.transactions.push({
+      timestamp: RandomBigInt(32),
+      hash: RandomBigInt(32),
+      from: 'string',
+      to: 'string',
+      amount: BigInt(1000),
+      currency: { symbol: 'XTC', decimals: 5 },
+      fee: {
+        amount: BigInt(1000),
+        currency: { symbol: 'XTC', decimals: 5 },
+      },
+      status: 'COMPLETED',
+      type: 'SEND',
+    });
   }
   return transactions;
 };

@@ -194,7 +194,7 @@ class PlugWallet {
       transactions: [
         ...icpTrxs.transactions,
         ...xtcTransactions.transactions,
-      ].sort((a, b) => a.timestamp - b.timestamp),
+      ].sort((a, b) => b.timestamp - a.timestamp),
     };
   };
 
