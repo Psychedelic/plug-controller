@@ -60,6 +60,23 @@ class PlugKeyRing {
     return wallet.getNFTs();
   };
 
+  public transferNFT = async ({
+    subAccount = 0,
+    id,
+    to,
+  }: {
+    subAccount?: number;
+    id: bigint;
+    to: string;
+  }): Promise<boolean> => {
+    this.checkUnlocked();
+    const index = subAccount || this.state.currentWalletId || 0;
+    const { wallets } = this.state;
+    this.validateSubaccount(index);
+    const wallet = wallets[index];
+    return wallet.transferNFT({ id, to });
+  }
+
   private loadFromPersistance = async (password: string): Promise<void> => {
     interface StorageData {
       vault: PlugState;

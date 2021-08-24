@@ -5,7 +5,7 @@ import randomColor from 'random-color';
 
 import { ERRORS } from '../errors';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
-import { validateCanisterId } from '../PlugKeyRing/utils';
+import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
@@ -106,12 +106,30 @@ class PlugWallet {
       nfts.map(async punkId => {
         const [nft] = await NFT.data_of(punkId);
         if (!nft) {
-          throw new Error('Error while fetching NFT data');
+          throw new Error(ERRORS.GET_NFT_ERROR);
         }
         return nft;
       })
     );
     return nftData as Array<TokenDesc>;
+  };
+
+  public transferNFT = async (args: {
+    id: bigint;
+    to: string;
+  }): Promise<boolean> => {
+    const { id, to } = args;
+    if (!validatePrincipalId(to)) {
+      throw new Error(ERRORS.INVALID_PRINCIPAL_ID);
+    }
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey });
+    const NFT = createNFTActor(agent, NFTs.IC_PUNKS.canisterId);
+    try {
+      return NFT.transfer_to(Principal.fromText(to), id);
+    } catch (e) {
+      throw new Error(ERRORS.TRANSFER_NFT_ERROR);
+    }
   };
 
   public registerToken = async (
