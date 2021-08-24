@@ -1,7 +1,7 @@
 import { HttpAgent, ActorSubclass, Actor } from '@dfinity/agent';
 
-import NFTIdls from '../../../idls/nft';
-import { NFTService } from '../../../interfaces/nft.did';
+import NFTIdls from '../../../idls/nft.did';
+import NFTService from '../../../interfaces/nft';
 
 export const createNFTActor = (
   agent: HttpAgent,

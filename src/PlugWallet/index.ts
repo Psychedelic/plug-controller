@@ -1,4 +1,4 @@
-import { Actor, ActorSubclass, PublicKey } from '@dfinity/agent';
+import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import randomColor from 'random-color';
@@ -14,9 +14,9 @@ import { SendOpts } from '../utils/dfx/ledger/methods';
 import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
 import { TOKENS, NFTs } from '../constants/tokens';
 import { uniqueByObjKey } from '../utils/array';
-import NFTidl from '../idls/nft';
-import { StandardNFT } from '../interfaces/nft.did';
-import createNFTActor from '../utils/dfx/nft';
+
+import { StandardNFT } from '../interfaces/nft';
+import { createNFTActor } from '../utils/dfx/nft';
 
 interface PlugWalletArgs {
   name?: string;
@@ -90,14 +90,18 @@ class PlugWallet {
     this.icon = val;
   }
 
-  public getPunks = async () => {
+  public getPunks = async (): Promise<void> => {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
     const ICPunks = createNFTActor(agent, NFTs.IC_PUNKS.canisterId);
-    const myPunks = await ICPunks.user_tokens(Principal.from(this.principal));
-    const firstPunk = await ICPunks.data_of(BigInt(1));
-    console.log('myPunks', this.principal, myPunks);
-    console.log('first punk', firstPunk);
+    const myPunkIds = await ICPunks.user_tokens(Principal.from(this.principal));
+    console.log('Owned punks: ', myPunkIds);
+    console.log('Fetching info...');
+    const myPunks = await Promise.all(
+      myPunkIds.map(punkId => ICPunks.data_of(punkId))
+    );
+    console.log('My punks:');
+    console.log(myPunks);
   };
 
   public registerToken = async (
