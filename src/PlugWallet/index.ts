@@ -15,7 +15,7 @@ import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
 import { TOKENS, NFTs } from '../constants/tokens';
 import { uniqueByObjKey } from '../utils/array';
 
-import { StandardNFT } from '../interfaces/nft';
+import { StandardNFT, TokenDesc } from '../interfaces/nft';
 import { createNFTActor } from '../utils/dfx/nft';
 
 interface PlugWalletArgs {
@@ -90,18 +90,24 @@ class PlugWallet {
     this.icon = val;
   }
 
-  public getPunks = async (): Promise<void> => {
+  // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
+  public getNFTs = async (): Promise<Array<TokenDesc>> => {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
-    const ICPunks = createNFTActor(agent, NFTs.IC_PUNKS.canisterId);
-    const myPunkIds = await ICPunks.user_tokens(Principal.from(this.principal));
-    console.log('Owned punks: ', myPunkIds);
-    console.log('Fetching info...');
-    const myPunks = await Promise.all(
-      myPunkIds.map(punkId => ICPunks.data_of(punkId))
+    const NFT = createNFTActor(agent, NFTs.IC_PUNKS.canisterId);
+    const nfts = await NFT.user_tokens(Principal.from(this.principal));
+
+    // Need to cast cause candid is bugged
+    const nftData: Array<TokenDesc> = await Promise.all(
+      nfts.map(async punkId => {
+        const [nft] = await NFT.data_of(punkId);
+        if (!nft) {
+          throw new Error('Error while fetching NFT data');
+        }
+        return nft;
+      })
     );
-    console.log('My punks:');
-    console.log(myPunks);
+    return nftData as Array<TokenDesc>;
   };
 
   public registerToken = async (

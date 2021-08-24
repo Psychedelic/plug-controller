@@ -84,8 +84,7 @@ describe('Account utils', () => {
       }
     });
 
-    // Commented until we get ahold on keysmith engineers
-    xit('should generate the correct principal id', () => {
+    it('should generate the correct principal id', () => {
       const mnemonic =
         'easily drift crazy brother trash green cricket peasant unhappy fruit behind pudding';
       const principal =
