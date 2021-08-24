@@ -106,7 +106,7 @@ class PlugWallet {
       nfts.map(async punkId => {
         const [nft] = await NFT.data_of(punkId);
         if (!nft) {
-          throw new Error(ERRORS.NFT_ERROR);
+          throw new Error(ERRORS.GET_NFT_ERROR);
         }
         return nft;
       })
@@ -125,7 +125,11 @@ class PlugWallet {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
     const NFT = createNFTActor(agent, NFTs.IC_PUNKS.canisterId);
-    return NFT.transfer_to(Principal.fromText(to), id);
+    try {
+      return NFT.transfer_to(Principal.fromText(to), id);
+    } catch (e) {
+      throw new Error(ERRORS.TRANSFER_NFT_ERROR);
+    }
   };
 
   public registerToken = async (

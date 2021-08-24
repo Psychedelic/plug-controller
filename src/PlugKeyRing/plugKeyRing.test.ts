@@ -55,7 +55,12 @@ jest.mock('../utils/dfx/nft', () => {
           properties: [],
         },
       ]),
-      transfer_to: jest.fn((_, id) => id !== BigInt(130)),
+      transfer_to: jest.fn((_, id) => {
+        if (id === BigInt(130)) {
+          throw new Error(ERRORS.TRANSFER_NFT_ERROR);
+        }
+        return true;
+      }),
     }),
   };
 });
@@ -686,12 +691,15 @@ describe('Plug KeyRing', () => {
           })
         ).rejects.toThrow(ERRORS.INVALID_WALLET_NUMBER);
       });
+      // TODO: Not sure how to make it fail.
       it('should fail to transfer IC Punks that is not owned', async () => {
-        const success = await keyRing.transferNFT({
-          id: BigInt(130),
-          to: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
-        });
-        expect(success).toBe(false);
+        await expect(
+          keyRing.transferNFT({
+            id: BigInt(130),
+            to:
+              'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+          })
+        ).rejects.toThrow(ERRORS.TRANSFER_NFT_ERROR);
       });
       it('should fail to transfer IC Punks to invalid principal', async () => {
         const nfts = await keyRing.getNFTs();

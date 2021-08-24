@@ -14,5 +14,7 @@ export const ERRORS = {
   TOKEN_NOT_SUPPORT_METADATA:
     'The provided canister does not implement commont extension',
   INVALID_PRINCIPAL_ID: 'Invalid principal id',
-  NFT_ERROR: 'Error while fetching NFT data',
+  GET_NFT_ERROR: 'Error while fetching NFT data',
+  TRANSFER_NFT_ERROR:
+    'Error while trying to transfer the NFT. Please verify you own the NFT you are trying to transfer',
 };
