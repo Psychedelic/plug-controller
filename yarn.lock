@@ -4917,7 +4917,7 @@ node-modules-regexp@^1.0.0:
 
 node-notifier@^6.0.0:
   version "6.0.0"
-  resolved "https://registry.npmjs.org/node-notifier/-/node-notifier-6.0.0.tgz"
+  resolved "https://registry.yarnpkg.com/node-notifier/-/node-notifier-6.0.0.tgz#cea319e06baa16deec8ce5cd7f133c4a46b68e12"
   integrity sha512-SVfQ/wMw+DesunOm5cKqr6yDcvUTDl/yc97ybGHMrteNEY6oekXpNpS3lZwgLlwz0FLgHoiW28ZpmBHUDg37cw==
   dependencies:
     growly "^1.3.0"
