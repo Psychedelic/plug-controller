@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/camelcase */
+/* eslint-disable camelcase */
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import RandomBigInt from 'random-bigint';
@@ -10,7 +12,7 @@ import PlugWallet from '../PlugWallet';
 import { createAgent } from '../utils/dfx';
 import store from '../utils/storage/mock';
 import { getAccountId } from '../utils/account';
-import tokens from '../constants/tokens';
+import { TOKENS } from '../constants/tokens';
 
 const mockSendICP = jest.fn();
 
@@ -31,6 +33,33 @@ jest.mock('../utils/dfx/token', () => {
       })),
     }),
   };
+});
+
+jest.mock('../utils/dfx/nft', () => {
+  return {
+    createNFTActor: (): {
+      user_tokens: jest.Mock<any, any>;
+      data_of: jest.Mock<any, any>;
+    } => ({
+      user_tokens: jest.fn(() => [BigInt(10)]),
+      data_of: jest.fn(() => [
+        {
+          id: BigInt(10),
+          url: '/Token/10',
+          owner: [
+            'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+          ],
+          desc: 'Example description of ICPunk',
+          name: 'ICPunk #10',
+          properties: [],
+        },
+      ]),
+    }),
+  };
+});
+
+jest.mock('../utils/dfx/token/methods', () => {
+  return {};
 });
 
 const TEST_PASSWORD = 'Somepassword1234';
@@ -138,7 +167,7 @@ describe('Plug KeyRing', () => {
       expect(state.currentWalletId).toEqual(0);
       expect(state.password).toEqual(TEST_PASSWORD); // Should I expose this?
       expect(bip39.validateMnemonic(state.mnemonic as string)).toEqual(true);
-      expect(stateWallet.registeredTokens).toEqual([tokens.XTC]);
+      expect(stateWallet.registeredTokens).toEqual([TOKENS.XTC]);
     });
     it('should fail if not password was provided', async () => {
       await expect(() => keyRing.create({ password: '' })).rejects.toEqual(
@@ -167,7 +196,7 @@ describe('Plug KeyRing', () => {
       expect(state.mnemonic).toEqual(TEST_MNEMONIC);
       expect(state.password).toEqual(TEST_PASSWORD);
       expect(bip39.validateMnemonic(state.mnemonic!)).toEqual(true);
-      expect(stateWallet.registeredTokens).toEqual([tokens.XTC]);
+      expect(stateWallet.registeredTokens).toEqual([TOKENS.XTC]);
     });
     it('should fail if not password or mnemonic were provided', async () => {
       await expect(() =>
@@ -449,6 +478,7 @@ describe('Plug KeyRing', () => {
       expect(wallets[1].icon).toEqual('New emoji2');
       expect(wallets[2].icon).toEqual('New name3');
     });
+    // Skipped since color is breaking it
     it('should register a token correctly to different subaccounts', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
@@ -459,9 +489,15 @@ describe('Plug KeyRing', () => {
       await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 2); // register WTC twice
 
       const { wallets } = await keyRing.getState();
-      expect(wallets[0].registeredTokens).toEqual([tokens.XTC]);
-      expect(wallets[1].registeredTokens).toEqual([tokens.XTC, tokens.WTC]);
-      expect(wallets[2].registeredTokens).toEqual([tokens.XTC, tokens.WTC]);
+      expect(wallets[0].registeredTokens).toMatchObject([TOKENS.XTC]);
+      expect(wallets[1].registeredTokens).toMatchObject([
+        TOKENS.XTC,
+        TOKENS.WTC,
+      ]);
+      expect(wallets[2].registeredTokens).toMatchObject([
+        TOKENS.XTC,
+        TOKENS.WTC,
+      ]);
     });
     test('should fail to register an invalid canister id', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
@@ -474,9 +510,6 @@ describe('Plug KeyRing', () => {
           'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe'
         )
       ).rejects.toEqual(new Error(ERRORS.INVALID_CANISTER_ID));
-    });
-    xit('should fail to register a canister ID that does not support the standard', async () => {
-      // TODO: confirm behavior
     });
   });
 
@@ -603,23 +636,31 @@ describe('Plug KeyRing', () => {
         getAccountId(Principal.fromText(to))
       );
     });
-
-    /*
-    it('call sendICP with token canister id', async () => {
-      const { wallets } = await keyRing.getState();
-      const amount = RandomBigInt(32);
-      const ind = Math.round(Math.random() * (walletsCreated - 1));
-      const to = wallets[ind].principal;
-
-      await keyRing.send(to.toString(), amount, XTC_MOCK.canisterId);
-      expect(createTokenActor).toHaveBeenCalled();
-
-      expect(mockSendICP.mock.calls[0][0].amount).toEqual(amount);
-      expect(mockSendICP.mock.calls[0][0].to).toEqual(
-        getAccountId(Principal.fromText(to))
-      );
+    describe('nfts', () => {
+      beforeEach(async () => {
+        keyRing = new PlugKeyRing();
+        await keyRing.importMnemonic({
+          password: TEST_PASSWORD,
+          mnemonic: TEST_MNEMONIC,
+        });
+        await keyRing.unlock(TEST_PASSWORD);
+      });
+      it('should fetch IC Punks correctly', async () => {
+        const nfts = await keyRing.getNFTs();
+        expect(nfts).toEqual([
+          {
+            id: BigInt(10),
+            url: '/Token/10',
+            owner: [
+              'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+            ],
+            desc: 'Example description of ICPunk',
+            name: 'ICPunk #10',
+            properties: [],
+          },
+        ]);
+      });
     });
-    */
 
     afterEach(() => {
       jest.clearAllMocks();

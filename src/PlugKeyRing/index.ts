@@ -14,6 +14,7 @@ import mockStore from '../utils/storage/mock';
 import { validatePrincipalId } from './utils';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
 import { BurnResult } from '../interfaces/xtc';
+import { TokenDesc } from '../interfaces/nft';
 
 interface PlugState {
   wallets: Array<PlugWallet>;
@@ -48,6 +49,15 @@ class PlugKeyRing {
     this.validateSubaccount(subaccount);
     const wallet = this.state.wallets[subaccount];
     return wallet.publicKey;
+  };
+
+  public getNFTs = async (subAccount = 0): Promise<Array<TokenDesc>> => {
+    this.checkUnlocked();
+    const index = subAccount || this.state.currentWalletId || 0;
+    const { wallets } = this.state;
+    this.validateSubaccount(index);
+    const wallet = wallets[index];
+    return wallet.getNFTs();
   };
 
   private loadFromPersistance = async (password: string): Promise<void> => {

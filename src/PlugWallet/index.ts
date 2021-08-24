@@ -15,9 +15,12 @@ import {
   getICPTransactions,
   GetTransactionsResponse,
 } from '../utils/dfx/history/rosetta';
-import TOKENS from '../constants/tokens';
+import { TOKENS, NFTs } from '../constants/tokens';
 import { uniqueByObjKey } from '../utils/array';
 import { getXTCTransactions } from '../utils/dfx/history/xtcHistory';
+
+import { StandardNFT, TokenDesc } from '../interfaces/nft';
+import { createNFTActor } from '../utils/dfx/nft';
 
 interface PlugWalletArgs {
   name?: string;
@@ -25,6 +28,7 @@ interface PlugWalletArgs {
   mnemonic: string;
   icon?: string;
   registeredTokens?: Array<StandardToken>;
+  registeredNFTs?: Array<StandardNFT>;
 }
 
 interface JSONWallet {
@@ -34,6 +38,7 @@ interface JSONWallet {
   accountId: string;
   icon?: string;
   registeredTokens?: Array<StandardToken>;
+  registeredNFTs?: Array<StandardNFT>;
 }
 
 class PlugWallet {
@@ -48,6 +53,8 @@ class PlugWallet {
   principal: string;
 
   registeredTokens: Array<StandardToken>;
+
+  registeredNFTs: Array<StandardNFT>;
 
   private identity: Secp256k1KeyIdentity;
 
@@ -65,6 +72,7 @@ class PlugWallet {
       [...registeredTokens, TOKENS.XTC],
       'symbol'
     ) as StandardToken[];
+    this.registeredNFTs = [NFTs.IC_PUNKS];
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -86,16 +94,34 @@ class PlugWallet {
     this.icon = val;
   }
 
+  // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
+  public getNFTs = async (): Promise<Array<TokenDesc>> => {
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey });
+    const NFT = createNFTActor(agent, NFTs.IC_PUNKS.canisterId);
+    const nfts = await NFT.user_tokens(Principal.from(this.principal));
+
+    // Need to cast cause candid is bugged
+    const nftData: Array<TokenDesc> = await Promise.all(
+      nfts.map(async punkId => {
+        const [nft] = await NFT.data_of(punkId);
+        if (!nft) {
+          throw new Error('Error while fetching NFT data');
+        }
+        return nft;
+      })
+    );
+    return nftData as Array<TokenDesc>;
+  };
+
   public registerToken = async (
     canisterId: string
   ): Promise<StandardToken[]> => {
-    const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
-
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey });
     const tokenActor = await createTokenActor(canisterId, agent);
 
     const metadata = await tokenActor.getMetadata();
