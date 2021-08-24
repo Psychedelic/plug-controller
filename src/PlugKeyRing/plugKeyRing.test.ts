@@ -40,6 +40,7 @@ jest.mock('../utils/dfx/nft', () => {
     createNFTActor: (): {
       user_tokens: jest.Mock<any, any>;
       data_of: jest.Mock<any, any>;
+      transfer_to: jest.Mock<boolean, any>;
     } => ({
       user_tokens: jest.fn(() => [BigInt(10)]),
       data_of: jest.fn(() => [
@@ -54,6 +55,7 @@ jest.mock('../utils/dfx/nft', () => {
           properties: [],
         },
       ]),
+      transfer_to: jest.fn((_, id) => id !== BigInt(130)),
     }),
   };
 });
@@ -659,6 +661,65 @@ describe('Plug KeyRing', () => {
             properties: [],
           },
         ]);
+      });
+      it('should fail to fetch IC Punks on inexistant account', async () => {
+        await expect(keyRing.getNFTs(1)).rejects.toThrow(
+          ERRORS.INVALID_WALLET_NUMBER
+        );
+      });
+      it('should transfer a punk correctly', async () => {
+        const nfts = await keyRing.getNFTs();
+        const transferred = await keyRing.transferNFT({
+          id: nfts[0].id,
+          to: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+        });
+        expect(transferred).toEqual(true);
+      });
+      it('should fail to transfer IC Punks on inexistant account', async () => {
+        const nfts = await keyRing.getNFTs();
+        await expect(
+          keyRing.transferNFT({
+            subAccount: 1,
+            id: nfts[0].id,
+            to:
+              'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+          })
+        ).rejects.toThrow(ERRORS.INVALID_WALLET_NUMBER);
+      });
+      it('should fail to transfer IC Punks that is not owned', async () => {
+        const success = await keyRing.transferNFT({
+          id: BigInt(130),
+          to: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+        });
+        expect(success).toBe(false);
+      });
+      it('should fail to transfer IC Punks to invalid principal', async () => {
+        const nfts = await keyRing.getNFTs();
+        // Malformed pid
+        await expect(
+          keyRing.transferNFT({
+            id: nfts[0]?.id,
+            to: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6lbzwp-7qe',
+          })
+        ).rejects.toThrow(ERRORS.INVALID_PRINCIPAL_ID);
+
+        // Account ID
+        await expect(
+          keyRing.transferNFT({
+            id: nfts[0]?.id,
+            to:
+              '9627c5abbae5b63b3a1b2ad8b6ee85e99e45317c4276c8addb39211ce05d2a59',
+          })
+        ).rejects.toThrow(ERRORS.INVALID_PRINCIPAL_ID);
+
+        // CONNFIRM WITH IC PUNKS
+        // Canister ID
+        await expect(
+          keyRing.transferNFT({
+            id: nfts[0]?.id,
+            to: '6xisx-7yaaa-aaaah-aagga-cai',
+          })
+        ).rejects.toThrow(ERRORS.INVALID_PRINCIPAL_ID);
       });
     });
 

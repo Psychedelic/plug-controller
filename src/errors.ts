@@ -13,4 +13,6 @@ export const ERRORS = {
   NON_FUNGIBLE_TOKEN_NOT_SUPPORTED: 'Non fungible tokens are not supported yet',
   TOKEN_NOT_SUPPORT_METADATA:
     'The provided canister does not implement commont extension',
+  INVALID_PRINCIPAL_ID: 'Invalid principal id',
+  NFT_ERROR: 'Error while fetching NFT data',
 };
