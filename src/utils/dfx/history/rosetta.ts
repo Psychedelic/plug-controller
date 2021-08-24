@@ -2,8 +2,10 @@
 /* eslint-disable @typescript-eslint/camelcase */
 
 import fetch from 'cross-fetch';
-import { ERRORS } from '../../errors';
-import { NET_ID, ROSETTA_URL } from './constants';
+import { ERRORS } from '../../../errors';
+import { NET_ID, ROSETTA_URL } from '../constants';
+
+export const MILI_PER_SECOND = 1_000_000;
 
 interface Operation {
   account: {
@@ -26,7 +28,12 @@ interface Currency {
 }
 
 interface RosettaTransaction {
-  metadata: { block_height: number; memo: number; timestamp: number };
+  metadata: {
+    block_height: number;
+    memo: number;
+    timestamp: number;
+    lockTime: number;
+  };
   operations: Operation[];
   transaction_identifier: { hash: string };
 }
@@ -43,7 +50,13 @@ export interface InferredTransaction {
   };
   timestamp: number;
   status: 'COMPLETED' | 'REVERTED' | 'PENDING';
-  type: 'SEND' | 'RECEIVE' | 'BURN' | 'MINT';
+  type:
+    | 'SEND'
+    | 'RECEIVE'
+    | 'BURN'
+    | 'MINT'
+    | 'CANISTER_CALLED'
+    | 'CANISTER_CREATED';
 }
 
 export interface GetTransactionsResponse {
@@ -78,10 +91,14 @@ const getTransactionInfo = (
     transaction.amount = amount;
     transaction.currency = operation.amount.currency;
   });
-  return { ...transaction, hash, timestamp } as InferredTransaction;
+  return {
+    ...transaction,
+    hash,
+    timestamp: timestamp / MILI_PER_SECOND,
+  } as InferredTransaction;
 };
 
-export const getTransactions = async (
+export const getICPTransactions = async (
   accountId: string
 ): Promise<GetTransactionsResponse> => {
   const response = await fetch(`${ROSETTA_URL}/search/transactions`, {

@@ -11,9 +11,13 @@ import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
 import { createTokenActor, SendResponse } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
-import { getTransactions, GetTransactionsResponse } from '../utils/dfx/rosetta';
+import {
+  getICPTransactions,
+  GetTransactionsResponse,
+} from '../utils/dfx/history/rosetta';
 import { TOKENS, NFTs } from '../constants/tokens';
 import { uniqueByObjKey } from '../utils/array';
+import { getXTCTransactions } from '../utils/dfx/history/xtcHistory';
 
 import { StandardNFT, TokenDesc } from '../interfaces/nft';
 import { createNFTActor } from '../utils/dfx/nft';
@@ -148,11 +152,19 @@ class PlugWallet {
     }
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
-    const xtcActor = await createTokenActor(to, agent);
+    const xtcActor = await createTokenActor(TOKENS.XTC.canisterId, agent);
     const burnResult = await xtcActor.burnXTC({
       to: Principal.fromText(to),
       amount,
     });
+    // try {
+    //   if ('Ok' in burnResult) {
+    //     const trxId = burnResult.Ok;
+    //     await requestCacheUpdate(this.principal, [trxId]);
+    //   }
+    // } catch (e) {
+    //   console.log('Kyasshu error');
+    // }
     return burnResult;
   };
 
@@ -217,7 +229,17 @@ class PlugWallet {
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
-    return getTransactions(this.accountId);
+    const icpTrxs = await getICPTransactions(this.accountId);
+    const xtcTransactions = await getXTCTransactions(this.principal);
+    // merge and format all trx. sort by timestamp
+    // TODO: any custom token impelmenting archive should be queried. (0.4.0)
+    return {
+      total: icpTrxs.total + xtcTransactions.total,
+      transactions: [
+        ...icpTrxs.transactions,
+        ...xtcTransactions.transactions,
+      ].sort((a, b) => b.timestamp - a.timestamp),
+    };
   };
 
   public send = async (
@@ -264,6 +286,16 @@ class PlugWallet {
       this.identity.getPrincipal().toString(),
       amount
     );
+    // if (canisterId === TOKENS.XTC.canisterId) {
+    //   try {
+    //     if ('transactionId' in result) {
+    //       const trxId = result.transactionId;
+    //       await requestCacheUpdate(this.principal, [trxId]);
+    //     }
+    //   } catch (e) {
+    //     console.log('Kyasshu error');
+    //   }
+    // }
 
     return result;
   }

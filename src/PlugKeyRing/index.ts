@@ -4,7 +4,7 @@ import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 
 import { ERRORS } from '../errors';
-import { GetTransactionsResponse } from '../utils/dfx/rosetta';
+import { GetTransactionsResponse } from '../utils/dfx/history/rosetta';
 import PlugWallet from '../PlugWallet';
 import { createAccount, getAccountId } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
@@ -208,7 +208,7 @@ class PlugKeyRing {
     this.validateSubaccount(index);
     const wallet = wallets[index];
     const registeredTokens = await wallet.registerToken(canisterId);
-    wallets.splice(subAccount, 1, wallet);
+    wallets.splice(index, 1, wallet);
     this.state.wallets = wallets;
     await this.saveEncryptedState({ wallets }, this.state.password);
     return registeredTokens;

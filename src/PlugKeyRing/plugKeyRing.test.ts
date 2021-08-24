@@ -7,7 +7,7 @@ import { Principal } from '@dfinity/principal';
 
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
-import { GetTransactionsResponse } from '../utils/dfx/rosetta';
+import { GetTransactionsResponse } from '../utils/dfx/history/rosetta';
 import PlugWallet from '../PlugWallet';
 import { createAgent } from '../utils/dfx';
 import store from '../utils/storage/mock';
@@ -27,15 +27,7 @@ jest.mock('../utils/dfx', () => {
 
 jest.mock('../utils/dfx/token', () => {
   return {
-    createTokenActor: (): {
-      metadata: jest.Mock<any, any>;
-      getMetadata: jest.Mock<any, any>;
-    } => ({
-      metadata: jest.fn(() => ({
-        fungible: {
-          metadata: { symbol: 'WTC', decimals: 5, name: 'Wrapped Cycles' },
-        },
-      })),
+    createTokenActor: (): { getMetadata: jest.Mock<any, any> } => ({
       getMetadata: jest.fn(() => ({
         fungible: { symbol: 'WTC', decimals: 5, name: 'Wrapped Cycles' },
       })),
@@ -95,6 +87,20 @@ const createManyTransactions = (): GetTransactionsResponse => {
       fee: {
         amount: BigInt(1000),
         currency: { symbol: 'ICP', decimals: 8 },
+      },
+      status: 'COMPLETED',
+      type: 'SEND',
+    });
+    transactions.transactions.push({
+      timestamp: RandomBigInt(32),
+      hash: RandomBigInt(32),
+      from: 'string',
+      to: 'string',
+      amount: BigInt(1000),
+      currency: { symbol: 'XTC', decimals: 5 },
+      fee: {
+        amount: BigInt(1000),
+        currency: { symbol: 'XTC', decimals: 5 },
       },
       status: 'COMPLETED',
       type: 'SEND',
