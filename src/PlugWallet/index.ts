@@ -284,7 +284,6 @@ class PlugWallet {
       !app.url ||
       !app.name ||
       !app.icon ||
-      !app.status ||
       !app.whitelist.every(item => validateCanisterId(item))
     ) {
       throw new Error(ERRORS.INVALID_APP);

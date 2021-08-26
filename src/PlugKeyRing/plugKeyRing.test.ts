@@ -374,7 +374,6 @@ describe('Plug KeyRing', () => {
       icon: ':smile:',
       url: 'dx4k2-mtdzp-qavet-nrazz-4tmro-oii6a-hlrlv-azdys-5j72q-ids2p-cae',
       whitelist: [],
-      status: 'accepted',
     });
     const state = await keyRing.getState();
     const encryptedState = CryptoJS.AES.encrypt(
@@ -552,7 +551,6 @@ describe('Plug KeyRing', () => {
           name: 'Chris',
           icon: ':smile:',
           url: 'chris123',
-          status: 'accepted',
           whitelist: [
             'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
           ],
@@ -566,7 +564,6 @@ describe('Plug KeyRing', () => {
         name: 'Chris',
         icon: ':smile:',
         url: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
-        status: 'accepted',
         whitelist: [],
       };
       const connectedApps = await keyRing.addConnectedApp(app);
@@ -581,14 +578,12 @@ describe('Plug KeyRing', () => {
         icon: ':smile:',
         url: 'test123.com',
         whitelist: [],
-        status: 'accepted',
       };
       const app2 = {
         name: 'App2',
         icon: ':sad:',
         url: 'plugwallet.ooo',
         whitelist: [],
-        status: 'accepted',
       };
       let connectedApps = await keyRing.addConnectedApp(app1);
       connectedApps = await keyRing.addConnectedApp(app2);
@@ -606,7 +601,6 @@ describe('Plug KeyRing', () => {
         icon: ':smile:',
         url: 'test123.com',
         whitelist: [],
-        status: 'accepted',
       };
       const connectedApps = await keyRing.deleteConnectedApp(account.url);
       expect(connectedApps).toEqual([]);

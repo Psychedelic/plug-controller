@@ -11,5 +11,4 @@ export interface ConnectedApp {
   icon: string;
   url: string;
   whitelist: Array<string>;
-  status: string;
 }
