@@ -26,7 +26,7 @@ export interface ICPTs { 'e8s' : bigint }
 export interface ICPunk {
   'add_genesis_record' : () => Promise<bigint>,
   'caller' : () => Promise<Principal>,
-  'data_of' : (arg_0: bigint) => Promise<[] | [TokenDesc]>,
+  'data_of' : (arg_0: bigint) => Promise<TokenDesc>,
   'delist' : (arg_0: bigint) => Promise<boolean>,
   'get_cycles' : () => Promise<bigint>,
   'get_listed' : (arg_0: bigint) => Promise<Array<bigint>>,

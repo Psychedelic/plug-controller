@@ -95,7 +95,7 @@ export default ({ IDL }) => {
   const ICPunk = IDL.Service({
     add_genesis_record: IDL.Func([], [IDL.Nat], []),
     caller: IDL.Func([], [IDL.Principal], []),
-    data_of: IDL.Func([IDL.Nat], [IDL.Opt(TokenDesc)], ['query']),
+    data_of: IDL.Func([IDL.Nat], [TokenDesc], ['query']),
     delist: IDL.Func([IDL.Nat], [IDL.Bool], []),
     get_cycles: IDL.Func([], [IDL.Nat], ['query']),
     get_listed: IDL.Func([IDL.Nat], [IDL.Vec(IDL.Nat)], ['query']),
