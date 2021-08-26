@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable @typescript-eslint/class-name-casing */
 /* eslint-disable @typescript-eslint/interface-name-prefix */
-import type { Principal } from '@dfinity/agent';
+import type { Principal } from '@dfinity/principal';
 
 export type HeaderField = [
   string,

@@ -44,10 +44,11 @@ class PlugKeyRing {
     this.isInitialized = !!state?.isInitialized;
   };
 
-  public getPublicKey = async (subaccount = 0): Promise<PublicKey> => {
+  public getPublicKey = async (subAccount = 0): Promise<PublicKey> => {
     await this.checkInitialized();
-    this.validateSubaccount(subaccount);
-    const wallet = this.state.wallets[subaccount];
+    const index = subAccount || this.state.currentWalletId || 0;
+    this.validateSubaccount(index);
+    const wallet = this.state.wallets[index];
     return wallet.publicKey;
   };
 
@@ -168,11 +169,12 @@ class PlugKeyRing {
 
   public sign = async (
     payload: BinaryBlob,
-    subaccount = 0
+    subAccount = 0
   ): Promise<BinaryBlob> => {
     this.checkUnlocked();
-    this.validateSubaccount(subaccount);
-    const wallet = this.state.wallets[subaccount];
+    const index = subAccount || this.state.currentWalletId || 0;
+    this.validateSubaccount(index);
+    const wallet = this.state.wallets[index];
     const signed = await wallet.sign(payload);
     return signed;
   };
