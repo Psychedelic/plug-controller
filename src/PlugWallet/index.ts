@@ -111,7 +111,7 @@ class PlugWallet {
     // Need to cast cause candid is bugged
     const nftData: Array<TokenDesc> = await Promise.all(
       nfts.map(async punkId => {
-        const [nft] = await NFT.data_of(punkId);
+        const nft = await NFT.data_of(punkId);
         if (!nft) {
           throw new Error(ERRORS.GET_NFT_ERROR);
         }
