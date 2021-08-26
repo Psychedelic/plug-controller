@@ -366,7 +366,7 @@ describe('Plug KeyRing', () => {
       expect(isInitialized).toEqual(true);
     });
   });
-  it('should persist data encypted correctly after adding a new contact', async () => {
+  it('should persist data encypted correctly after adding a new app', async () => {
     await keyRing.create({ password: TEST_PASSWORD });
     await keyRing.unlock(TEST_PASSWORD);
     await keyRing.addConnectedApp({

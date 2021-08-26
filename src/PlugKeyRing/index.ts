@@ -295,7 +295,7 @@ class PlugKeyRing {
   };
 
   public addConnectedApp = async (
-    contact: ConnectedApp,
+    app: ConnectedApp,
     subAccount = 0
   ): Promise<Array<ConnectedApp>> => {
     this.checkUnlocked();
@@ -303,7 +303,7 @@ class PlugKeyRing {
     this.validateSubaccount(index);
     const { wallets } = this.state;
     const wallet = wallets[index];
-    const apps = wallet.addConnectedApp(contact);
+    const apps = wallet.addConnectedApp(app);
     this.state.wallets = wallets;
     await this.saveEncryptedState({ wallets }, this.state.password);
     return apps;
