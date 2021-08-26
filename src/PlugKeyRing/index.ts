@@ -15,7 +15,7 @@ import { validatePrincipalId } from './utils';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
 import { BurnResult } from '../interfaces/xtc';
 import { TokenDesc } from '../interfaces/nft';
-import { Contact } from '../interfaces/account';
+import { ConnectedApp } from '../interfaces/account';
 
 interface PlugState {
   wallets: Array<PlugWallet>;
@@ -294,34 +294,34 @@ class PlugKeyRing {
     );
   };
 
-  public addContact = async (
-    contact: Contact,
+  public addConnectedApp = async (
+    contact: ConnectedApp,
     subAccount = 0
-  ): Promise<Array<Contact>> => {
+  ): Promise<Array<ConnectedApp>> => {
     this.checkUnlocked();
     const index = subAccount || this.state.currentWalletId || 0;
     this.validateSubaccount(index);
     const { wallets } = this.state;
     const wallet = wallets[index];
-    const contacts = wallet.addContact(contact);
+    const apps = wallet.addConnectedApp(contact);
     this.state.wallets = wallets;
     await this.saveEncryptedState({ wallets }, this.state.password);
-    return contacts;
+    return apps;
   };
 
-  public deleteContact = async (
+  public deleteConnectedApp = async (
     id: string,
     subAccount = 0
-  ): Promise<Array<Contact>> => {
+  ): Promise<Array<ConnectedApp>> => {
     this.checkUnlocked();
     const index = subAccount || this.state.currentWalletId || 0;
     this.validateSubaccount(index);
     const { wallets } = this.state;
     const wallet = wallets[index];
-    const contacts = wallet.deleteContact(id);
+    const apps = wallet.deleteConnectedApp(id);
     this.state.wallets = wallets;
     await this.saveEncryptedState({ wallets }, this.state.password);
-    return contacts;
+    return apps;
   };
 
   public get currentWallet(): PlugWallet {

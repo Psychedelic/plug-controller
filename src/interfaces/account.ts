@@ -6,8 +6,10 @@ export interface AccountCredentials {
   accountId: string;
 }
 
-export interface Contact {
+export interface ConnectedApp {
   name: string;
-  id: string;
-  image: string;
+  icon: string;
+  url: string;
+  whitelist: Array<string>;
+  status: string;
 }

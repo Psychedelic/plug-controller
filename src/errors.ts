@@ -17,5 +17,5 @@ export const ERRORS = {
   GET_NFT_ERROR: 'Error while fetching NFT data',
   TRANSFER_NFT_ERROR:
     'Error while trying to transfer the NFT. Please verify you own the NFT you are trying to transfer',
-  INVALID_CONTACT: 'Invalid contact',
+  INVALID_APP: 'Invalid app',
 };

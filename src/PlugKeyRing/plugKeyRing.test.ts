@@ -204,7 +204,7 @@ describe('Plug KeyRing', () => {
       expect(state.password).toEqual(TEST_PASSWORD);
       expect(bip39.validateMnemonic(state.mnemonic!)).toEqual(true);
       expect(stateWallet.registeredTokens).toEqual([TOKENS.XTC]);
-      expect(stateWallet.contacts).toEqual([]);
+      expect(stateWallet.connectedApps).toEqual([]);
     });
     it('should fail if not password or mnemonic were provided', async () => {
       await expect(() =>
@@ -369,10 +369,12 @@ describe('Plug KeyRing', () => {
   it('should persist data encypted correctly after adding a new contact', async () => {
     await keyRing.create({ password: TEST_PASSWORD });
     await keyRing.unlock(TEST_PASSWORD);
-    await keyRing.addContact({
+    await keyRing.addConnectedApp({
       name: 'Chris',
-      image: ':smile:',
-      id: 'dx4k2-mtdzp-qavet-nrazz-4tmro-oii6a-hlrlv-azdys-5j72q-ids2p-cae',
+      icon: ':smile:',
+      url: 'dx4k2-mtdzp-qavet-nrazz-4tmro-oii6a-hlrlv-azdys-5j72q-ids2p-cae',
+      whitelist: [],
+      status: 'accepted',
     });
     const state = await keyRing.getState();
     const encryptedState = CryptoJS.AES.encrypt(
@@ -542,89 +544,72 @@ describe('Plug KeyRing', () => {
         )
       ).rejects.toEqual(new Error(ERRORS.INVALID_CANISTER_ID));
     });
-    test('should fail to add an invalid contact', async () => {
+    test('should fail to add an app with an invalid canister whitelisted', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       await expect(() =>
-        keyRing.addContact({
+        keyRing.addConnectedApp({
           name: 'Chris',
-          image: ':smile:',
-          id: 'chris123',
+          icon: ':smile:',
+          url: 'chris123',
+          status: 'accepted',
+          whitelist: [
+            'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+          ],
         })
-      ).rejects.toEqual(new Error(ERRORS.INVALID_CONTACT));
+      ).rejects.toEqual(new Error(ERRORS.INVALID_APP));
     });
-    test('should fail to add a contact that has already been added', async () => {
+    test('should do nothing if app was already added', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      const contact = {
+      const app = {
         name: 'Chris',
-        image: ':smile:',
-        id: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+        icon: ':smile:',
+        url: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+        status: 'accepted',
+        whitelist: [],
       };
-      await keyRing.addContact(contact);
-      await expect(() => keyRing.addContact(contact)).rejects.toEqual(
-        new Error(ERRORS.INVALID_CONTACT)
-      );
+      const connectedApps = await keyRing.addConnectedApp(app);
+      await keyRing.addConnectedApp(app);
+      expect(connectedApps).toEqual([app]);
     });
-    test('should add correctly principal, account, or canister contact', async () => {
+    test('should delete correctly a previously saved app', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      const dank = {
-        name: 'Dank wallet',
-        image: ':confused:',
-        id: 'aanaa-xaaaa-aaaah-aaeiq-cai',
+      const app1 = {
+        name: 'App1',
+        icon: ':smile:',
+        url: 'test123.com',
+        whitelist: [],
+        status: 'accepted',
       };
-      const account = {
-        name: 'Account',
-        image: ':smile:',
-        id: '5c0894512eb058b0445e4dc67401dc906da0b85d088a60b4096cb313bf74c309',
+      const app2 = {
+        name: 'App2',
+        icon: ':sad:',
+        url: 'plugwallet.ooo',
+        whitelist: [],
+        status: 'accepted',
       };
-      const principal = {
-        name: 'Principal',
-        image: ':sad:',
-        id: 'dx4k2-mtdzp-qavet-nrazz-4tmro-oii6a-hlrlv-azdys-5j72q-ids2p-cae',
-      };
-      // Account id
-      let contacts = await keyRing.addContact(account);
-      expect(contacts).toEqual([account]);
-      // Principal
-      contacts = await keyRing.addContact(principal);
-      expect(contacts).toEqual([account, principal]);
-      // Canister ID
-      contacts = await keyRing.addContact(dank);
-      expect(contacts).toEqual([account, principal, dank]);
+      let connectedApps = await keyRing.addConnectedApp(app1);
+      connectedApps = await keyRing.addConnectedApp(app2);
+      expect(connectedApps).toEqual([app1, app2]);
+      connectedApps = await keyRing.deleteConnectedApp(app1.url);
+      expect(connectedApps).toEqual([app2]);
+      connectedApps = await keyRing.deleteConnectedApp(app2.url);
+      expect(connectedApps).toEqual([]);
     });
-    test('should delete correctly a previously saved contact', async () => {
-      await keyRing.create({ password: TEST_PASSWORD });
-      await keyRing.unlock(TEST_PASSWORD);
-      const account = {
-        name: 'Account',
-        image: ':smile:',
-        id: '5c0894512eb058b0445e4dc67401dc906da0b85d088a60b4096cb313bf74c309',
-      };
-      const principal = {
-        name: 'Principal',
-        image: ':sad:',
-        id: 'dx4k2-mtdzp-qavet-nrazz-4tmro-oii6a-hlrlv-azdys-5j72q-ids2p-cae',
-      };
-      let contacts = await keyRing.addContact(principal);
-      contacts = await keyRing.addContact(account);
-      expect(contacts).toEqual([principal, account]);
-      contacts = await keyRing.deleteContact(principal.id);
-      expect(contacts).toEqual([account]);
-      contacts = await keyRing.deleteContact(account.id);
-      expect(contacts).toEqual([]);
-    });
-    test('should do nothing when trying to delete an unexistant contact', async () => {
+    test('should do nothing when trying to delete an unexistant app', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       const account = {
-        name: 'Account',
-        image: ':smile:',
-        id: '5c0894512eb058b0445e4dc67401dc906da0b85d088a60b4096cb313bf74c309',
+        name: 'Some app',
+        icon: ':smile:',
+        url: 'test123.com',
+        whitelist: [],
+        status: 'accepted',
       };
-      const contacts = await keyRing.deleteContact(account.id);
-      expect(contacts).toEqual([]);
+      const connectedApps = await keyRing.deleteConnectedApp(account.url);
+      expect(connectedApps).toEqual([]);
     });
   });
 

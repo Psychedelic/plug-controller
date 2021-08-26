@@ -5,11 +5,7 @@ import randomColor from 'random-color';
 
 import { ERRORS } from '../errors';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
-import {
-  validateAccountId,
-  validateCanisterId,
-  validatePrincipalId,
-} from '../PlugKeyRing/utils';
+import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
@@ -25,7 +21,7 @@ import { getXTCTransactions } from '../utils/dfx/history/xtcHistory';
 
 import { StandardNFT, TokenDesc } from '../interfaces/nft';
 import { createNFTActor } from '../utils/dfx/nft';
-import { Contact } from '../interfaces/account';
+import { ConnectedApp } from '../interfaces/account';
 
 interface PlugWalletArgs {
   name?: string;
@@ -34,7 +30,7 @@ interface PlugWalletArgs {
   icon?: string;
   registeredTokens?: Array<StandardToken>;
   registeredNFTs?: Array<StandardNFT>;
-  contacts?: Array<Contact>;
+  connectedApps?: Array<ConnectedApp>;
 }
 
 interface JSONWallet {
@@ -45,7 +41,7 @@ interface JSONWallet {
   icon?: string;
   registeredTokens: Array<StandardToken>;
   registeredNFTs?: Array<StandardNFT>;
-  contacts: Array<Contact>;
+  connectedApps: Array<ConnectedApp>;
 }
 
 class PlugWallet {
@@ -63,7 +59,7 @@ class PlugWallet {
 
   registeredNFTs: Array<StandardNFT>;
 
-  contacts: Array<Contact>;
+  connectedApps: Array<ConnectedApp>;
 
   private identity: Secp256k1KeyIdentity;
 
@@ -73,7 +69,7 @@ class PlugWallet {
     walletNumber,
     mnemonic,
     registeredTokens = [],
-    contacts = [],
+    connectedApps = [],
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
@@ -90,7 +86,7 @@ class PlugWallet {
     this.identity = identity;
     this.accountId = accountId;
     this.principal = identity.getPrincipal().toText();
-    this.contacts = [...contacts];
+    this.connectedApps = [...connectedApps];
   }
 
   public setName(val: string): void {
@@ -173,7 +169,7 @@ class PlugWallet {
     accountId: this.accountId,
     icon: this.icon,
     registeredTokens: this.registeredTokens,
-    contacts: this.contacts,
+    connectedApps: this.connectedApps,
   });
 
   public burnXTC = async (to: string, amount: bigint) => {
@@ -283,30 +279,29 @@ class PlugWallet {
       : { height: await this.sendICP(to, amount, opts) };
   };
 
-  public addContact = (contact: Contact): Array<Contact> => {
+  public addConnectedApp = (app: ConnectedApp): Array<ConnectedApp> => {
     if (
-      !contact.id ||
-      !contact.name ||
-      !contact.image ||
-      this.contacts.some(saved => saved.id === contact.id) ||
-      !(
-        validateCanisterId(contact.id) ||
-        validatePrincipalId(contact.id) ||
-        validateAccountId(contact.id)
-      )
+      !app.url ||
+      !app.name ||
+      !app.icon ||
+      !app.status ||
+      !app.whitelist.every(item => validateCanisterId(item))
     ) {
-      throw new Error(ERRORS.INVALID_CONTACT);
+      throw new Error(ERRORS.INVALID_APP);
     }
-    this.contacts = [...this.contacts, contact];
-    return this.contacts;
+    this.connectedApps = uniqueByObjKey(
+      [...this.connectedApps, app],
+      'url'
+    ) as ConnectedApp[];
+    return this.connectedApps;
   };
 
-  public deleteContact = (id: string): Array<Contact> => {
-    if (!this.contacts.some(contact => contact.id === id)) {
-      return this.contacts;
+  public deleteConnectedApp = (url: string): Array<ConnectedApp> => {
+    if (!this.connectedApps.some(app => app.url === url)) {
+      return this.connectedApps;
     }
-    this.contacts = [...this.contacts.filter(contact => contact.id !== id)];
-    return this.contacts;
+    this.connectedApps = [...this.connectedApps.filter(app => app.url !== url)];
+    return this.connectedApps;
   };
 
   public get publicKey(): PublicKey {
