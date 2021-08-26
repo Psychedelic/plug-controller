@@ -21,6 +21,7 @@ import { getXTCTransactions } from '../utils/dfx/history/xtcHistory';
 
 import { StandardNFT, TokenDesc } from '../interfaces/nft';
 import { createNFTActor } from '../utils/dfx/nft';
+import { ConnectedApp } from '../interfaces/account';
 
 interface PlugWalletArgs {
   name?: string;
@@ -29,6 +30,7 @@ interface PlugWalletArgs {
   icon?: string;
   registeredTokens?: Array<StandardToken>;
   registeredNFTs?: Array<StandardNFT>;
+  connectedApps?: Array<ConnectedApp>;
 }
 
 interface JSONWallet {
@@ -37,8 +39,9 @@ interface JSONWallet {
   principal: string;
   accountId: string;
   icon?: string;
-  registeredTokens?: Array<StandardToken>;
+  registeredTokens: Array<StandardToken>;
   registeredNFTs?: Array<StandardNFT>;
+  connectedApps: Array<ConnectedApp>;
 }
 
 class PlugWallet {
@@ -56,6 +59,8 @@ class PlugWallet {
 
   registeredNFTs: Array<StandardNFT>;
 
+  connectedApps: Array<ConnectedApp>;
+
   private identity: Secp256k1KeyIdentity;
 
   constructor({
@@ -64,6 +69,7 @@ class PlugWallet {
     walletNumber,
     mnemonic,
     registeredTokens = [],
+    connectedApps = [],
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
@@ -80,6 +86,7 @@ class PlugWallet {
     this.identity = identity;
     this.accountId = accountId;
     this.principal = identity.getPrincipal().toText();
+    this.connectedApps = [...connectedApps];
   }
 
   public setName(val: string): void {
@@ -162,6 +169,7 @@ class PlugWallet {
     accountId: this.accountId,
     icon: this.icon,
     registeredTokens: this.registeredTokens,
+    connectedApps: this.connectedApps,
   });
 
   public burnXTC = async (to: string, amount: bigint) => {
@@ -269,6 +277,30 @@ class PlugWallet {
     return canisterId
       ? this.sendCustomToken(to, amount, canisterId)
       : { height: await this.sendICP(to, amount, opts) };
+  };
+
+  public addConnectedApp = (app: ConnectedApp): Array<ConnectedApp> => {
+    if (
+      !app.url ||
+      !app.name ||
+      !app.icon ||
+      !app.whitelist.every(item => validateCanisterId(item))
+    ) {
+      throw new Error(ERRORS.INVALID_APP);
+    }
+    this.connectedApps = uniqueByObjKey(
+      [...this.connectedApps, app],
+      'url'
+    ) as ConnectedApp[];
+    return this.connectedApps;
+  };
+
+  public deleteConnectedApp = (url: string): Array<ConnectedApp> => {
+    if (!this.connectedApps.some(app => app.url === url)) {
+      return this.connectedApps;
+    }
+    this.connectedApps = [...this.connectedApps.filter(app => app.url !== url)];
+    return this.connectedApps;
   };
 
   public get publicKey(): PublicKey {

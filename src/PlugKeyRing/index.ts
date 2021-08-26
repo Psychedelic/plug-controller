@@ -15,6 +15,7 @@ import { validatePrincipalId } from './utils';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
 import { BurnResult } from '../interfaces/xtc';
 import { TokenDesc } from '../interfaces/nft';
+import { ConnectedApp } from '../interfaces/account';
 
 interface PlugState {
   wallets: Array<PlugWallet>;
@@ -76,7 +77,7 @@ class PlugKeyRing {
     this.validateSubaccount(index);
     const wallet = wallets[index];
     return wallet.transferNFT({ id, to });
-  }
+  };
 
   private loadFromPersistance = async (password: string): Promise<void> => {
     interface StorageData {
@@ -291,6 +292,36 @@ class PlugKeyRing {
       canisterId,
       opts
     );
+  };
+
+  public addConnectedApp = async (
+    app: ConnectedApp,
+    subAccount = 0
+  ): Promise<Array<ConnectedApp>> => {
+    this.checkUnlocked();
+    const index = subAccount || this.state.currentWalletId || 0;
+    this.validateSubaccount(index);
+    const { wallets } = this.state;
+    const wallet = wallets[index];
+    const apps = wallet.addConnectedApp(app);
+    this.state.wallets = wallets;
+    await this.saveEncryptedState({ wallets }, this.state.password);
+    return apps;
+  };
+
+  public deleteConnectedApp = async (
+    id: string,
+    subAccount = 0
+  ): Promise<Array<ConnectedApp>> => {
+    this.checkUnlocked();
+    const index = subAccount || this.state.currentWalletId || 0;
+    this.validateSubaccount(index);
+    const { wallets } = this.state;
+    const wallet = wallets[index];
+    const apps = wallet.deleteConnectedApp(id);
+    this.state.wallets = wallets;
+    await this.saveEncryptedState({ wallets }, this.state.password);
+    return apps;
   };
 
   public get currentWallet(): PlugWallet {

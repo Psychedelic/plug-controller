@@ -5,3 +5,10 @@ export interface AccountCredentials {
   identity: Secp256k1KeyIdentity;
   accountId: string;
 }
+
+export interface ConnectedApp {
+  name: string;
+  icon: string;
+  url: string;
+  whitelist: Array<string>;
+}
