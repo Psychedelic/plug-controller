@@ -172,7 +172,7 @@ describe('Plug KeyRing', () => {
       const stateWallet = state.wallets[0];
       expect(stateWallet.toJSON()).toEqual(wallet.toJSON());
       expect(state.currentWalletId).toEqual(0);
-      expect(state.password).toEqual(TEST_PASSWORD); // Should I expose this?
+      expect(state.password).toEqual(TEST_PASSWORD);
       expect(bip39.validateMnemonic(state.mnemonic as string)).toEqual(true);
       expect(stateWallet.registeredTokens).toEqual([TOKENS.XTC]);
     });
@@ -204,6 +204,7 @@ describe('Plug KeyRing', () => {
       expect(state.password).toEqual(TEST_PASSWORD);
       expect(bip39.validateMnemonic(state.mnemonic!)).toEqual(true);
       expect(stateWallet.registeredTokens).toEqual([TOKENS.XTC]);
+      expect(stateWallet.contacts).toEqual([]);
     });
     it('should fail if not password or mnemonic were provided', async () => {
       await expect(() =>
@@ -365,6 +366,29 @@ describe('Plug KeyRing', () => {
       expect(isInitialized).toEqual(true);
     });
   });
+  it('should persist data encypted correctly after adding a new contact', async () => {
+    await keyRing.create({ password: TEST_PASSWORD });
+    await keyRing.unlock(TEST_PASSWORD);
+    await keyRing.addContact({
+      name: 'Chris',
+      image: ':smile:',
+      id: 'dx4k2-mtdzp-qavet-nrazz-4tmro-oii6a-hlrlv-azdys-5j72q-ids2p-cae',
+    });
+    const state = await keyRing.getState();
+    const encryptedState = CryptoJS.AES.encrypt(
+      JSON.stringify(state),
+      TEST_PASSWORD
+    );
+    const { vault: stored, isInitialized } = store.get();
+    expect(
+      CryptoJS.AES.decrypt(encryptedState, TEST_PASSWORD).toString(
+        CryptoJS.enc.Utf8
+      )
+    ).toEqual(
+      CryptoJS.AES.decrypt(stored, TEST_PASSWORD).toString(CryptoJS.enc.Utf8)
+    );
+    expect(isInitialized).toEqual(true);
+  });
   describe('principal management', () => {
     it('should create new principals correctly when unlocked', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
@@ -517,6 +541,46 @@ describe('Plug KeyRing', () => {
           'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe'
         )
       ).rejects.toEqual(new Error(ERRORS.INVALID_CANISTER_ID));
+    });
+    test('should fail to add an invalid contact', async () => {
+      await keyRing.create({ password: TEST_PASSWORD });
+      await keyRing.unlock(TEST_PASSWORD);
+      await expect(() =>
+        keyRing.addContact({
+          name: 'Chris',
+          image: ':smile:',
+          id: 'chris123',
+        })
+      ).rejects.toEqual(new Error(ERRORS.INVALID_CONTACT));
+    });
+
+    test('should add correctly principal, account, or canister contact', async () => {
+      await keyRing.create({ password: TEST_PASSWORD });
+      await keyRing.unlock(TEST_PASSWORD);
+      const dank = {
+        name: 'Dank wallet',
+        image: ':confused:',
+        id: 'aanaa-xaaaa-aaaah-aaeiq-cai',
+      };
+      const account = {
+        name: 'Account',
+        image: ':smile:',
+        id: '5c0894512eb058b0445e4dc67401dc906da0b85d088a60b4096cb313bf74c309',
+      };
+      const principal = {
+        name: 'Principal',
+        image: ':sad:',
+        id: 'dx4k2-mtdzp-qavet-nrazz-4tmro-oii6a-hlrlv-azdys-5j72q-ids2p-cae',
+      };
+      // Account id
+      let contacts = await keyRing.addContact(account);
+      expect(contacts).toEqual([account]);
+      // Principal
+      contacts = await keyRing.addContact(principal);
+      expect(contacts).toEqual([account, principal]);
+      // Canister ID
+      contacts = await keyRing.addContact(dank);
+      expect(contacts).toEqual([account, principal, dank]);
     });
   });
 

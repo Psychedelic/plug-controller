@@ -5,7 +5,7 @@ import randomColor from 'random-color';
 
 import { ERRORS } from '../errors';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
-import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
+import { validateAccountId, validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
@@ -21,6 +21,7 @@ import { getXTCTransactions } from '../utils/dfx/history/xtcHistory';
 
 import { StandardNFT, TokenDesc } from '../interfaces/nft';
 import { createNFTActor } from '../utils/dfx/nft';
+import { Contact } from '../interfaces/account';
 
 interface PlugWalletArgs {
   name?: string;
@@ -29,6 +30,7 @@ interface PlugWalletArgs {
   icon?: string;
   registeredTokens?: Array<StandardToken>;
   registeredNFTs?: Array<StandardNFT>;
+  contacts?: Array<Contact>;
 }
 
 interface JSONWallet {
@@ -37,8 +39,9 @@ interface JSONWallet {
   principal: string;
   accountId: string;
   icon?: string;
-  registeredTokens?: Array<StandardToken>;
+  registeredTokens: Array<StandardToken>;
   registeredNFTs?: Array<StandardNFT>;
+  contacts: Array<Contact>;
 }
 
 class PlugWallet {
@@ -56,6 +59,8 @@ class PlugWallet {
 
   registeredNFTs: Array<StandardNFT>;
 
+  contacts: Array<Contact>;
+
   private identity: Secp256k1KeyIdentity;
 
   constructor({
@@ -64,6 +69,7 @@ class PlugWallet {
     walletNumber,
     mnemonic,
     registeredTokens = [],
+    contacts = [],
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
@@ -80,6 +86,7 @@ class PlugWallet {
     this.identity = identity;
     this.accountId = accountId;
     this.principal = identity.getPrincipal().toText();
+    this.contacts = [...contacts];
   }
 
   public setName(val: string): void {
@@ -162,6 +169,7 @@ class PlugWallet {
     accountId: this.accountId,
     icon: this.icon,
     registeredTokens: this.registeredTokens,
+    contacts: this.contacts,
   });
 
   public burnXTC = async (to: string, amount: bigint) => {
@@ -269,6 +277,23 @@ class PlugWallet {
     return canisterId
       ? this.sendCustomToken(to, amount, canisterId)
       : { height: await this.sendICP(to, amount, opts) };
+  };
+
+  public addContact = (contact: Contact): Array<Contact> => {
+    if (
+      !contact.id ||
+      !contact.name ||
+      !contact.image ||
+      !(
+        validateCanisterId(contact.id) ||
+        validatePrincipalId(contact.id) ||
+        validateAccountId(contact.id)
+      )
+    ) {
+      throw new Error(ERRORS.INVALID_CONTACT);
+    }
+    this.contacts = [...this.contacts, contact];
+    return this.contacts;
   };
 
   public get publicKey(): PublicKey {

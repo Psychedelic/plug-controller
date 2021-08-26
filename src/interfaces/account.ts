@@ -5,3 +5,9 @@ export interface AccountCredentials {
   identity: Secp256k1KeyIdentity;
   accountId: string;
 }
+
+export interface Contact {
+  name: string;
+  id: string;
+  image: string;
+}
