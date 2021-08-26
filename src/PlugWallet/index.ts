@@ -5,7 +5,11 @@ import randomColor from 'random-color';
 
 import { ERRORS } from '../errors';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
-import { validateAccountId, validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
+import {
+  validateAccountId,
+  validateCanisterId,
+  validatePrincipalId,
+} from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
@@ -284,6 +288,7 @@ class PlugWallet {
       !contact.id ||
       !contact.name ||
       !contact.image ||
+      this.contacts.some(saved => saved.id === contact.id) ||
       !(
         validateCanisterId(contact.id) ||
         validatePrincipalId(contact.id) ||
@@ -293,6 +298,14 @@ class PlugWallet {
       throw new Error(ERRORS.INVALID_CONTACT);
     }
     this.contacts = [...this.contacts, contact];
+    return this.contacts;
+  };
+
+  public deleteContact = (id: string): Array<Contact> => {
+    if (!this.contacts.some(contact => contact.id === id)) {
+      return this.contacts;
+    }
+    this.contacts = [...this.contacts.filter(contact => contact.id !== id)];
     return this.contacts;
   };
 

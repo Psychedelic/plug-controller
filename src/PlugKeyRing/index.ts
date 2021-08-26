@@ -309,6 +309,21 @@ class PlugKeyRing {
     return contacts;
   };
 
+  public deleteContact = async (
+    id: string,
+    subAccount = 0
+  ): Promise<Array<Contact>> => {
+    this.checkUnlocked();
+    const index = subAccount || this.state.currentWalletId || 0;
+    this.validateSubaccount(index);
+    const { wallets } = this.state;
+    const wallet = wallets[index];
+    const contacts = wallet.deleteContact(id);
+    this.state.wallets = wallets;
+    await this.saveEncryptedState({ wallets }, this.state.password);
+    return contacts;
+  };
+
   public get currentWallet(): PlugWallet {
     this.checkUnlocked();
     return this.state.wallets[this.state.currentWalletId || 0];

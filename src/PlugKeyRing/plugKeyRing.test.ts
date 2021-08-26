@@ -553,7 +553,19 @@ describe('Plug KeyRing', () => {
         })
       ).rejects.toEqual(new Error(ERRORS.INVALID_CONTACT));
     });
-
+    test('should fail to add a contact that has already been added', async () => {
+      await keyRing.create({ password: TEST_PASSWORD });
+      await keyRing.unlock(TEST_PASSWORD);
+      const contact = {
+        name: 'Chris',
+        image: ':smile:',
+        id: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+      };
+      await keyRing.addContact(contact);
+      await expect(() => keyRing.addContact(contact)).rejects.toEqual(
+        new Error(ERRORS.INVALID_CONTACT)
+      );
+    });
     test('should add correctly principal, account, or canister contact', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
@@ -581,6 +593,38 @@ describe('Plug KeyRing', () => {
       // Canister ID
       contacts = await keyRing.addContact(dank);
       expect(contacts).toEqual([account, principal, dank]);
+    });
+    test('should delete correctly a previously saved contact', async () => {
+      await keyRing.create({ password: TEST_PASSWORD });
+      await keyRing.unlock(TEST_PASSWORD);
+      const account = {
+        name: 'Account',
+        image: ':smile:',
+        id: '5c0894512eb058b0445e4dc67401dc906da0b85d088a60b4096cb313bf74c309',
+      };
+      const principal = {
+        name: 'Principal',
+        image: ':sad:',
+        id: 'dx4k2-mtdzp-qavet-nrazz-4tmro-oii6a-hlrlv-azdys-5j72q-ids2p-cae',
+      };
+      let contacts = await keyRing.addContact(principal);
+      contacts = await keyRing.addContact(account);
+      expect(contacts).toEqual([principal, account]);
+      contacts = await keyRing.deleteContact(principal.id);
+      expect(contacts).toEqual([account]);
+      contacts = await keyRing.deleteContact(account.id);
+      expect(contacts).toEqual([]);
+    });
+    test('should do nothing when trying to delete an unexistant contact', async () => {
+      await keyRing.create({ password: TEST_PASSWORD });
+      await keyRing.unlock(TEST_PASSWORD);
+      const account = {
+        name: 'Account',
+        image: ':smile:',
+        id: '5c0894512eb058b0445e4dc67401dc906da0b85d088a60b4096cb313bf74c309',
+      };
+      const contacts = await keyRing.deleteContact(account.id);
+      expect(contacts).toEqual([]);
     });
   });
 
