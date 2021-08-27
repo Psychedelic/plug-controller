@@ -21,6 +21,7 @@ interface PlugState {
   wallets: Array<PlugWallet>;
   password?: string;
   mnemonic?: string;
+  currentWalletId?: number;
 }
 
 const store = process.env.NODE_ENV === 'test' ? mockStore : new Storage();
@@ -166,12 +167,13 @@ class PlugKeyRing {
     await this.checkInitialized();
     this.validateSubaccount(walletNumber);
     this.currentWalletId = walletNumber;
+    await store.set({ currentWalletId: walletNumber });
   };
 
   public getState = async (): Promise<PlugState> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    return this.state;
+    return { ...this.state, currentWalletId: this.currentWalletId };
   };
 
   public sign = async (
@@ -361,7 +363,11 @@ class PlugKeyRing {
     };
     this.isInitialized = true;
     this.currentWalletId = 0;
-    await store.set({ isInitialized: true, isUnlocked: false });
+    await store.set({
+      isInitialized: true,
+      isUnlocked: false,
+      currentWalletId: 0,
+    });
     await this.saveEncryptedState(data, password);
     return wallet;
   };
