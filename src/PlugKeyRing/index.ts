@@ -45,6 +45,7 @@ class PlugKeyRing {
     const state = await store.get();
     this.isUnlocked = !!state?.isUnlocked;
     this.isInitialized = !!state?.isInitialized;
+    this.currentWalletId = state?.currentWalletId || 0;
   };
 
   public getPublicKey = async (subAccount = 0): Promise<PublicKey> => {
@@ -85,9 +86,11 @@ class PlugKeyRing {
     interface StorageData {
       vault: PlugState;
       isInitialized: boolean;
+      currentWalletId: number;
     }
 
-    const { vault, isInitialized } = ((await store.get()) || {}) as StorageData;
+    const { vault, isInitialized, currentWalletId } = ((await store.get()) ||
+      {}) as StorageData;
     if (isInitialized && vault) {
       const decrypted = this.decryptState(vault, password);
       const wallets = decrypted.wallets.map(
@@ -99,6 +102,7 @@ class PlugKeyRing {
       );
       this.state = { ...decrypted, wallets };
       this.isInitialized = isInitialized;
+      this.currentWalletId = currentWalletId;
     }
   };
 
