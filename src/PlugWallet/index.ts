@@ -61,7 +61,7 @@ class PlugWallet {
 
   connectedApps: Array<ConnectedApp>;
 
-  private identity: Secp256k1KeyIdentity;
+  identity: Secp256k1KeyIdentity;
 
   constructor({
     name,
