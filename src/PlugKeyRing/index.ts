@@ -19,7 +19,6 @@ import { ConnectedApp } from '../interfaces/account';
 
 interface PlugState {
   wallets: Array<PlugWallet>;
-  currentWalletId?: number;
   password?: string;
   mnemonic?: string;
 }
@@ -33,10 +32,13 @@ class PlugKeyRing {
 
   public isInitialized = false;
 
+  public currentWalletId?: number;
+
   public constructor() {
-    this.state = { wallets: [], currentWalletId: 0 };
+    this.state = { wallets: [] };
     this.isUnlocked = false;
     this.isInitialized = false;
+    this.currentWalletId = 0;
   }
 
   public init = async (): Promise<void> => {
@@ -47,7 +49,7 @@ class PlugKeyRing {
 
   public getPublicKey = async (subAccount = 0): Promise<PublicKey> => {
     await this.checkInitialized();
-    const index = subAccount || this.state.currentWalletId || 0;
+    const index = subAccount || this.currentWalletId || 0;
     this.validateSubaccount(index);
     const wallet = this.state.wallets[index];
     return wallet.publicKey;
@@ -55,7 +57,7 @@ class PlugKeyRing {
 
   public getNFTs = async (subAccount = 0): Promise<Array<TokenDesc>> => {
     this.checkUnlocked();
-    const index = subAccount || this.state.currentWalletId || 0;
+    const index = subAccount || this.currentWalletId || 0;
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
@@ -72,7 +74,7 @@ class PlugKeyRing {
     to: string;
   }): Promise<boolean> => {
     this.checkUnlocked();
-    const index = subAccount || this.state.currentWalletId || 0;
+    const index = subAccount || this.currentWalletId || 0;
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
@@ -110,7 +112,7 @@ class PlugKeyRing {
     subAccount: number;
   }): Promise<BurnResult> => {
     this.checkUnlocked();
-    const index = subAccount || this.state.currentWalletId || 0;
+    const index = subAccount || this.currentWalletId || 0;
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
@@ -159,7 +161,7 @@ class PlugKeyRing {
   public setCurrentPrincipal = async (walletNumber: number): Promise<void> => {
     await this.checkInitialized();
     this.validateSubaccount(walletNumber);
-    this.state.currentWalletId = walletNumber;
+    this.currentWalletId = walletNumber;
   };
 
   public getState = async (): Promise<PlugState> => {
@@ -173,7 +175,7 @@ class PlugKeyRing {
     subAccount = 0
   ): Promise<BinaryBlob> => {
     this.checkUnlocked();
-    const index = subAccount || this.state.currentWalletId || 0;
+    const index = subAccount || this.currentWalletId || 0;
     this.validateSubaccount(index);
     const wallet = this.state.wallets[index];
     const signed = await wallet.sign(payload);
@@ -222,7 +224,7 @@ class PlugKeyRing {
     subAccount = 0
   ): Promise<Array<StandardToken>> => {
     this.checkUnlocked();
-    const index = subAccount || this.state.currentWalletId || 0;
+    const index = subAccount || this.currentWalletId || 0;
     const { wallets } = this.state;
 
     this.validateSubaccount(index);
@@ -238,14 +240,14 @@ class PlugKeyRing {
     subAccount?: number
   ): Promise<Array<TokenBalance>> => {
     this.checkUnlocked();
-    const index = subAccount || this.state.currentWalletId || 0;
+    const index = subAccount || this.currentWalletId || 0;
     this.validateSubaccount(index);
     return this.state.wallets[index].getBalance();
   };
 
   public getTokenInfo = async (canisterId: string, subAccount?: number) => {
     this.checkUnlocked();
-    const index = subAccount || this.state.currentWalletId || 0;
+    const index = subAccount || this.currentWalletId || 0;
     this.validateSubaccount(index);
     return this.state.wallets[index].getTokenInfo(canisterId);
   };
@@ -254,7 +256,7 @@ class PlugKeyRing {
     subAccount?: number
   ): Promise<GetTransactionsResponse> => {
     this.checkUnlocked();
-    const index = subAccount || this.state.currentWalletId || 0;
+    const index = subAccount || this.currentWalletId || 0;
     this.validateSubaccount(index);
     return this.state.wallets[index].getTransactions();
   };
@@ -281,7 +283,7 @@ class PlugKeyRing {
     opts?: SendOpts
   ): Promise<SendResponse> => {
     this.checkUnlocked();
-    const currentWalletNumber = this.state.currentWalletId;
+    const currentWalletNumber = this.currentWalletId;
     let account = to;
     if (!canisterId && validatePrincipalId(to)) {
       account = getAccountId(Principal.fromText(to));
@@ -299,7 +301,7 @@ class PlugKeyRing {
     subAccount = 0
   ): Promise<Array<ConnectedApp>> => {
     this.checkUnlocked();
-    const index = subAccount || this.state.currentWalletId || 0;
+    const index = subAccount || this.currentWalletId || 0;
     this.validateSubaccount(index);
     const { wallets } = this.state;
     const wallet = wallets[index];
@@ -314,7 +316,7 @@ class PlugKeyRing {
     subAccount = 0
   ): Promise<Array<ConnectedApp>> => {
     this.checkUnlocked();
-    const index = subAccount || this.state.currentWalletId || 0;
+    const index = subAccount || this.currentWalletId || 0;
     this.validateSubaccount(index);
     const { wallets } = this.state;
     const wallet = wallets[index];
@@ -326,12 +328,12 @@ class PlugKeyRing {
 
   public get currentWallet(): PlugWallet {
     this.checkUnlocked();
-    return this.state.wallets[this.state.currentWalletId || 0];
+    return this.state.wallets[this.currentWalletId || 0];
   }
 
   public getPemFile = (walletNumber?: number): string => {
     this.checkUnlocked();
-    const currentWalletNumber = walletNumber || this.state.currentWalletId || 0;
+    const currentWalletNumber = walletNumber || this.currentWalletId || 0;
     this.validateSubaccount(currentWalletNumber);
     return this.state.wallets[currentWalletNumber].pemFile;
   };
@@ -350,11 +352,11 @@ class PlugKeyRing {
     const wallet = new PlugWallet({ mnemonic, walletNumber: 0 });
     const data = {
       wallets: [wallet.toJSON()],
-      currentWalletId: 0,
       password,
       mnemonic,
     };
     this.isInitialized = true;
+    this.currentWalletId = 0;
     await store.set({ isInitialized: true, isUnlocked: false });
     await this.saveEncryptedState(data, password);
     return wallet;

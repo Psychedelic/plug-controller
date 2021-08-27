@@ -43,18 +43,16 @@ jest.mock('../utils/dfx/nft', () => {
       transfer_to: jest.Mock<boolean, any>;
     } => ({
       user_tokens: jest.fn(() => [BigInt(10)]),
-      data_of: jest.fn(() => [
-        {
-          id: BigInt(10),
-          url: '/Token/10',
-          owner: [
-            'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
-          ],
-          desc: 'Example description of ICPunk',
-          name: 'ICPunk #10',
-          properties: [],
-        },
-      ]),
+      data_of: jest.fn(() => ({
+        id: BigInt(10),
+        url: '/Token/10',
+        owner: [
+          'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+        ],
+        desc: 'Example description of ICPunk',
+        name: 'ICPunk #10',
+        properties: [],
+      })),
       transfer_to: jest.fn((_, id) => {
         if (id === BigInt(130)) {
           throw new Error(ERRORS.TRANSFER_NFT_ERROR);
@@ -171,7 +169,6 @@ describe('Plug KeyRing', () => {
 
       const stateWallet = state.wallets[0];
       expect(stateWallet.toJSON()).toEqual(wallet.toJSON());
-      expect(state.currentWalletId).toEqual(0);
       expect(state.password).toEqual(TEST_PASSWORD);
       expect(bip39.validateMnemonic(state.mnemonic as string)).toEqual(true);
       expect(stateWallet.registeredTokens).toEqual([TOKENS.XTC]);
@@ -199,7 +196,6 @@ describe('Plug KeyRing', () => {
       expect(state.wallets.length).toEqual(1);
       const stateWallet = state.wallets[0];
       expect(stateWallet.toJSON()).toEqual(wallet.toJSON());
-      expect(state.currentWalletId).toEqual(0);
       expect(state.mnemonic).toEqual(TEST_MNEMONIC);
       expect(state.password).toEqual(TEST_PASSWORD);
       expect(bip39.validateMnemonic(state.mnemonic!)).toEqual(true);
@@ -264,7 +260,6 @@ describe('Plug KeyRing', () => {
 
       const state = await keyRing.getState();
       expect(state.wallets.length).toEqual(1);
-      expect(state.currentWalletId).toEqual(0);
       expect(state.password).toEqual(TEST_PASSWORD);
     });
     it('should fail to unlock with incorrect password', async () => {
@@ -422,10 +417,9 @@ describe('Plug KeyRing', () => {
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.createPrincipal();
       const wallet = await keyRing.createPrincipal();
-      const state = await keyRing.getState();
-      expect(state.currentWalletId).toEqual(0);
       await keyRing.setCurrentPrincipal(wallet.walletNumber);
-      expect(state.currentWalletId).toEqual(wallet.walletNumber);
+      expect(keyRing.currentWalletId).toEqual(wallet.walletNumber);
+      expect(keyRing.currentWallet).toEqual(wallet);
     });
     it('should fail to set invalid current principal ', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
