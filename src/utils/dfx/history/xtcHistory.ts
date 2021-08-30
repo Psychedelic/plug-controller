@@ -4,7 +4,7 @@ import axios from 'axios';
 
 import { GetTransactionsResponse, InferredTransaction } from './rosetta';
 
-const KYASHU_URL = 'https://hwy253x090.execute-api.us-west-2.amazonaws.com/dev';
+const KYASHU_URL = 'https://gxdmhoifte.execute-api.us-west-2.amazonaws.com/prod';
 
 type TransactionKind =
   | {
