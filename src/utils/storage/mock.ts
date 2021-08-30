@@ -2,6 +2,8 @@
 class StorageMock {
   private store: any;
 
+  public isSupported: boolean;
+
   public local: {
     get: () => any;
     set: (obj: any) => void;
@@ -13,6 +15,7 @@ class StorageMock {
       set: this.set.bind(this),
       get: this.get.bind(this),
     };
+    this.isSupported = true;
   }
 
   public set = (obj = {}): any => {
@@ -26,7 +29,7 @@ class StorageMock {
     return { ...this.store };
   };
 
-  public clear = (): {} => {
+  public clear = (): any => {
     this.set({});
     return {};
   };
