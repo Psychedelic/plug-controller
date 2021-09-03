@@ -4,7 +4,8 @@ import axios from 'axios';
 
 import { GetTransactionsResponse, InferredTransaction } from './rosetta';
 
-const KYASHU_URL = 'https://gxdmhoifte.execute-api.us-west-2.amazonaws.com/prod';
+const KYASHU_URL =
+  'https://gxdmhoifte.execute-api.us-west-2.amazonaws.com/prod';
 
 type TransactionKind =
   | {
@@ -152,13 +153,7 @@ export const getXTCTransactions = async (
     txnIds?.length ? `?txnIds=[${txnIds.join(',')}]` : ''
   }`;
   try {
-    const response = await axios.get(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: '*/*',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
+    const response = await axios.get(url);
     return {
       total: response.data.length,
       transactions: response.data.map(transaction =>
@@ -179,11 +174,11 @@ export const requestCacheUpdate = async (
 ): Promise<boolean> => {
   try {
     const response = await axios.post(`${KYASHU_URL}/txn/${principalId}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: '*/*',
-        'Access-Control-Allow-Origin': '*',
-      },
+      // headers: {
+      //   'Content-Type': 'application/json',
+      //   Accept: '*/*',
+      //   'Access-Control-Allow-Origin': '*',
+      // },
       body: {
         txnIds: txnIds?.map(tx => tx.toString()),
       },

@@ -15,9 +15,12 @@ import {
   getICPTransactions,
   GetTransactionsResponse,
 } from '../utils/dfx/history/rosetta';
-import { TOKENS, NFTs } from '../constants/tokens';
+import { TOKENS, NFTs, DEFAULT_ASSETS } from '../constants/tokens';
 import { uniqueByObjKey } from '../utils/array';
-import { getXTCTransactions } from '../utils/dfx/history/xtcHistory';
+import {
+  getXTCTransactions,
+  requestCacheUpdate,
+} from '../utils/dfx/history/xtcHistory';
 
 import { StandardNFT, TokenDesc } from '../interfaces/nft';
 import { createNFTActor } from '../utils/dfx/nft';
@@ -31,6 +34,7 @@ interface PlugWalletArgs {
   registeredTokens?: Array<StandardToken>;
   registeredNFTs?: Array<StandardNFT>;
   connectedApps?: Array<ConnectedApp>;
+  assets?: Array<TokenBalance>;
 }
 
 interface JSONWallet {
@@ -42,6 +46,12 @@ interface JSONWallet {
   registeredTokens: Array<StandardToken>;
   registeredNFTs?: Array<StandardNFT>;
   connectedApps: Array<ConnectedApp>;
+  assets?: Array<{
+    name: string;
+    symbol: string;
+    amount: number;
+    canisterId: string | null;
+  }>;
 }
 
 class PlugWallet {
@@ -61,6 +71,8 @@ class PlugWallet {
 
   connectedApps: Array<ConnectedApp>;
 
+  assets: Array<TokenBalance>;
+
   private identity: Secp256k1KeyIdentity;
 
   constructor({
@@ -70,10 +82,15 @@ class PlugWallet {
     mnemonic,
     registeredTokens = [],
     connectedApps = [],
+    assets = DEFAULT_ASSETS,
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
     this.walletNumber = walletNumber;
+    this.assets = assets.map(asset => ({
+      ...asset,
+      amount: BigInt(asset.amount),
+    }));
     this.registeredTokens = uniqueByObjKey(
       [...registeredTokens, TOKENS.XTC],
       'symbol'
@@ -170,6 +187,10 @@ class PlugWallet {
     icon: this.icon,
     registeredTokens: this.registeredTokens,
     connectedApps: this.connectedApps,
+    assets: this.assets.map(asset => ({
+      ...asset,
+      amount: parseInt(asset.amount.toString(), 10),
+    })),
   });
 
   public burnXTC = async (to: string, amount: bigint) => {
@@ -183,14 +204,14 @@ class PlugWallet {
       to: Principal.fromText(to),
       amount,
     });
-    // try {
-    //   if ('Ok' in burnResult) {
-    //     const trxId = burnResult.Ok;
-    //     await requestCacheUpdate(this.principal, [trxId]);
-    //   }
-    // } catch (e) {
-    //   console.log('Kyasshu error');
-    // }
+    try {
+      if ('Ok' in burnResult) {
+        const trxId = burnResult.Ok;
+        await requestCacheUpdate(this.principal, [trxId]);
+      }
+    } catch (e) {
+      console.log('Kyasshu error');
+    }
     return burnResult;
   };
 
@@ -224,10 +245,12 @@ class PlugWallet {
         };
       })
     );
-    return [
+    const assets = [
       { name: 'ICP', symbol: 'ICP', amount: icpBalance, canisterId: null },
       ...tokenBalances,
     ];
+    this.assets = assets;
+    return assets;
   };
 
   public getTokenInfo = async (
@@ -336,16 +359,16 @@ class PlugWallet {
       this.identity.getPrincipal().toString(),
       amount
     );
-    // if (canisterId === TOKENS.XTC.canisterId) {
-    //   try {
-    //     if ('transactionId' in result) {
-    //       const trxId = result.transactionId;
-    //       await requestCacheUpdate(this.principal, [trxId]);
-    //     }
-    //   } catch (e) {
-    //     console.log('Kyasshu error');
-    //   }
-    // }
+    if (canisterId === TOKENS.XTC.canisterId) {
+      try {
+        if ('transactionId' in result) {
+          const trxId = result.transactionId;
+          await requestCacheUpdate(this.principal, [trxId]);
+        }
+      } catch (e) {
+        console.log('Kyasshu error');
+      }
+    }
 
     return result;
   }
