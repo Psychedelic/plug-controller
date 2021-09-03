@@ -251,7 +251,10 @@ class PlugKeyRing {
     return this.state.wallets[index].getBalance();
   };
 
-  public getTokenInfo = async (canisterId: string, subAccount?: number) => {
+  public getTokenInfo = async (
+    canisterId: string,
+    subAccount?: number
+  ): Promise<{ token: StandardToken; amount: bigint }> => {
     this.checkUnlocked();
     const index = subAccount || this.currentWalletId || 0;
     this.validateSubaccount(index);
