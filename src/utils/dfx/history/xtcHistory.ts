@@ -174,11 +174,6 @@ export const requestCacheUpdate = async (
 ): Promise<boolean> => {
   try {
     const response = await axios.post(`${KYASHU_URL}/txn/${principalId}`, {
-      // headers: {
-      //   'Content-Type': 'application/json',
-      //   Accept: '*/*',
-      //   'Access-Control-Allow-Origin': '*',
-      // },
       body: {
         txnIds: txnIds?.map(tx => tx.toString()),
       },
