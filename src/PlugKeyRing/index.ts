@@ -49,7 +49,7 @@ class PlugKeyRing {
     this.currentWalletId = state?.currentWalletId || 0;
   };
 
-  public getPublicKey = async (subAccount = 0): Promise<PublicKey> => {
+  public getPublicKey = async (subAccount): Promise<PublicKey> => {
     await this.checkInitialized();
     const index = (subAccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
@@ -57,7 +57,7 @@ class PlugKeyRing {
     return wallet.publicKey;
   };
 
-  public getNFTs = async (subAccount = 0): Promise<Array<TokenDesc>> => {
+  public getNFTs = async (subAccount?: number): Promise<Array<TokenDesc>> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
     const { wallets } = this.state;
@@ -67,7 +67,7 @@ class PlugKeyRing {
   };
 
   public transferNFT = async ({
-    subAccount = 0,
+    subAccount,
     id,
     to,
   }: {
@@ -178,7 +178,7 @@ class PlugKeyRing {
 
   public sign = async (
     payload: BinaryBlob,
-    subAccount = 0
+    subAccount?: number
   ): Promise<BinaryBlob> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
@@ -227,7 +227,7 @@ class PlugKeyRing {
 
   public registerToken = async (
     canisterId: string,
-    subAccount = 0
+    subAccount?: number
   ): Promise<Array<StandardToken>> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
@@ -307,7 +307,7 @@ class PlugKeyRing {
 
   public addConnectedApp = async (
     app: ConnectedApp,
-    subAccount = 0
+    subAccount?: number
   ): Promise<Array<ConnectedApp>> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
@@ -322,7 +322,7 @@ class PlugKeyRing {
 
   public deleteConnectedApp = async (
     id: string,
-    subAccount = 0
+    subAccount?: number
   ): Promise<Array<ConnectedApp>> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
