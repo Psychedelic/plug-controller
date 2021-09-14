@@ -2,6 +2,8 @@ import CryptoJS from 'crypto-js';
 import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
+import { GetAllUserNFTsResponse } from '@psychedelic/dab-js';
+import { NFTDetails } from '@psychedelic/dab-js/dist/nft';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/history/rosetta';
@@ -14,7 +16,6 @@ import mockStore from '../utils/storage/mock';
 import { validatePrincipalId } from './utils';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
 import { BurnResult } from '../interfaces/xtc';
-import { TokenDesc } from '../interfaces/nft';
 import { ConnectedApp } from '../interfaces/account';
 
 interface PlugState {
@@ -57,7 +58,9 @@ class PlugKeyRing {
     return wallet.publicKey;
   };
 
-  public getNFTs = async (subAccount?: number): Promise<Array<TokenDesc>> => {
+  public getNFTs = async (
+    subAccount?: number
+  ): Promise<GetAllUserNFTsResponse> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
     const { wallets } = this.state;
@@ -68,19 +71,21 @@ class PlugKeyRing {
 
   public transferNFT = async ({
     subAccount,
-    id,
+    token,
     to,
+    standard,
   }: {
     subAccount?: number;
-    id: bigint;
+    token: NFTDetails;
     to: string;
+    standard: string;
   }): Promise<boolean> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
-    return wallet.transferNFT({ id, to });
+    return wallet.transferNFT({ token, to, standard });
   };
 
   private loadFromPersistance = async (password: string): Promise<void> => {

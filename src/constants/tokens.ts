@@ -21,15 +21,6 @@ export const TOKENS = {
 
 export const DEFAULT_TOKENS = [TOKENS.ICP, TOKENS.XTC];
 
-export const NFTs = {
-  IC_PUNKS: {
-    name: 'IC Punks',
-    totalSupply: 10000,
-    symbol: 'ICPK',
-    canisterId: 'qcg3w-tyaaa-aaaah-qakea-cai',
-  },
-};
-
 export const DEFAULT_ASSETS = Object.values(DEFAULT_TOKENS).map(token => ({
   ...token,
   amount: BigInt(0),
