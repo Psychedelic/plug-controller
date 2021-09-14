@@ -3,8 +3,8 @@ import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import {
   getAllUserNFTs,
-  GetAllUserNFTsResponse,
   getNFTActor,
+  NFTCollection,
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
@@ -54,6 +54,20 @@ interface JSONWallet {
     amount: number;
     canisterId: string | null;
   }>;
+  nftCollections?: Array<{
+    name: string;
+    canisterId: string;
+    standard: string;
+    tokens: Array<{
+      index: number;
+      canister: string;
+      id?: string;
+      name?: string;
+      url: string;
+      metadata: any;
+      collection?: string;
+    }>;
+  }>;
 }
 
 class PlugWallet {
@@ -72,6 +86,8 @@ class PlugWallet {
   connectedApps: Array<ConnectedApp>;
 
   assets: Array<TokenBalance>;
+
+  collections: Array<NFTCollection>;
 
   private identity: Secp256k1KeyIdentity;
 
@@ -118,10 +134,15 @@ class PlugWallet {
   }
 
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
-  public getNFTs = async (): Promise<GetAllUserNFTsResponse> => {
+  public getNFTs = async (): Promise<NFTCollection[]> => {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
-    return getAllUserNFTs(agent, Principal.fromText(this.principal));
+    const collections = await getAllUserNFTs(
+      agent,
+      Principal.fromText(this.principal)
+    );
+    this.collections = collections;
+    return collections;
   };
 
   public transferNFT = async (args: {
@@ -181,6 +202,13 @@ class PlugWallet {
     assets: this.assets.map(asset => ({
       ...asset,
       amount: parseInt(asset.amount.toString(), 10),
+    })),
+    nftCollections: this.collections.map(collection => ({
+      ...collection,
+      tokens: collection.tokens.map(token => ({
+        ...token,
+        index: parseInt(token.index.toString(), 10),
+      })),
     })),
   });
 
