@@ -3,10 +3,9 @@
 /* eslint-disable camelcase */
 import fetch from 'cross-fetch';
 import { config } from 'dotenv';
-import { HttpAgent, Actor, ActorSubclass } from '@dfinity/agent';
+import { HttpAgent } from '@dfinity/agent';
 import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
 
-import tokenIDLFactory from '../../idls/ext.did';
 // import TokenService from '../../interfaces/token';
 import { IC_HOST } from './constants';
 import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
