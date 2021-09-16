@@ -2,8 +2,7 @@ import CryptoJS from 'crypto-js';
 import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
-import { GetAllUserNFTsResponse } from '@psychedelic/dab-js';
-import { NFTDetails } from '@psychedelic/dab-js/dist/nft';
+import { NFTDetails, NFTCollection } from '@psychedelic/dab-js';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/history/rosetta';
@@ -17,6 +16,7 @@ import { validatePrincipalId } from './utils';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
 import { BurnResult } from '../interfaces/xtc';
 import { ConnectedApp } from '../interfaces/account';
+import { recursiveParseBigint } from '../utils/object';
 
 interface PlugState {
   wallets: Array<PlugWallet>;
@@ -58,9 +58,7 @@ class PlugKeyRing {
     return wallet.publicKey;
   };
 
-  public getNFTs = async (
-    subAccount?: number
-  ): Promise<GetAllUserNFTsResponse> => {
+  public getNFTs = async (subAccount?: number): Promise<NFTCollection[]> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
     const { wallets } = this.state;
@@ -73,7 +71,6 @@ class PlugKeyRing {
     subAccount,
     token,
     to,
-    standard,
   }: {
     subAccount?: number;
     token: NFTDetails;
@@ -85,7 +82,7 @@ class PlugKeyRing {
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
-    return wallet.transferNFT({ token, to, standard });
+    return wallet.transferNFT({ token, to });
   };
 
   private loadFromPersistance = async (password: string): Promise<void> => {
@@ -178,7 +175,10 @@ class PlugKeyRing {
   public getState = async (): Promise<PlugState> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    return { ...this.state, currentWalletId: this.currentWalletId };
+    return recursiveParseBigint({
+      ...this.state,
+      currentWalletId: this.currentWalletId,
+    });
   };
 
   public sign = async (
@@ -381,7 +381,9 @@ class PlugKeyRing {
   };
 
   private saveEncryptedState = async (newState, password): Promise<void> => {
-    const stringData = JSON.stringify({ ...this.state, ...newState });
+    const stringData = JSON.stringify(
+      recursiveParseBigint({ ...this.state, ...newState })
+    );
     const encrypted = CryptoJS.AES.encrypt(stringData, password).toString();
     await store.set({ vault: encrypted });
   };

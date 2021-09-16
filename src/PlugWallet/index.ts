@@ -38,6 +38,7 @@ interface PlugWalletArgs {
   registeredTokens?: Array<StandardToken>;
   connectedApps?: Array<ConnectedApp>;
   assets?: Array<TokenBalance>;
+  collections?: Array<NFTCollection>;
 }
 
 interface JSONWallet {
@@ -99,6 +100,7 @@ class PlugWallet {
     registeredTokens = [],
     connectedApps = [],
     assets = DEFAULT_ASSETS,
+    collections = [],
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
@@ -119,6 +121,7 @@ class PlugWallet {
     this.accountId = accountId;
     this.principal = identity.getPrincipal().toText();
     this.connectedApps = [...connectedApps];
+    this.collections = [...collections];
   }
 
   public setName(val: string): void {
@@ -148,15 +151,14 @@ class PlugWallet {
   public transferNFT = async (args: {
     token: NFTDetails;
     to: string;
-    standard: string;
   }): Promise<boolean> => {
-    const { token, to, standard } = args;
+    const { token, to } = args;
     if (!validatePrincipalId(to)) {
       throw new Error(ERRORS.INVALID_PRINCIPAL_ID);
     }
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
-    const NFT = getNFTActor(token.canister, agent, standard);
+    const NFT = getNFTActor(token.canister, agent, token.standard);
     try {
       await NFT.transfer(
         Principal.fromText(to),
