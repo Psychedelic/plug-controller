@@ -164,6 +164,12 @@ class PlugWallet {
         Principal.fromText(to),
         parseInt(token.index.toString(), 10)
       );
+      // Optimistically update the state
+      const collections = this.collections.map(col => ({
+        ...col,
+        tokens: col.tokens.filter(tok => tok.id !== token.id),
+      }));
+      this.collections = collections.filter(col => col.tokens.length);
       return true;
     } catch (e) {
       throw new Error(ERRORS.TRANSFER_NFT_ERROR);

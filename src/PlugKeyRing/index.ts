@@ -82,7 +82,10 @@ class PlugKeyRing {
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
-    return wallet.transferNFT({ token, to });
+    const newWallets = [...this.state.wallets, wallet];
+    await this.saveEncryptedState({ wallets: newWallets }, this.state.password);
+    const success = wallet.transferNFT({ token, to });
+    return success;
   };
 
   private loadFromPersistance = async (password: string): Promise<void> => {
