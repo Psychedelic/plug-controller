@@ -25,6 +25,24 @@ interface PlugState {
   currentWalletId?: number;
 }
 
+interface CreatePrincipalOptions {
+  name?: string;
+  icon?: string;
+}
+
+interface CreateOptions extends CreatePrincipalOptions {
+  password: string;
+}
+
+interface CreateAndPersistKeyRingOptions extends CreateOptions {
+  mnemonic: string;
+}
+
+interface ImportMnemonicOptions {
+  mnemonic: string;
+  password: string;
+}
+
 const store = process.env.NODE_ENV === 'test' ? mockStore : new Storage();
 
 class PlugKeyRing {
@@ -131,30 +149,37 @@ class PlugKeyRing {
 
   public create = async ({
     password = '',
-  }: {
-    password: string;
-  }): Promise<{ wallet: PlugWallet; mnemonic: string }> => {
+    icon,
+    name,
+  }: CreateOptions): Promise<{
+    wallet: PlugWallet;
+    mnemonic: string;
+  }> => {
     const { mnemonic } = createAccount();
-    const wallet = await this.createAndPersistKeyRing({ mnemonic, password });
+    const wallet = await this.createAndPersistKeyRing({
+      mnemonic,
+      password,
+      icon,
+      name,
+    });
     return { wallet, mnemonic };
   };
 
   public importMnemonic = async ({
     mnemonic,
     password,
-  }: {
+  }: ImportMnemonicOptions): Promise<{
+    wallet: PlugWallet;
     mnemonic: string;
-    password: string;
-  }): Promise<{ wallet: PlugWallet; mnemonic: string }> => {
+  }> => {
     const wallet = await this.createAndPersistKeyRing({ mnemonic, password });
     return { wallet, mnemonic };
   };
 
   // Assumes the state is already initialized
-  public createPrincipal = async (opts?: {
-    name?: string;
-    icon?: string;
-  }): Promise<PlugWallet> => {
+  public createPrincipal = async (
+    opts?: CreatePrincipalOptions
+  ): Promise<PlugWallet> => {
     await this.checkInitialized();
     this.checkUnlocked();
     const wallet = new PlugWallet({
@@ -364,14 +389,19 @@ class PlugKeyRing {
   private createAndPersistKeyRing = async ({
     mnemonic,
     password,
-  }): Promise<PlugWallet> => {
+    icon,
+    name,
+  }: CreateAndPersistKeyRingOptions): Promise<PlugWallet> => {
     if (!password) throw new Error(ERRORS.PASSWORD_REQUIRED);
-    const wallet = new PlugWallet({ mnemonic, walletNumber: 0 });
+
+    const wallet = new PlugWallet({ icon, name, mnemonic, walletNumber: 0 });
+
     const data = {
       wallets: [wallet.toJSON()],
       password,
       mnemonic,
     };
+
     this.isInitialized = true;
     this.currentWalletId = 0;
     await store.set({
