@@ -76,7 +76,9 @@ class PlugKeyRing {
     return wallet.publicKey;
   };
 
-  public getNFTs = async (subAccount?: number): Promise<NFTCollection[]> => {
+  public getNFTs = async (
+    subAccount?: number
+  ): Promise<NFTCollection[] | null> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
     const { wallets } = this.state;
