@@ -92,6 +92,8 @@ class PlugWallet {
 
   private identity: Secp256k1KeyIdentity;
 
+  private lock: boolean;
+
   constructor({
     name,
     icon,
@@ -137,15 +139,21 @@ class PlugWallet {
   }
 
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
-  public getNFTs = async (): Promise<NFTCollection[]> => {
+  public getNFTs = async (): Promise<NFTCollection[] | null> => {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
-    const collections = await getAllUserNFTs(
-      agent,
-      Principal.fromText(this.principal)
-    );
-    this.collections = collections;
-    return collections;
+    let collections: NFTCollection[] = [];
+    if (!this.lock) {
+      this.lock = true;
+      collections = await getAllUserNFTs(
+        agent,
+        Principal.fromText(this.principal)
+      );
+      this.lock = false;
+      this.collections = collections;
+      return collections;
+    }
+    return null;
   };
 
   public transferNFT = async (args: {
