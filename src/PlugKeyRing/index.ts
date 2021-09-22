@@ -2,6 +2,7 @@ import CryptoJS from 'crypto-js';
 import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
+import { NFTDetails, NFTCollection } from '@psychedelic/dab-js';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/history/rosetta';
@@ -14,8 +15,8 @@ import StorageMock from '../utils/storage/mock';
 import { validatePrincipalId } from './utils';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
 import { BurnResult } from '../interfaces/xtc';
-import { TokenDesc } from '../interfaces/nft';
 import { ConnectedApp } from '../interfaces/account';
+import { recursiveParseBigint } from '../utils/object';
 
 interface StorageData {
   vault: PlugState;
@@ -39,6 +40,23 @@ interface PlugState {
 const ExtensionStorage = (process.env.NODE_ENV === 'test'
   ? StorageMock
   : new Storage()) as KeyringStorage;
+interface CreatePrincipalOptions {
+  name?: string;
+  icon?: string;
+}
+
+interface CreateOptions extends CreatePrincipalOptions {
+  password: string;
+}
+
+interface CreateAndPersistKeyRingOptions extends CreateOptions {
+  mnemonic: string;
+}
+
+interface ImportMnemonicOptions {
+  mnemonic: string;
+  password: string;
+}
 
 class PlugKeyRing {
   private state: PlugState;
@@ -66,17 +84,19 @@ class PlugKeyRing {
     this.currentWalletId = state?.currentWalletId || 0;
   };
 
-  public getPublicKey = async (subAccount = 0): Promise<PublicKey> => {
+  public getPublicKey = async (subAccount): Promise<PublicKey> => {
     await this.checkInitialized();
-    const index = subAccount || this.currentWalletId || 0;
+    const index = (subAccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
     const wallet = this.state.wallets[index];
     return wallet.publicKey;
   };
 
-  public getNFTs = async (subAccount = 0): Promise<Array<TokenDesc>> => {
+  public getNFTs = async (
+    subAccount?: number
+  ): Promise<NFTCollection[] | null> => {
     this.checkUnlocked();
-    const index = subAccount || this.currentWalletId || 0;
+    const index = (subAccount ?? this.currentWalletId) || 0;
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
@@ -84,20 +104,24 @@ class PlugKeyRing {
   };
 
   public transferNFT = async ({
-    subAccount = 0,
-    id,
+    subAccount,
+    token,
     to,
   }: {
     subAccount?: number;
-    id: bigint;
+    token: NFTDetails;
     to: string;
+    standard: string;
   }): Promise<boolean> => {
     this.checkUnlocked();
-    const index = subAccount || this.currentWalletId || 0;
+    const index = (subAccount ?? this.currentWalletId) || 0;
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
-    return wallet.transferNFT({ id, to });
+    const newWallets = [...this.state.wallets, wallet];
+    await this.saveEncryptedState({ wallets: newWallets }, this.state.password);
+    const success = wallet.transferNFT({ token, to });
+    return success;
   };
 
   private loadFromPersistance = async (password: string): Promise<void> => {
@@ -131,7 +155,7 @@ class PlugKeyRing {
     subAccount: number;
   }): Promise<BurnResult> => {
     this.checkUnlocked();
-    const index = subAccount || this.currentWalletId || 0;
+    const index = (subAccount ?? this.currentWalletId) || 0;
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
@@ -140,30 +164,37 @@ class PlugKeyRing {
 
   public create = async ({
     password = '',
-  }: {
-    password: string;
-  }): Promise<{ wallet: PlugWallet; mnemonic: string }> => {
+    icon,
+    name,
+  }: CreateOptions): Promise<{
+    wallet: PlugWallet;
+    mnemonic: string;
+  }> => {
     const { mnemonic } = createAccount();
-    const wallet = await this.createAndPersistKeyRing({ mnemonic, password });
+    const wallet = await this.createAndPersistKeyRing({
+      mnemonic,
+      password,
+      icon,
+      name,
+    });
     return { wallet, mnemonic };
   };
 
   public importMnemonic = async ({
     mnemonic,
     password,
-  }: {
+  }: ImportMnemonicOptions): Promise<{
+    wallet: PlugWallet;
     mnemonic: string;
-    password: string;
-  }): Promise<{ wallet: PlugWallet; mnemonic: string }> => {
+  }> => {
     const wallet = await this.createAndPersistKeyRing({ mnemonic, password });
     return { wallet, mnemonic };
   };
 
   // Assumes the state is already initialized
-  public createPrincipal = async (opts?: {
-    name?: string;
-    icon?: string;
-  }): Promise<PlugWallet> => {
+  public createPrincipal = async (
+    opts?: CreatePrincipalOptions
+  ): Promise<PlugWallet> => {
     await this.checkInitialized();
     this.checkUnlocked();
     const wallet = new PlugWallet({
@@ -187,15 +218,18 @@ class PlugKeyRing {
   public getState = async (): Promise<PlugState> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    return { ...this.state, currentWalletId: this.currentWalletId };
+    return recursiveParseBigint({
+      ...this.state,
+      currentWalletId: this.currentWalletId,
+    });
   };
 
   public sign = async (
     payload: BinaryBlob,
-    subAccount = 0
+    subAccount?: number
   ): Promise<BinaryBlob> => {
     this.checkUnlocked();
-    const index = subAccount || this.currentWalletId || 0;
+    const index = (subAccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
     const wallet = this.state.wallets[index];
     const signed = await wallet.sign(payload);
@@ -240,10 +274,10 @@ class PlugKeyRing {
 
   public registerToken = async (
     canisterId: string,
-    subAccount = 0
+    subAccount?: number
   ): Promise<Array<StandardToken>> => {
     this.checkUnlocked();
-    const index = subAccount || this.currentWalletId || 0;
+    const index = (subAccount ?? this.currentWalletId) || 0;
     const { wallets } = this.state;
 
     this.validateSubaccount(index);
@@ -259,14 +293,17 @@ class PlugKeyRing {
     subAccount?: number
   ): Promise<Array<TokenBalance>> => {
     this.checkUnlocked();
-    const index = subAccount || this.currentWalletId || 0;
+    const index = (subAccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
     return this.state.wallets[index].getBalance();
   };
 
-  public getTokenInfo = async (canisterId: string, subAccount?: number) => {
+  public getTokenInfo = async (
+    canisterId: string,
+    subAccount?: number
+  ): Promise<{ token: StandardToken; amount: bigint }> => {
     this.checkUnlocked();
-    const index = subAccount || this.currentWalletId || 0;
+    const index = (subAccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
     return this.state.wallets[index].getTokenInfo(canisterId);
   };
@@ -275,7 +312,7 @@ class PlugKeyRing {
     subAccount?: number
   ): Promise<GetTransactionsResponse> => {
     this.checkUnlocked();
-    const index = subAccount || this.currentWalletId || 0;
+    const index = (subAccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
     return this.state.wallets[index].getTransactions();
   };
@@ -317,10 +354,10 @@ class PlugKeyRing {
 
   public addConnectedApp = async (
     app: ConnectedApp,
-    subAccount = 0
+    subAccount?: number
   ): Promise<Array<ConnectedApp>> => {
     this.checkUnlocked();
-    const index = subAccount || this.currentWalletId || 0;
+    const index = (subAccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
     const { wallets } = this.state;
     const wallet = wallets[index];
@@ -332,10 +369,10 @@ class PlugKeyRing {
 
   public deleteConnectedApp = async (
     id: string,
-    subAccount = 0
+    subAccount?: number
   ): Promise<Array<ConnectedApp>> => {
     this.checkUnlocked();
-    const index = subAccount || this.currentWalletId || 0;
+    const index = (subAccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
     const { wallets } = this.state;
     const wallet = wallets[index];
@@ -352,7 +389,7 @@ class PlugKeyRing {
 
   public getPemFile = (walletNumber?: number): string => {
     this.checkUnlocked();
-    const currentWalletNumber = walletNumber || this.currentWalletId || 0;
+    const currentWalletNumber = (walletNumber ?? this.currentWalletId) || 0;
     this.validateSubaccount(currentWalletNumber);
     return this.state.wallets[currentWalletNumber].pemFile;
   };
@@ -366,14 +403,19 @@ class PlugKeyRing {
   private createAndPersistKeyRing = async ({
     mnemonic,
     password,
-  }): Promise<PlugWallet> => {
+    icon,
+    name,
+  }: CreateAndPersistKeyRingOptions): Promise<PlugWallet> => {
     if (!password) throw new Error(ERRORS.PASSWORD_REQUIRED);
-    const wallet = new PlugWallet({ mnemonic, walletNumber: 0 });
+
+    const wallet = new PlugWallet({ icon, name, mnemonic, walletNumber: 0 });
+
     const data = {
       wallets: [wallet.toJSON()],
       password,
       mnemonic,
     };
+
     this.isInitialized = true;
     this.currentWalletId = 0;
     await this.storage.set({
@@ -386,7 +428,9 @@ class PlugKeyRing {
   };
 
   private saveEncryptedState = async (newState, password): Promise<void> => {
-    const stringData = JSON.stringify({ ...this.state, ...newState });
+    const stringData = JSON.stringify(
+      recursiveParseBigint({ ...this.state, ...newState })
+    );
     const encrypted = CryptoJS.AES.encrypt(stringData, password).toString();
     await this.storage.set({ vault: encrypted });
   };

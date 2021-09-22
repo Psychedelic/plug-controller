@@ -1,8 +1,14 @@
 import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
+import {
+  getAllUserNFTs,
+  getNFTActor,
+  NFTCollection,
+} from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
+import { NFTDetails } from '@psychedelic/dab-js/dist/nft';
 import { ERRORS } from '../errors';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
@@ -15,12 +21,13 @@ import {
   getICPTransactions,
   GetTransactionsResponse,
 } from '../utils/dfx/history/rosetta';
-import { TOKENS, NFTs } from '../constants/tokens';
+import { TOKENS, DEFAULT_ASSETS } from '../constants/tokens';
 import { uniqueByObjKey } from '../utils/array';
-import { getXTCTransactions } from '../utils/dfx/history/xtcHistory';
+import {
+  getXTCTransactions,
+  requestCacheUpdate,
+} from '../utils/dfx/history/xtcHistory';
 
-import { StandardNFT, TokenDesc } from '../interfaces/nft';
-import { createNFTActor } from '../utils/dfx/nft';
 import { ConnectedApp } from '../interfaces/account';
 
 interface PlugWalletArgs {
@@ -29,8 +36,9 @@ interface PlugWalletArgs {
   mnemonic: string;
   icon?: string;
   registeredTokens?: Array<StandardToken>;
-  registeredNFTs?: Array<StandardNFT>;
   connectedApps?: Array<ConnectedApp>;
+  assets?: Array<TokenBalance>;
+  collections?: Array<NFTCollection>;
 }
 
 interface JSONWallet {
@@ -40,8 +48,27 @@ interface JSONWallet {
   accountId: string;
   icon?: string;
   registeredTokens: Array<StandardToken>;
-  registeredNFTs?: Array<StandardNFT>;
   connectedApps: Array<ConnectedApp>;
+  assets?: Array<{
+    name: string;
+    symbol: string;
+    amount: number;
+    canisterId: string | null;
+  }>;
+  nftCollections?: Array<{
+    name: string;
+    canisterId: string;
+    standard: string;
+    tokens: Array<{
+      index: number;
+      canister: string;
+      id?: string;
+      name?: string;
+      url: string;
+      metadata: any;
+      collection?: string;
+    }>;
+  }>;
 }
 
 class PlugWallet {
@@ -57,11 +84,15 @@ class PlugWallet {
 
   registeredTokens: Array<StandardToken>;
 
-  registeredNFTs: Array<StandardNFT>;
-
   connectedApps: Array<ConnectedApp>;
 
+  assets: Array<TokenBalance>;
+
+  collections: Array<NFTCollection>;
+
   private identity: Secp256k1KeyIdentity;
+
+  private lock: boolean;
 
   constructor({
     name,
@@ -70,15 +101,20 @@ class PlugWallet {
     mnemonic,
     registeredTokens = [],
     connectedApps = [],
+    assets = DEFAULT_ASSETS,
+    collections = [],
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
     this.walletNumber = walletNumber;
+    this.assets = assets.map(asset => ({
+      ...asset,
+      amount: BigInt(asset.amount),
+    }));
     this.registeredTokens = uniqueByObjKey(
       [...registeredTokens, TOKENS.XTC],
       'symbol'
     ) as StandardToken[];
-    this.registeredNFTs = [NFTs.IC_PUNKS];
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -87,6 +123,7 @@ class PlugWallet {
     this.accountId = accountId;
     this.principal = identity.getPrincipal().toText();
     this.connectedApps = [...connectedApps];
+    this.collections = [...collections];
   }
 
   public setName(val: string): void {
@@ -102,38 +139,46 @@ class PlugWallet {
   }
 
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
-  public getNFTs = async (): Promise<Array<TokenDesc>> => {
+  public getNFTs = async (): Promise<NFTCollection[] | null> => {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
-    const NFT = createNFTActor(agent, NFTs.IC_PUNKS.canisterId);
-    const nfts = await NFT.user_tokens(Principal.from(this.principal));
-
-    // Need to cast cause candid is bugged
-    const nftData: Array<TokenDesc> = await Promise.all(
-      nfts.map(async punkId => {
-        const nft = await NFT.data_of(punkId);
-        if (!nft) {
-          throw new Error(ERRORS.GET_NFT_ERROR);
-        }
-        return nft;
-      })
-    );
-    return nftData as Array<TokenDesc>;
+    let collections: NFTCollection[] = [];
+    if (!this.lock) {
+      this.lock = true;
+      collections = await getAllUserNFTs(
+        agent,
+        Principal.fromText(this.principal)
+      );
+      this.lock = false;
+      this.collections = collections;
+      return collections;
+    }
+    return null;
   };
 
   public transferNFT = async (args: {
-    id: bigint;
+    token: NFTDetails;
     to: string;
   }): Promise<boolean> => {
-    const { id, to } = args;
+    const { token, to } = args;
     if (!validatePrincipalId(to)) {
       throw new Error(ERRORS.INVALID_PRINCIPAL_ID);
     }
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
-    const NFT = createNFTActor(agent, NFTs.IC_PUNKS.canisterId);
+    const NFT = getNFTActor(token.canister, agent, token.standard);
     try {
-      return NFT.transfer_to(Principal.fromText(to), id);
+      await NFT.transfer(
+        Principal.fromText(to),
+        parseInt(token.index.toString(), 10)
+      );
+      // Optimistically update the state
+      const collections = this.collections.map(col => ({
+        ...col,
+        tokens: col.tokens.filter(tok => tok.id !== token.id),
+      }));
+      this.collections = collections.filter(col => col.tokens.length);
+      return true;
     } catch (e) {
       throw new Error(ERRORS.TRANSFER_NFT_ERROR);
     }
@@ -170,6 +215,17 @@ class PlugWallet {
     icon: this.icon,
     registeredTokens: this.registeredTokens,
     connectedApps: this.connectedApps,
+    assets: this.assets.map(asset => ({
+      ...asset,
+      amount: parseInt(asset.amount.toString(), 10),
+    })),
+    nftCollections: this.collections.map(collection => ({
+      ...collection,
+      tokens: collection.tokens.map(token => ({
+        ...token,
+        index: parseInt(token.index.toString(), 10),
+      })),
+    })),
   });
 
   public burnXTC = async (to: string, amount: bigint) => {
@@ -183,14 +239,14 @@ class PlugWallet {
       to: Principal.fromText(to),
       amount,
     });
-    // try {
-    //   if ('Ok' in burnResult) {
-    //     const trxId = burnResult.Ok;
-    //     await requestCacheUpdate(this.principal, [trxId]);
-    //   }
-    // } catch (e) {
-    //   console.log('Kyasshu error');
-    // }
+    try {
+      if ('Ok' in burnResult) {
+        const trxId = burnResult.Ok;
+        await requestCacheUpdate(this.principal, [trxId]);
+      }
+    } catch (e) {
+      console.log('Kyasshu error');
+    }
     return burnResult;
   };
 
@@ -224,10 +280,12 @@ class PlugWallet {
         };
       })
     );
-    return [
+    const assets = [
       { name: 'ICP', symbol: 'ICP', amount: icpBalance, canisterId: null },
       ...tokenBalances,
     ];
+    this.assets = assets;
+    return assets;
   };
 
   public getTokenInfo = async (
@@ -336,16 +394,16 @@ class PlugWallet {
       this.identity.getPrincipal().toString(),
       amount
     );
-    // if (canisterId === TOKENS.XTC.canisterId) {
-    //   try {
-    //     if ('transactionId' in result) {
-    //       const trxId = result.transactionId;
-    //       await requestCacheUpdate(this.principal, [trxId]);
-    //     }
-    //   } catch (e) {
-    //     console.log('Kyasshu error');
-    //   }
-    // }
+    if (canisterId === TOKENS.XTC.canisterId) {
+      try {
+        if ('transactionId' in result) {
+          const trxId = result.transactionId;
+          await requestCacheUpdate(this.principal, [trxId]);
+        }
+      } catch (e) {
+        console.log('Kyasshu error', e);
+      }
+    }
 
     return result;
   }
