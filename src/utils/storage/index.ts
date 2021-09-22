@@ -82,7 +82,7 @@ class ExtensionStore {
     });
   }
 
-  public clear(): Promise<void> {
+  public async clear(): Promise<void> {
     const { local } = extension.storage;
     return new Promise<void>((resolve, reject) => {
       local.clear(() => {

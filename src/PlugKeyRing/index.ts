@@ -11,13 +11,25 @@ import { createAccount, getAccountId } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import { SendResponse } from '../utils/dfx/token';
 import Storage from '../utils/storage';
-import mockStore from '../utils/storage/mock';
+import StorageMock from '../utils/storage/mock';
 import { validatePrincipalId } from './utils';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
 import { BurnResult } from '../interfaces/xtc';
 import { ConnectedApp } from '../interfaces/account';
 import { recursiveParseBigint } from '../utils/object';
 
+interface StorageData {
+  vault: PlugState;
+  isInitialized: boolean;
+  isUnlocked: boolean;
+  currentWalletId: number;
+}
+interface KeyringStorage {
+  isSupported: boolean;
+  get: () => Promise<unknown>;
+  set: (state: unknown) => Promise<void>;
+  clear: () => Promise<void>;
+}
 interface PlugState {
   wallets: Array<PlugWallet>;
   password?: string;
@@ -25,6 +37,9 @@ interface PlugState {
   currentWalletId?: number;
 }
 
+const ExtensionStorage = (process.env.NODE_ENV === 'test'
+  ? StorageMock
+  : new Storage()) as KeyringStorage;
 interface CreatePrincipalOptions {
   name?: string;
   icon?: string;
@@ -43,10 +58,10 @@ interface ImportMnemonicOptions {
   password: string;
 }
 
-const store = process.env.NODE_ENV === 'test' ? mockStore : new Storage();
-
 class PlugKeyRing {
   private state: PlugState;
+
+  private storage: KeyringStorage;
 
   public isUnlocked = false;
 
@@ -54,15 +69,16 @@ class PlugKeyRing {
 
   public currentWalletId?: number;
 
-  public constructor() {
+  public constructor(StorageAdapter = ExtensionStorage) {
     this.state = { wallets: [] };
     this.isUnlocked = false;
     this.isInitialized = false;
     this.currentWalletId = 0;
+    this.storage = StorageAdapter;
   }
 
   public init = async (): Promise<void> => {
-    const state = await store.get();
+    const state = (await this.storage.get()) as StorageData;
     this.isUnlocked = !!state?.isUnlocked;
     this.isInitialized = !!state?.isInitialized;
     this.currentWalletId = state?.currentWalletId || 0;
@@ -109,14 +125,11 @@ class PlugKeyRing {
   };
 
   private loadFromPersistance = async (password: string): Promise<void> => {
-    interface StorageData {
-      vault: PlugState;
-      isInitialized: boolean;
-      currentWalletId: number;
-    }
-
-    const { vault, isInitialized, currentWalletId } = ((await store.get()) ||
-      {}) as StorageData;
+    const {
+      vault,
+      isInitialized,
+      currentWalletId,
+    } = ((await this.storage.get()) || {}) as StorageData;
     if (isInitialized && vault) {
       const decrypted = this.decryptState(vault, password);
       const wallets = decrypted.wallets.map(
@@ -199,7 +212,7 @@ class PlugKeyRing {
     await this.checkInitialized();
     this.validateSubaccount(walletNumber);
     this.currentWalletId = walletNumber;
-    await store.set({ currentWalletId: walletNumber });
+    await this.storage.set({ currentWalletId: walletNumber });
   };
 
   public getState = async (): Promise<PlugState> => {
@@ -228,8 +241,7 @@ class PlugKeyRing {
     try {
       await this.loadFromPersistance(password);
       this.isUnlocked = password === this.state?.password;
-
-      await store.set({ isUnlocked: this.isUnlocked });
+      await this.storage.set({ isUnlocked: this.isUnlocked });
       return this.isUnlocked;
     } catch (e) {
       this.isUnlocked = false;
@@ -240,7 +252,7 @@ class PlugKeyRing {
   public lock = async (): Promise<void> => {
     this.isUnlocked = false;
     this.state = { wallets: [] };
-    await store.set({ isUnlocked: this.isUnlocked });
+    await this.storage.set({ isUnlocked: this.isUnlocked });
   };
 
   public editPrincipal = async (
@@ -406,7 +418,7 @@ class PlugKeyRing {
 
     this.isInitialized = true;
     this.currentWalletId = 0;
-    await store.set({
+    await this.storage.set({
       isInitialized: true,
       isUnlocked: false,
       currentWalletId: 0,
@@ -420,7 +432,7 @@ class PlugKeyRing {
       recursiveParseBigint({ ...this.state, ...newState })
     );
     const encrypted = CryptoJS.AES.encrypt(stringData, password).toString();
-    await store.set({ vault: encrypted });
+    await this.storage.set({ vault: encrypted });
   };
 
   private decryptState = (state, password): PlugState =>

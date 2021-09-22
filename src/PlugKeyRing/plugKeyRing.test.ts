@@ -292,7 +292,7 @@ describe('Plug KeyRing', () => {
     it('should persist data encypted correctly after creating a new keyring', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      const state = await keyRing.getState();
+      const { currentWalletId, ...state } = await keyRing.getState();
       const encryptedState = CryptoJS.AES.encrypt(
         JSON.stringify(state),
         TEST_PASSWORD
@@ -313,7 +313,7 @@ describe('Plug KeyRing', () => {
         password: TEST_PASSWORD,
       });
       await keyRing.unlock(TEST_PASSWORD);
-      const state = await keyRing.getState();
+      const { currentWalletId, ...state } = await keyRing.getState();
       const encryptedState = CryptoJS.AES.encrypt(
         JSON.stringify(state),
         TEST_PASSWORD
@@ -332,7 +332,7 @@ describe('Plug KeyRing', () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.createPrincipal();
-      const state = await keyRing.getState();
+      const { currentWalletId, ...state } = await keyRing.getState();
       const encryptedState = CryptoJS.AES.encrypt(
         JSON.stringify(state),
         TEST_PASSWORD
@@ -351,7 +351,7 @@ describe('Plug KeyRing', () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai'); // register XTC
-      const state = await keyRing.getState();
+      const { currentWalletId, ...state } = await keyRing.getState();
       const encryptedState = CryptoJS.AES.encrypt(
         JSON.stringify(state),
         TEST_PASSWORD
@@ -376,7 +376,7 @@ describe('Plug KeyRing', () => {
       url: 'dx4k2-mtdzp-qavet-nrazz-4tmro-oii6a-hlrlv-azdys-5j72q-ids2p-cae',
       whitelist: [],
     });
-    const state = await keyRing.getState();
+    const { currentWalletId, ...state } = await keyRing.getState();
     const encryptedState = CryptoJS.AES.encrypt(
       JSON.stringify(state),
       TEST_PASSWORD
