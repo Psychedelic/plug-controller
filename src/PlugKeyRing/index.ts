@@ -11,7 +11,6 @@ import { createAccount, getAccountId } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import { SendResponse } from '../utils/dfx/token';
 import Storage from '../utils/storage';
-import StorageMock from '../utils/storage/mock';
 import { validatePrincipalId } from './utils';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
 import { BurnResult } from '../interfaces/xtc';
@@ -36,10 +35,6 @@ interface PlugState {
   mnemonic?: string;
   currentWalletId?: number;
 }
-
-const ExtensionStorage = (process.env.NODE_ENV === 'test'
-  ? StorageMock
-  : new Storage()) as KeyringStorage;
 interface CreatePrincipalOptions {
   name?: string;
   icon?: string;
@@ -69,7 +64,7 @@ class PlugKeyRing {
 
   public currentWalletId?: number;
 
-  public constructor(StorageAdapter = ExtensionStorage) {
+  public constructor(StorageAdapter = new Storage() as KeyringStorage) {
     this.state = { wallets: [] };
     this.isUnlocked = false;
     this.isInitialized = false;
