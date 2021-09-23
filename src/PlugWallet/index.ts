@@ -5,10 +5,10 @@ import {
   getAllUserNFTs,
   getNFTActor,
   NFTCollection,
+  NFTDetails,
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
-import { NFTDetails } from '@psychedelic/dab-js/dist/nft';
 import { ERRORS } from '../errors';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
