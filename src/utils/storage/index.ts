@@ -11,7 +11,7 @@ class ExtensionStore {
   isSupported: boolean;
 
   constructor() {
-    this.isSupported = Boolean(extension.storage.local);
+    this.isSupported = Boolean(extension?.storage?.local);
     if (!this.isSupported) {
       console.log('Storage not supported in this browser'); // eslint-disable-line
     }
@@ -26,7 +26,7 @@ class ExtensionStore {
       return undefined;
     }
     const result = await this._get();
-    // extension.storage.local always returns an obj
+    // extension?.storage.local always returns an obj
     // if the object is empty, treat it as undefined
     if (isEmpty(result)) {
       return undefined;
@@ -49,7 +49,7 @@ class ExtensionStore {
    * @returns {Object} the key-value map from local storage
    */
   private _get(): Promise<unknown> {
-    const { local } = extension.storage;
+    const { local } = extension?.storage;
     return new Promise((resolve, reject) => {
       local.get(null, (/** @type {any} */ result) => {
         const err = checkForError();
@@ -69,7 +69,7 @@ class ExtensionStore {
    * @private
    */
   private _set(obj): Promise<void> {
-    const { local } = extension.storage;
+    const { local } = extension?.storage;
     return new Promise<void>((resolve, reject) => {
       local.set(obj, () => {
         const err = checkForError();
@@ -83,7 +83,7 @@ class ExtensionStore {
   }
 
   public async clear(): Promise<void> {
-    const { local } = extension.storage;
+    const { local } = extension?.storage;
     return new Promise<void>((resolve, reject) => {
       local.clear(() => {
         const err = checkForError();

@@ -129,7 +129,7 @@ describe('Plug KeyRing', () => {
   let keyRing: PlugKeyRing;
   const cleanup = async (): Promise<void> => {
     await store.clear();
-    keyRing = new PlugKeyRing();
+    keyRing = new PlugKeyRing(store);
   };
 
   beforeAll(cleanup);
@@ -611,7 +611,7 @@ describe('Plug KeyRing', () => {
     const balances = {};
     let walletsCreated = 0;
     beforeEach(async () => {
-      keyRing = new PlugKeyRing();
+      keyRing = new PlugKeyRing(store);
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       walletsCreated = await createManyWallets(keyRing);
@@ -651,7 +651,7 @@ describe('Plug KeyRing', () => {
     const transactions = {};
     let walletsCreated = 0;
     beforeEach(async () => {
-      keyRing = new PlugKeyRing();
+      keyRing = new PlugKeyRing(store);
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       walletsCreated = await createManyWallets(keyRing);
@@ -690,7 +690,7 @@ describe('Plug KeyRing', () => {
   describe('sendICP', () => {
     let walletsCreated = 0;
     beforeEach(async () => {
-      keyRing = new PlugKeyRing();
+      keyRing = new PlugKeyRing(store);
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       walletsCreated = await createManyWallets(keyRing);
@@ -732,7 +732,7 @@ describe('Plug KeyRing', () => {
     });
     // describe('nfts', () => {
     //   beforeEach(async () => {
-    //     keyRing = new PlugKeyRing();
+    //     keyRing = new PlugKeyRing(store);
     //     await keyRing.importMnemonic({
     //       password: TEST_PASSWORD,
     //       mnemonic: TEST_MNEMONIC,
