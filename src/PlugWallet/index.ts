@@ -1,5 +1,4 @@
 import { PublicKey } from '@dfinity/agent';
-import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import {
   getAllUserNFTs,
@@ -8,12 +7,12 @@ import {
   NFTDetails,
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
+import { Secp256k1KeyIdentity } from '@dfinity/identity';
 
 import { ERRORS } from '../errors';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
-import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
 import { createTokenActor, SendResponse } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
@@ -29,6 +28,7 @@ import {
 } from '../utils/dfx/history/xtcHistory';
 
 import { ConnectedApp } from '../interfaces/account';
+import { getPem } from '../utils/crypto/identity';
 
 interface PlugWalletArgs {
   name?: string;
@@ -130,7 +130,7 @@ class PlugWallet {
     this.name = val;
   }
 
-  public async sign(payload: BinaryBlob): Promise<BinaryBlob> {
+  public async sign(payload: ArrayBuffer): Promise<ArrayBuffer> {
     return this.identity.sign(payload);
   }
 
@@ -366,7 +366,7 @@ class PlugWallet {
   }
 
   public get pemFile(): string {
-    return this.identity.getPem();
+    return getPem(this.identity);
   }
 
   private async sendICP(

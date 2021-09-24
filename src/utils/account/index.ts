@@ -1,6 +1,7 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import { Principal } from '@dfinity/principal';
+import { Secp256k1KeyIdentity } from '@dfinity/identity';
 
 import { ERRORS } from '../../errors';
 
@@ -12,7 +13,6 @@ import {
   wordArrayToByteArray,
 } from '../crypto/binary';
 import { createSecp256K1KeyPair } from '../crypto/keys';
-import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
 
 interface DerivedKey {
   key: Buffer;
