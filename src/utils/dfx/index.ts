@@ -3,10 +3,10 @@
 /* eslint-disable camelcase */
 import fetch from 'cross-fetch';
 import { HttpAgent } from '@dfinity/agent';
+import { Secp256k1KeyIdentity } from '@dfinity/identity';
 
 // import TokenService from '../../interfaces/token';
 import { IC_HOST } from './constants';
-import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
 
 export interface CreateAgentArgs {
   secretKey: ArrayBuffer;
