@@ -1,19 +1,7 @@
 /* eslint-disable no-underscore-dangle */
+import { Secp256k1KeyIdentity, Secp256k1PublicKey } from '@dfinity/identity';
 import Secp256k1 from 'secp256k1';
-import { sha256 } from 'js-sha256';
-
-import {
-  blobFromHex,
-  blobFromUint8Array,
-  blobToHex,
-  BinaryBlob,
-} from '@dfinity/candid';
-import { PublicKey, SignIdentity } from '@dfinity/agent';
-import Secp256k1PublicKey from './publicKey';
-
-declare type PublicKeyHex = string;
-declare type SecretKeyHex = string;
-export declare type JsonableSecp256k1Identity = [PublicKeyHex, SecretKeyHex];
+import { randomBytes } from 'tweetnacl';
 
 const PEM_BEGIN = '-----BEGIN PRIVATE KEY-----';
 
@@ -24,16 +12,61 @@ const PRIV_KEY_INIT =
 
 const KEY_SEPARATOR = 'a144034200';
 
-class Secp256k1KeyIdentity extends SignIdentity {
-  public static fromParsedJson(obj: [string, string]): Secp256k1KeyIdentity {
+const fromHexString = (hexString: string): ArrayBuffer => {
+  return new Uint8Array(
+    (hexString.match(/.{1,2}/g) ?? []).map(byte => parseInt(byte, 16))
+  ).buffer;
+};
+
+declare type PublicKeyHex = string;
+declare type SecretKeyHex = string;
+export declare type JsonableSecp256k1Identity = [PublicKeyHex, SecretKeyHex];
+class PlugSecp256k1KeyIdentity extends Secp256k1KeyIdentity {
+  /**
+   * Generates an identity. If a seed is provided, the keys are generated from the
+   * seed according to BIP 0032. Otherwise, the key pair is randomly generated.
+   * This method throws an error in case the seed is not 32 bytes long or invalid
+   * for use as a private key.
+   * @param {Uint8Array} seed the optional seed
+   * @returns {PlugSecp256k1KeyIdentity}
+   */
+  public static generate(seed?: Uint8Array): PlugSecp256k1KeyIdentity {
+    if (seed && seed.byteLength !== 32) {
+      throw new Error('Secp256k1 Seed needs to be 32 bytes long.');
+    }
+    let privateKey: Uint8Array;
+
+    if (seed) {
+      // private key from seed according to https://en.bitcoin.it/wiki/BIP_0032
+      // master key generation:
+      privateKey = seed;
+      if (!Secp256k1.privateKeyVerify(privateKey)) {
+        throw new Error('The seed is invalid.');
+      }
+    } else {
+      privateKey = new Uint8Array(randomBytes(32));
+      while (!Secp256k1.privateKeyVerify(privateKey)) {
+        privateKey = new Uint8Array(randomBytes(32));
+      }
+    }
+
+    const publicKeyRaw = Secp256k1.publicKeyCreate(privateKey, false);
+
+    const publicKey = Secp256k1PublicKey.fromRaw(publicKeyRaw);
+    return new this(publicKey, privateKey);
+  }
+
+  public static fromParsedJson(
+    obj: JsonableSecp256k1Identity
+  ): PlugSecp256k1KeyIdentity {
     const [publicKeyRaw, privateKeyRaw] = obj;
-    return new Secp256k1KeyIdentity(
-      Secp256k1PublicKey.fromRaw(blobFromHex(publicKeyRaw)),
-      blobFromHex(privateKeyRaw)
+    return new PlugSecp256k1KeyIdentity(
+      Secp256k1PublicKey.fromRaw(fromHexString(publicKeyRaw)),
+      fromHexString(privateKeyRaw)
     );
   }
 
-  public static fromJSON(json: string): Secp256k1KeyIdentity {
+  public static fromJSON(json: string): PlugSecp256k1KeyIdentity {
     const parsed = JSON.parse(json);
     if (Array.isArray(parsed)) {
       if (typeof parsed[0] === 'string' && typeof parsed[1] === 'string') {
@@ -42,28 +75,6 @@ class Secp256k1KeyIdentity extends SignIdentity {
       throw new Error(
         'Deserialization error: JSON must have at least 2 items.'
       );
-    } else if (typeof parsed === 'object' && parsed !== null) {
-      const { publicKey, _publicKey, secretKey, _privateKey } = parsed;
-      const pk = publicKey
-        ? Secp256k1PublicKey.fromRaw(
-            blobFromUint8Array(new Uint8Array(publicKey.data))
-          )
-        : Secp256k1PublicKey.fromDer(
-            blobFromUint8Array(new Uint8Array(_publicKey.data))
-          );
-
-      if (publicKey && secretKey && secretKey.data) {
-        return new Secp256k1KeyIdentity(
-          pk,
-          blobFromUint8Array(new Uint8Array(secretKey.data))
-        );
-      }
-      if (_publicKey && _privateKey && _privateKey.data) {
-        return new Secp256k1KeyIdentity(
-          pk,
-          blobFromUint8Array(new Uint8Array(_privateKey.data))
-        );
-      }
     }
     throw new Error(
       `Deserialization error: Invalid JSON type for string: ${JSON.stringify(
@@ -72,93 +83,57 @@ class Secp256k1KeyIdentity extends SignIdentity {
     );
   }
 
+  /**
+   * generates an identity from a public and private key. Please ensure that you are generating these keys securely and protect the user's private key
+   * @param {ArrayBuffer} publicKey
+   * @param {ArrayBuffer} privateKey
+   * @returns {PlugSecp256k1KeyIdentity}
+   */
   public static fromKeyPair(
-    publicKey: BinaryBlob,
-    privateKey: BinaryBlob
-  ): Secp256k1KeyIdentity {
-    return new Secp256k1KeyIdentity(
+    publicKey: ArrayBuffer,
+    privateKey: ArrayBuffer
+  ): PlugSecp256k1KeyIdentity {
+    return new PlugSecp256k1KeyIdentity(
       Secp256k1PublicKey.fromRaw(publicKey),
       privateKey
     );
   }
 
-  public static fromSecretKey(secretKey: ArrayBuffer): Secp256k1KeyIdentity {
+  /**
+   * generates an identity from an existing secret key, and is the correct method to generate an identity from a seed phrase. Please ensure you protect the user's private key.
+   * @param {ArrayBuffer} secretKey
+   * @returns {PlugSecp256k1KeyIdentity}
+   */
+  public static fromSecretKey(
+    secretKey: ArrayBuffer
+  ): PlugSecp256k1KeyIdentity {
     const publicKey = Secp256k1.publicKeyCreate(
       new Uint8Array(secretKey),
       false
     );
-    const identity = Secp256k1KeyIdentity.fromKeyPair(
-      blobFromUint8Array(publicKey),
-      blobFromUint8Array(new Uint8Array(secretKey))
+    const identity = PlugSecp256k1KeyIdentity.fromKeyPair(
+      publicKey,
+      new Uint8Array(secretKey)
     );
     return identity;
   }
 
-  protected _publicKey: Secp256k1PublicKey;
-
-  // `fromRaw` and `fromDer` should be used for instantiation, not this constructor.
   protected constructor(
-    publicKey: PublicKey,
-    protected _privateKey: BinaryBlob
+    publicKey: Secp256k1PublicKey,
+    protected _privateKey: ArrayBuffer
   ) {
-    super();
-    this._publicKey = Secp256k1PublicKey.from(publicKey);
+    super(publicKey, _privateKey);
   }
-
-  /**
-   * Serialize this key to JSON.
-   */
-  public toJSON(): JsonableSecp256k1Identity {
-    return [blobToHex(this._publicKey.toRaw()), blobToHex(this._privateKey)];
-  }
-
-  /**
-   * Return a copy of the key pair.
-   */
-  public getKeyPair(): {
-    secretKey: BinaryBlob;
-    publicKey: Secp256k1PublicKey;
-  } {
-    return {
-      secretKey: blobFromUint8Array(new Uint8Array(this._privateKey)),
-      publicKey: this._publicKey,
-    };
-  }
-
-  /**
-   * Return the public key.
-   */
-  public getPublicKey(): PublicKey {
-    return this._publicKey;
-  }
-
-  /**
-   *  Return private key in a pem file
-   */
 
   public getPem(): string {
-    const rawPrivateKey = this._privateKey.toString('hex');
-    const rawPublicKey = this._publicKey.toRaw().toString('hex');
+    const rawPrivateKey = Buffer.from(this._privateKey).toString('hex');
+    const rawPublicKey = Buffer.from(this._publicKey.toRaw()).toString('hex');
 
     return `${PEM_BEGIN}\n${Buffer.from(
       `${PRIV_KEY_INIT}${rawPrivateKey}${KEY_SEPARATOR}${rawPublicKey}`,
       'hex'
     ).toString('base64')}\n${PEM_END}`;
   }
-
-  /**
-   * Signs a blob of data, with this identity's private key.
-   * @param challenge - challenge to sign with this identity's secretKey, producing a signature
-   */
-  public async sign(challenge: BinaryBlob): Promise<BinaryBlob> {
-    const hash = sha256.create();
-    hash.update(challenge);
-    const { signature } = Secp256k1.ecdsaSign(
-      new Uint8Array(hash.digest()),
-      this._privateKey
-    );
-    return blobFromUint8Array(signature);
-  }
 }
 
-export default Secp256k1KeyIdentity;
+export default PlugSecp256k1KeyIdentity;

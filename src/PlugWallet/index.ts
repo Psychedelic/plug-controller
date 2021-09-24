@@ -1,14 +1,13 @@
 import { PublicKey } from '@dfinity/agent';
-import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import {
   getAllUserNFTs,
   getNFTActor,
   NFTCollection,
+  NFTDetails,
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
-import { NFTDetails } from '@psychedelic/dab-js/dist/nft';
 import { ERRORS } from '../errors';
 import { StandardToken, TokenBalance } from '../interfaces/ext';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
@@ -130,7 +129,7 @@ class PlugWallet {
     this.name = val;
   }
 
-  public async sign(payload: BinaryBlob): Promise<BinaryBlob> {
+  public async sign(payload: ArrayBuffer): Promise<ArrayBuffer> {
     return this.identity.sign(payload);
   }
 

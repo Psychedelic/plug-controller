@@ -1,3 +1,4 @@
+import { Secp256k1PublicKey } from '@dfinity/identity';
 import { Principal } from '@dfinity/principal';
 import { ERRORS } from '../../errors';
 import { AccountCredentials } from '../../interfaces/account';
@@ -16,7 +17,11 @@ describe('Account utils', () => {
 
   beforeAll(() => {
     globalAccount = createAccount();
-    globalKeys = globalAccount.identity.getKeyPair();
+    const keyPair = globalAccount.identity.getKeyPair();
+    globalKeys = {
+      secretKey: keyPair.secretKey,
+      publicKey: Secp256k1PublicKey.from(keyPair.publicKey),
+    };
   });
 
   describe('credentials creation', () => {
