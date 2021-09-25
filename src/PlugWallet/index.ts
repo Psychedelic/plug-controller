@@ -10,7 +10,7 @@ import randomColor from 'random-color';
 import { Secp256k1KeyIdentity } from '@dfinity/identity';
 
 import { ERRORS } from '../errors';
-import { StandardToken, TokenBalance } from '../interfaces/ext';
+import { StandardToken } from '../interfaces/ext';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import { createAgent, createLedgerActor } from '../utils/dfx';
@@ -30,6 +30,12 @@ import {
 import { ConnectedApp } from '../interfaces/account';
 import { getPem } from '../utils/crypto/identity';
 
+export interface TokenBalance {
+  name: string;
+  symbol: string;
+  amount: string;
+  canisterId: string | null;
+}
 interface PlugWalletArgs {
   name?: string;
   walletNumber: number;
@@ -107,10 +113,7 @@ class PlugWallet {
     this.name = name || 'Account 1';
     this.icon = icon;
     this.walletNumber = walletNumber;
-    this.assets = assets.map(asset => ({
-      ...asset,
-      amount: BigInt(asset.amount),
-    }));
+    this.assets = assets;
     this.registeredTokens = uniqueByObjKey(
       [...registeredTokens, TOKENS.XTC],
       'symbol'
@@ -275,13 +278,18 @@ class PlugWallet {
         return {
           name: token.name,
           symbol: token.symbol,
-          amount: tokenBalance,
+          amount: tokenBalance.toString(10),
           canisterId: token.canisterId,
         };
       })
     );
     const assets = [
-      { name: 'ICP', symbol: 'ICP', amount: icpBalance, canisterId: null },
+      {
+        name: 'ICP',
+        symbol: 'ICP',
+        amount: icpBalance.toString(10),
+        canisterId: null,
+      },
       ...tokenBalances,
     ];
     this.assets = assets;

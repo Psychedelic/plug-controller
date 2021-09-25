@@ -23,5 +23,5 @@ export const DEFAULT_TOKENS = [TOKENS.ICP, TOKENS.XTC];
 
 export const DEFAULT_ASSETS = Object.values(DEFAULT_TOKENS).map(token => ({
   ...token,
-  amount: BigInt(0),
+  amount: '0',
 }));
