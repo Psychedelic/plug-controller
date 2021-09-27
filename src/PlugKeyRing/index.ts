@@ -5,13 +5,13 @@ import { NFTDetails, NFTCollection } from '@psychedelic/dab-js';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/history/rosetta';
-import PlugWallet from '../PlugWallet';
+import PlugWallet, { TokenBalance } from '../PlugWallet';
 import { createAccount, getAccountId } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import { SendResponse } from '../utils/dfx/token';
 import Storage from '../utils/storage';
 import { validatePrincipalId } from './utils';
-import { StandardToken, TokenBalance } from '../interfaces/ext';
+import { StandardToken } from '../interfaces/ext';
 import { BurnResult } from '../interfaces/xtc';
 import { ConnectedApp } from '../interfaces/account';
 import { recursiveParseBigint } from '../utils/object';

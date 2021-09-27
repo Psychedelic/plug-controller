@@ -1,5 +1,6 @@
 // eslint-disable-next-line
-export const recursiveParseBigint = (obj) => Object.entries(obj).reduce(
+export const recursiveParseBigint = obj =>
+  Object.entries(obj).reduce(
     (acum, [key, val]) => {
       if (val instanceof Object) {
         const res = Array.isArray(val)
@@ -8,7 +9,7 @@ export const recursiveParseBigint = (obj) => Object.entries(obj).reduce(
         return { ...acum, [key]: res };
       }
       if (typeof val === 'bigint') {
-        return { ...acum, [key]: parseInt(val.toString(), 10) };
+        return { ...acum, [key]: val.toString() };
       }
       return { ...acum, [key]: val };
     },

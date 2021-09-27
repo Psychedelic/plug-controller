@@ -54,13 +54,6 @@ export type CommonError =
       Other: string;
     };
 
-export interface TokenBalance {
-  name: string;
-  symbol: string;
-  amount: bigint;
-  canisterId: string | null;
-}
-
 export type Extension = string;
 
 export interface BalanceRequest {
