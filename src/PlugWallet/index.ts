@@ -169,8 +169,9 @@ class PlugWallet {
     }
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey });
-    const NFT = getNFTActor(token.canister, agent, token.standard);
     try {
+      const NFT = getNFTActor(token.canister, agent, token.standard);
+
       await NFT.transfer(
         Principal.fromText(to),
         parseInt(token.index.toString(), 10)
