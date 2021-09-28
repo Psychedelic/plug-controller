@@ -41,6 +41,7 @@ interface CreatePrincipalOptions {
 
 interface CreateOptions extends CreatePrincipalOptions {
   password: string;
+  rng?: (size: number) => Buffer;
 }
 
 interface CreateAndPersistKeyRingOptions extends CreateOptions {
@@ -160,11 +161,12 @@ class PlugKeyRing {
     password = '',
     icon,
     name,
+    rng,
   }: CreateOptions): Promise<{
     wallet: PlugWallet;
     mnemonic: string;
   }> => {
-    const { mnemonic } = createAccount();
+    const { mnemonic } = createAccount(rng);
     const wallet = await this.createAndPersistKeyRing({
       mnemonic,
       password,
