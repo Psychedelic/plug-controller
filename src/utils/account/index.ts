@@ -66,10 +66,10 @@ const getAccountCredentials = (
   };
 };
 
-export const createAccount = (
-  rng?: (size: number) => Buffer
-): AccountCredentials => {
-  const mnemonic = bip39.generateMnemonic(128, rng);
+export const createAccount = (entropy?: Buffer): AccountCredentials => {
+  const mnemonic = entropy
+    ? bip39.entropyToMnemonic(entropy)
+    : bip39.generateMnemonic();
   return getAccountCredentials(mnemonic, 0);
 };
 
