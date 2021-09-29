@@ -355,17 +355,6 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@dfinity/agent@^0.10.0":
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/@dfinity/agent/-/agent-0.10.0.tgz#fa5ea1bf9201e12e0f95f9c333368f8554427a30"
-  integrity sha512-wRXZ54spejA6K74Gn5g0sdtf2nSi6B2gTpx+D/WxqQKDvZbtkp8AOT+zhH5o+UQILrchZgq40pCzOWpy2W01mQ==
-  dependencies:
-    base64-arraybuffer "^0.2.0"
-    bignumber.js "^9.0.0"
-    borc "^2.1.1"
-    js-sha256 "0.9.0"
-    simple-cbor "^0.4.1"
-
 "@dfinity/agent@^0.9.3":
   version "0.9.3"
   resolved "https://registry.yarnpkg.com/@dfinity/agent/-/agent-0.9.3.tgz#e49f07d6749e534c4c30aa2df2bba59e3fa9570f"
@@ -387,16 +376,6 @@
     buffer "^6.0.3"
     buffer-pipe "^0.0.4"
 
-"@dfinity/identity@^0.10.0":
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/@dfinity/identity/-/identity-0.10.0.tgz#cbb6fc6f2c139244c9ec2a1487ccc16c856a4494"
-  integrity sha512-0KUAcP/s5j/3q8uWXAFbE5dWuxf9xSack6OYkSa5LGGdJ/s3DCwrgb0bPzYEX2CeIqNUG3x8/YwUZrMNWBxvNQ==
-  dependencies:
-    borc "^2.1.1"
-    js-sha256 "^0.9.0"
-    secp256k1 "^4.0.2"
-    tweetnacl "^1.0.1"
-
 "@dfinity/identity@^0.9.3":
   version "0.9.3"
   resolved "https://registry.yarnpkg.com/@dfinity/identity/-/identity-0.9.3.tgz#7d65d1ee7655d9028034bf22a92c21eea8b24028"
@@ -406,11 +385,6 @@
     buffer "^6.0.3"
     buffer-pipe "0.0.4"
     tweetnacl "^1.0.1"
-
-"@dfinity/principal@^0.10.0":
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/@dfinity/principal/-/principal-0.10.0.tgz#96a5b11ef80424a66488f02a24a08f2fed09eea7"
-  integrity sha512-SvlsLDLpqDQFqmTWttLWKR1D5XODmT7BmTN9QdEx+Q8x9Zxcm9K5EJevuXhe9bAAAorwgRK+vg5riF4+hW7fAw==
 
 "@dfinity/principal@^0.9.3":
   version "0.9.3"
@@ -719,14 +693,14 @@
   dependencies:
     fancy-test "^1.4.3"
 
-"@psychedelic/dab-js@0.2.4":
-  version "0.2.4"
-  resolved "https://npm.pkg.github.com/download/@psychedelic/dab-js/0.2.4/854527e39fe48649b3d31856b0beb96350c675b44935bbe9b5bc82d34bbc3c58#82240e3181e0e0bc5a0079818472f39511a37e26"
-  integrity sha512-MwUPdVy7MEmNXXTMo2Ko7VpcM3xU8U6uavXq/KgN5IWRsSqAY3Qca4eaYCuTCUQ3n0EMh3vAW5NTSn/oH7Kv7w==
+"@psychedelic/dab-js@0.2.1":
+  version "0.2.1"
+  resolved "https://npm.pkg.github.com/download/@psychedelic/dab-js/0.2.1/e51cd40f8a1d64df37898cd1cfa74899ef0312ab9165c319baf6bec3a4d07173#eaa0542ff66979ebcbf8dbfa8588fbb0daf53f19"
+  integrity sha512-Xr0/TfsUrnltaaH5z6vUsTxw6wVvsLN+x4ertbi4ILqDhHzK5+51Uqj+EAMNTKa91Pz0GZCNAyiMpTKQrgAiMw==
   dependencies:
-    "@dfinity/agent" "^0.10.0"
-    "@dfinity/identity" "^0.10.0"
-    "@dfinity/principal" "^0.10.0"
+    "@dfinity/agent" "^0.9.3"
+    "@dfinity/identity" "^0.9.3"
+    "@dfinity/principal" "^0.9.3"
     buffer-crc32 "^0.2.13"
     crypto-js "^4.1.1"
 
