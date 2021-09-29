@@ -1,10 +1,9 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import { Principal } from '@dfinity/principal';
-import { Secp256k1KeyIdentity } from '@dfinity/identity';
 
 import { ERRORS } from '../../errors';
-
+import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
 import { AccountCredentials } from '../../interfaces/account';
 import { ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO } from './constants';
 import {

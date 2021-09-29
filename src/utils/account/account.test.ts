@@ -1,4 +1,3 @@
-import { Secp256k1PublicKey } from '@dfinity/identity';
 import { Principal } from '@dfinity/principal';
 import { ERRORS } from '../../errors';
 import { AccountCredentials } from '../../interfaces/account';
@@ -17,17 +16,12 @@ describe('Account utils', () => {
 
   beforeAll(() => {
     globalAccount = createAccount();
-    const keyPair = globalAccount.identity.getKeyPair();
-    globalKeys = {
-      secretKey: keyPair.secretKey,
-      publicKey: Secp256k1PublicKey.from(keyPair.publicKey),
-    };
+    globalKeys = globalAccount.identity.getKeyPair();
   });
 
   describe('credentials creation', () => {
     it('should create a new account with mnemonic, secret and public keys', () => {
       const account = createAccount();
-
       expect(account).toHaveProperty('mnemonic');
       expect(account).toHaveProperty('identity');
       expect(account).toHaveProperty('accountId');

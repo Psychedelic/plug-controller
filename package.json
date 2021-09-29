@@ -1,11 +1,10 @@
 {
   "dependencies": {
-    "@babel/preset-env": "^7.14.4",
-    "@dfinity/agent": "^0.10.0",
-    "@dfinity/candid": "^0.10.0",
-    "@dfinity/identity": "^0.10.0",
-    "@dfinity/principal": "^0.10.0",
-    "@psychedelic/dab-js": "^0.2.4",
+    "@dfinity/agent": "^0.9.3",
+    "@dfinity/candid": "^0.9.3",
+    "@dfinity/identity": "^0.9.3",
+    "@dfinity/principal": "^0.9.3",
+    "@psychedelic/dab-js": "0.2.1",
     "@types/secp256k1": "^4.0.3",
     "axios": "^0.21.1",
     "babel-jest": "^25.5.1",
