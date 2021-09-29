@@ -1261,10 +1261,10 @@
   dependencies:
     fancy-test "^1.4.3"
 
-"@psychedelic/dab-js@^0.2.0":
-  version "0.2.0"
-  resolved "https://npm.pkg.github.com/download/@psychedelic/dab-js/0.2.0/c8117c34a9b938bb4e82b53d7100c69e3800d7b706a44f665c49e9e091d44907#747f344dc6743b3b776215585c132163ab29c148"
-  integrity sha512-9visPjbg2c1veZtInO9qJc0HoWv7slosbFGiG8xw9tI3wVoAzzGZVy3JK9+uSv/ViiZG8Kcs3C8AjvYjlg8MLw==
+"@psychedelic/dab-js@^0.2.4":
+  version "0.2.4"
+  resolved "https://npm.pkg.github.com/download/@psychedelic/dab-js/0.2.4/854527e39fe48649b3d31856b0beb96350c675b44935bbe9b5bc82d34bbc3c58#82240e3181e0e0bc5a0079818472f39511a37e26"
+  integrity sha512-MwUPdVy7MEmNXXTMo2Ko7VpcM3xU8U6uavXq/KgN5IWRsSqAY3Qca4eaYCuTCUQ3n0EMh3vAW5NTSn/oH7Kv7w==
   dependencies:
     "@dfinity/agent" "^0.10.0"
     "@dfinity/identity" "^0.10.0"

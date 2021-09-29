@@ -5,7 +5,7 @@
     "@dfinity/candid": "^0.10.0",
     "@dfinity/identity": "^0.10.0",
     "@dfinity/principal": "^0.10.0",
-    "@psychedelic/dab-js": "^0.2.1",
+    "@psychedelic/dab-js": "^0.2.4",
     "@types/secp256k1": "^4.0.3",
     "axios": "^0.21.1",
     "babel-jest": "^25.5.1",
@@ -56,7 +56,7 @@
     "typescript": "^3.8.3"
   },
   "name": "@psychedelic/plug-controller",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Internet Computer Plug wallet's controller",
   "main": "dist/index.js",
   "scripts": {
