@@ -59,18 +59,24 @@ class PlugKeyRing {
 
   private storage: KeyringStorage;
 
+  private crypto: any; // TODO: see what functions are needed and create an interface.
+
   public isUnlocked = false;
 
   public isInitialized = false;
 
   public currentWalletId?: number;
 
-  public constructor(StorageAdapter = new Storage() as KeyringStorage) {
+  public constructor(
+    StorageAdapter = new Storage() as KeyringStorage,
+    CryptoAdapter = CryptoJS
+  ) {
     this.state = { wallets: [] };
     this.isUnlocked = false;
     this.isInitialized = false;
     this.currentWalletId = 0;
     this.storage = StorageAdapter;
+    this.crypto = CryptoAdapter;
   }
 
   public init = async (): Promise<void> => {
@@ -428,13 +434,13 @@ class PlugKeyRing {
     const stringData = JSON.stringify(
       recursiveParseBigint({ ...this.state, ...newState })
     );
-    const encrypted = CryptoJS.AES.encrypt(stringData, password).toString();
-    await this.storage.set({ vault: encrypted });
+    const encrypted = this.crypto.AES.encrypt(stringData, password);
+    await this.storage.set({ vault: encrypted.toString() });
   };
 
   private decryptState = (state, password): PlugState =>
     JSON.parse(
-      CryptoJS.AES.decrypt(state, password).toString(CryptoJS.enc.Utf8)
+      this.crypto.AES.decrypt(state, password).toString(this.crypto.enc.Utf8)
     );
 }
 
