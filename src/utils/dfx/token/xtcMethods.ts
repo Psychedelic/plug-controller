@@ -8,10 +8,10 @@ import { Metadata } from '../../../interfaces/ext';
 const send = async (
   actor: ActorSubclass<XtcService>,
   to: Principal,
-  from: Principal,
+  _from: Principal, // Try to maintain send signature
   amount: bigint
 ): Promise<bigint> => {
-  const transferResult = await actor.transfer({ to, from: [from], amount });
+  const transferResult = await actor.trasnferERC20(to, amount);
 
   if ('Ok' in transferResult) return transferResult.Ok;
 
