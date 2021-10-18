@@ -59,7 +59,7 @@ export default ({ IDL }) => {
       [TransferResult],
       []
     ),
-    transferErc20: IDL.func([IDL.Principal, IDL.Nat], [TxReceipt], []),
+    transferErc20: IDL.Func([IDL.Principal, IDL.Nat], [TxReceipt], []),
   });
 };
 export const init = () => {
