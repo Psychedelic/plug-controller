@@ -34,7 +34,6 @@ const send = async (
         transactionId: await xtcMethods.send(
           actor as ActorSubclass<XtcService>,
           Principal.fromText(to),
-          Principal.fromText(from),
           amount
         ),
       };

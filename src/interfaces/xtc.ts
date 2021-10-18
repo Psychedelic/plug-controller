@@ -37,6 +37,8 @@ export type TransferError = { 'CallFailed': null } |
 { 'AmountTooLarge': null };
 export type TransferResult = { 'Ok': TransactionId } |
 { 'Err': TransferError };
+
+export type TxReceipt = {'Ok': bigint} | {'Err': {'InsufficientAllowance': null, 'InsufficientBalance': null}}
 export default interface _SERVICE {
   'meta': () => Promise<TokenMetaData>,
   'meta_certified': () => Promise<TokenMetaData>,
@@ -50,6 +52,7 @@ export default interface _SERVICE {
       'to': Principal,
       'from': [] | [Principal],
       'amount': bigint,
-    },
+    }
   ) => Promise<TransferResult>,
+  'trasnferERC20': (to: Principal, amount: bigint) => Promise<TxReceipt>,
 }

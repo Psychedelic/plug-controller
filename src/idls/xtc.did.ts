@@ -7,6 +7,14 @@ export default ({ IDL }) => {
     NotSufficientLiquidity: IDL.Null,
   });
 
+  const TxReceipt = IDL.Variant({
+    Err: IDL.Variant({
+      InsufficientAllowance: IDL.Null,
+      InsufficientBalance: IDL.Null,
+    }),
+    Ok: IDL.Nat,
+  });
+
   const BurnResult = IDL.Variant({
     Ok: TransactionId,
     Err: BurnError,
@@ -51,6 +59,7 @@ export default ({ IDL }) => {
       [TransferResult],
       []
     ),
+    transferERC20: IDL.func([IDL.Principal, IDL.Nat], [TxReceipt], []),
   });
 };
 export const init = () => {
