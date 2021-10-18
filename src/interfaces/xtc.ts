@@ -54,5 +54,5 @@ export default interface _SERVICE {
       'amount': bigint,
     }
   ) => Promise<TransferResult>,
-  'trasnferERC20': (to: Principal, amount: bigint) => Promise<TxReceipt>,
+  'transferErc20': (to: Principal, amount: bigint) => Promise<TxReceipt>,
 }

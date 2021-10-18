@@ -10,7 +10,7 @@ const send = async (
   to: Principal,
   amount: bigint
 ): Promise<bigint> => {
-  const transferResult = await actor.trasnferERC20(to, amount);
+  const transferResult = await actor.transferErc20(to, amount);
 
   if ('Ok' in transferResult) return transferResult.Ok;
 
