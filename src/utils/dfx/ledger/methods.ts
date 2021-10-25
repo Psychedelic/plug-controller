@@ -9,7 +9,7 @@ import LedgerService, { TimeStamp } from '../../../interfaces/ledger';
 
 export interface SendOpts {
   fee?: bigint;
-  memo?: bigint;
+  memo?: string;
   from_subaccount?: number;
   created_at_time?: TimeStamp; // TODO: create js Date to TimeStamp function
 }
@@ -34,12 +34,11 @@ const sendICP = async (
     fee: BigInt(10000),
     memo: RandomBigInt(32),
   };
-
   return actor.send_dfx({
     to,
     fee: { e8s: opts?.fee || defaultArgs.fee },
     amount: { e8s: amount },
-    memo: opts?.memo || defaultArgs.memo,
+    memo: opts?.memo ? BigInt(opts.memo) : defaultArgs.memo,
     from_subaccount: [], // For now, using default subaccount to handle ICP
     created_at_time: [],
   });
