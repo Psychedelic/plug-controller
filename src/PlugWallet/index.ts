@@ -2,7 +2,7 @@ import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import {
-  getAllUserNFTs,
+  getBatchedNFTs,
   getNFTActor,
   NFTCollection,
   NFTDetails,
@@ -143,16 +143,12 @@ class PlugWallet {
 
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
   public getNFTs = async (): Promise<NFTCollection[] | null> => {
-    const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
     let collections: NFTCollection[] = [];
     if (!this.lock) {
       this.lock = true;
-      collections = await getAllUserNFTs(
-        agent,
-        Principal.fromText(this.principal)
-      );
-      this.lock = false;
+      collections = await getBatchedNFTs({
+        principal: Principal.fromText(this.principal),
+      });
       this.collections = collections;
       return collections;
     }
