@@ -103,10 +103,10 @@ class PlugKeyRing {
     this.validateSubaccount(index);
     const wallet = wallets[index];
     const nfts = await wallet.getNFTs();
-    await this.saveEncryptedState(
-      { wallets: this.state.wallets },
-      this.state.password
-    );
+
+    wallets.splice(index, 1, wallet);
+    this.state.wallets = wallets;
+    await this.saveEncryptedState({ wallets }, this.state.password);
     return nfts;
   };
 
@@ -125,11 +125,10 @@ class PlugKeyRing {
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
-    await this.saveEncryptedState(
-      { wallets: this.state.wallets },
-      this.state.password
-    );
-    const success = wallet.transferNFT({ token, to });
+    const success = await wallet.transferNFT({ token, to });
+    wallets.splice(index, 1, wallet);
+    this.state.wallets = wallets;
+    await this.saveEncryptedState({ wallets }, this.state.password);
     return success;
   };
 
