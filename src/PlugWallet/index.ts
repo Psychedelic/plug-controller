@@ -148,6 +148,14 @@ class PlugWallet {
       this.lock = true;
       collections = await getBatchedNFTs({
         principal: Principal.fromText(this.principal),
+        callback: collection => {
+          if (collection?.tokens?.length) {
+            this.collections = uniqueByObjKey(
+              [...this.collections, collection],
+              'canisterId'
+            );
+          }
+        },
       });
       this.collections = collections;
       return collections;

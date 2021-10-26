@@ -102,7 +102,12 @@ class PlugKeyRing {
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
-    return wallet.getNFTs();
+    const nfts = await wallet.getNFTs();
+    await this.saveEncryptedState(
+      { wallets: this.state.wallets },
+      this.state.password
+    );
+    return nfts;
   };
 
   public transferNFT = async ({
@@ -120,8 +125,10 @@ class PlugKeyRing {
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
-    const newWallets = [...this.state.wallets, wallet];
-    await this.saveEncryptedState({ wallets: newWallets }, this.state.password);
+    await this.saveEncryptedState(
+      { wallets: this.state.wallets },
+      this.state.password
+    );
     const success = wallet.transferNFT({ token, to });
     return success;
   };
