@@ -45,6 +45,7 @@ interface PlugWalletArgs {
   connectedApps?: Array<ConnectedApp>;
   assets?: Array<TokenBalance>;
   collections?: Array<NFTCollection>;
+  fetch: any;
 }
 
 interface JSONWallet {
@@ -88,6 +89,8 @@ class PlugWallet {
 
   principal: string;
 
+  fetch: any;
+
   registeredTokens: Array<StandardToken>;
 
   connectedApps: Array<ConnectedApp>;
@@ -109,6 +112,7 @@ class PlugWallet {
     connectedApps = [],
     assets = DEFAULT_ASSETS,
     collections = [],
+    fetch,
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
@@ -127,6 +131,7 @@ class PlugWallet {
     this.principal = identity.getPrincipal().toText();
     this.connectedApps = [...connectedApps];
     this.collections = [...collections];
+    this.fetch = fetch;
   }
 
   public setName(val: string): void {

@@ -1,9 +1,9 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable camelcase */
-import fetch from 'cross-fetch';
 import { HttpAgent } from '@dfinity/agent';
 import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
+import crossFetch from 'cross-fetch';
 import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
 
 // import TokenService from '../../interfaces/token';
@@ -12,6 +12,7 @@ import { IC_HOST } from './constants';
 export interface CreateAgentArgs {
   secretKey: BinaryBlob;
   defaultIdentity?: Secp256k1KeyIdentity;
+  fetch?: any;
 }
 
 export const createIdentity = (secretKey: BinaryBlob): Secp256k1KeyIdentity =>
@@ -20,6 +21,7 @@ export const createIdentity = (secretKey: BinaryBlob): Secp256k1KeyIdentity =>
 export const createAgent = async ({
   secretKey,
   defaultIdentity,
+  fetch = crossFetch,
 }: CreateAgentArgs): Promise<HttpAgent> => {
   const identity =
     defaultIdentity || createIdentity(blobFromUint8Array(secretKey));
