@@ -73,7 +73,7 @@ class PlugKeyRing {
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
     CryptoAdapter = CryptoJS,
-    FetchAdapter = fetch
+    FetchAdapter?: any
   ) {
     this.state = { wallets: [] };
     this.isUnlocked = false;
@@ -81,7 +81,7 @@ class PlugKeyRing {
     this.currentWalletId = 0;
     this.storage = StorageAdapter;
     this.crypto = CryptoAdapter;
-    this.fetch = FetchAdapter;
+    this.fetch = FetchAdapter || fetch;
   }
 
   public init = async (): Promise<void> => {
@@ -234,6 +234,7 @@ class PlugKeyRing {
   public getState = async (): Promise<PlugState> => {
     await this.checkInitialized();
     this.checkUnlocked();
+    console.log('returning state from controller', this.state);
     return recursiveParseBigint({
       ...this.state,
       currentWalletId: this.currentWalletId,
@@ -423,7 +424,6 @@ class PlugKeyRing {
     name,
   }: CreateAndPersistKeyRingOptions): Promise<PlugWallet> => {
     if (!password) throw new Error(ERRORS.PASSWORD_REQUIRED);
-    console.log('creating keyring with fetch', this.fetch);
     const wallet = new PlugWallet({
       icon,
       name,

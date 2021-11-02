@@ -264,7 +264,7 @@ class PlugWallet {
   public getBalance = async (): Promise<Array<TokenBalance>> => {
     const { secretKey } = this.identity.getKeyPair();
     // Get ICP Balance
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     const ledger = await createLedgerActor(agent);
     const icpBalance = await ledger.getBalance(this.accountId);
     // Add XTC if it was not in the first place (backwards compatibility)
@@ -282,7 +282,6 @@ class PlugWallet {
         const tokenBalance = await tokenActor.getBalance(
           this.identity.getPrincipal()
         );
-
         return {
           name: token.name,
           symbol: token.symbol,
