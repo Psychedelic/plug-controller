@@ -15,14 +15,16 @@ interface KyashuItem {
   gs1pk: string;
 }
 
+interface LastEvaluatedKey {
+  pk: string;
+  sk: string;
+  userId: string;
+}
+
 interface KyashuResponse {
   Count: number;
   Items: KyashuItem[];
-  LastEvaluatedKey: {
-    pk: string;
-    sk: string;
-    userId: string;
-  };
+  LastEvaluatedKey: LastEvaluatedKey;
 }
 
 interface CapUserTransaction extends TransactionPrettified {
@@ -32,15 +34,17 @@ interface CapUserTransaction extends TransactionPrettified {
 export interface GetUserTransactionResponse {
   total: number;
   transactions: CapUserTransaction[];
+  lastEvaluatedKey?: LastEvaluatedKey;
 }
 
 const getTransactionCanister = (sk: string): string | undefined => sk?.split('#')?.pop()?.[0];
 
 
 export const getUserTransactions = async (
-  principalId: string
-): Promise<GetUserTransactionResponse>  => {
-  const url = `${KYASHU_URL}/cap/user/txns/${principalId}`;
+  principalId: string,
+  lastEvaluatedKey?: string,
+): Promise<GetUserTransactionResponse> => {
+  const url = `${KYASHU_URL}/cap/user/txns/${principalId}${lastEvaluatedKey ? `?LastEvaluatedKey=${lastEvaluatedKey}` : ''}`;
   try {
     const response = await axios.get<any, AxiosResponse<KyashuResponse>>(url);
     const canisterIds = [...new Set(response.data.Items.map(item => getTransactionCanister(item.sk)))].filter(value => value) as string[]
@@ -48,6 +52,7 @@ export const getUserTransactions = async (
       .reduce((acum, canisterInfo, idx) => ({ ...acum, [canisterIds[idx]]: { canisterId: canisterIds[idx], ...canisterInfo } }), {})
     return {
       total: response.data.Count,
+      lastEvaluatedKey: response.data.LastEvaluatedKey,
       transactions: response.data.Items.map(item => {
         const canisterId = getTransactionCanister(item.sk)
         return {
