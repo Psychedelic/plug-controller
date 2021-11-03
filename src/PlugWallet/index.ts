@@ -175,7 +175,7 @@ class PlugWallet {
       throw new Error(ERRORS.INVALID_PRINCIPAL_ID);
     }
     const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     try {
       const NFT = getNFTActor(token.canister, agent, token.standard);
 
@@ -202,7 +202,7 @@ class PlugWallet {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
     const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     const tokenActor = await createTokenActor(canisterId, agent);
 
     const metadata = await tokenActor.getMetadata();
@@ -244,7 +244,7 @@ class PlugWallet {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
     const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     const xtcActor = await createTokenActor(TOKENS.XTC.canisterId, agent);
     const burnResult = await xtcActor.burnXTC({
       to: Principal.fromText(to),
@@ -310,7 +310,7 @@ class PlugWallet {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     const tokenActor = await createTokenActor(canisterId, agent);
 
     const metadataResult = await tokenActor.getMetadata();
@@ -390,7 +390,7 @@ class PlugWallet {
     opts?: SendOpts
   ): Promise<bigint> {
     const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     const ledger = await createLedgerActor(agent);
     return ledger.sendICP({ to, amount, opts });
   }
@@ -401,7 +401,7 @@ class PlugWallet {
     canisterId: string
   ): Promise<SendResponse> {
     const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     const tokenActor = await createTokenActor(canisterId, agent);
 
     const result = await tokenActor.send(

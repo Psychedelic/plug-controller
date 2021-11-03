@@ -23,6 +23,7 @@ export const createAgent = async ({
   defaultIdentity,
   fetch = crossFetch,
 }: CreateAgentArgs): Promise<HttpAgent> => {
+  console.log('creating agent with fetch', fetch);
   const identity =
     defaultIdentity || createIdentity(blobFromUint8Array(secretKey));
   const agent = await Promise.resolve(

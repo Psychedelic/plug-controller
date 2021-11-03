@@ -4,6 +4,7 @@ import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import { NFTDetails, NFTCollection } from '@psychedelic/dab-js';
 import fetch from 'cross-fetch';
+import JsonBigInt from 'json-bigint';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/history/rosetta';
@@ -16,7 +17,6 @@ import { validatePrincipalId } from './utils';
 import { StandardToken } from '../interfaces/ext';
 import { BurnResult } from '../interfaces/xtc';
 import { ConnectedApp } from '../interfaces/account';
-import { recursiveParseBigint } from '../utils/object';
 
 interface StorageData {
   vault: PlugState;
@@ -234,8 +234,7 @@ class PlugKeyRing {
   public getState = async (): Promise<PlugState> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    console.log('returning state from controller', this.state);
-    return recursiveParseBigint({
+    return JsonBigInt.stringify({
       ...this.state,
       currentWalletId: this.currentWalletId,
     });
@@ -450,9 +449,7 @@ class PlugKeyRing {
   };
 
   private saveEncryptedState = async (newState, password): Promise<void> => {
-    const stringData = JSON.stringify(
-      recursiveParseBigint({ ...this.state, ...newState })
-    );
+    const stringData = JsonBigInt.stringify({ ...this.state, ...newState });
     const encrypted = this.crypto.AES.encrypt(stringData, password);
     await this.storage.set({ vault: encrypted.toString() });
   };
