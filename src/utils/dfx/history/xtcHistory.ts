@@ -47,10 +47,11 @@ interface XtcTransactions {
 
 const formatTransfer = (
   principalId: string,
-  { event }: XtcTransactions
+  { event }: XtcTransactions,
+  details: any
 ): InferredTransaction => {
   if (!('Transfer' in event.kind)) throw Error();
-  const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
+  const transaction: any = { details };
   transaction.details.from = event.kind.Transfer.from; // check with @b0xtch how to instance Principal from api answer
   transaction.details.to = event.kind.Transfer.to;
   transaction.caller = event.kind.Transfer.from;
@@ -62,10 +63,11 @@ const formatTransfer = (
 
 const formatBurn = (
   _principalId: string,
-  { event }: XtcTransactions
+  { event }: XtcTransactions,
+  details: any
 ): InferredTransaction => {
   if (!('Burn' in event.kind)) throw Error();
-  const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
+  const transaction: any = { details };
   transaction.details.from = event.kind.Burn.from;
   transaction.details.to = event.kind.Burn.to;
   transaction.caller = event.kind.Burn.from;
@@ -76,10 +78,11 @@ const formatBurn = (
 
 const formatMint = (
   _principalId: string,
-  { event }: XtcTransactions
+  { event }: XtcTransactions,
+  details: any
 ): InferredTransaction => {
   if (!('Mint' in event.kind)) throw Error();
-  const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
+  const transaction: any = { details };
   transaction.details.from = 'Mint';
   transaction.details.to = event.kind.Mint.to;
   transaction.caller = _principalId;
@@ -90,10 +93,11 @@ const formatMint = (
 
 const formatCanisterCalled = (
   _principalId: string,
-  { event }: XtcTransactions
+  { event }: XtcTransactions,
+  details: any
 ): InferredTransaction => {
   if (!('CanisterCalled' in event.kind)) throw Error();
-  const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
+  const transaction: any = { details };
   transaction.details.from = event.kind.CanisterCalled.from;
   transaction.caller = event.kind.CanisterCalled.from;
   transaction.details.to = `${event.kind.CanisterCalled.canister}_${event.kind.CanisterCalled.method_name}`;
@@ -104,10 +108,11 @@ const formatCanisterCalled = (
 
 const formatCanisterCreated = (
   _principalId: string,
-  { event }: XtcTransactions
+  { event }: XtcTransactions,
+  details: any
 ): InferredTransaction => {
   if (!('CanisterCreated' in event.kind)) throw Error();
-  const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
+  const transaction: any = { details };
   transaction.details.from = event.kind.CanisterCreated.from;
   transaction.caller = event.kind.CanisterCreated.from;
   transaction.details.to = event.kind.CanisterCreated.canister;
@@ -121,29 +126,43 @@ const formatXTCTransaction = (
   xtcTransaction: XtcTransactions
 ): InferredTransaction => {
   const transactionEvent = xtcTransaction.event;
-  const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
+  const transaction: any = {};
   transaction.hash = xtcTransaction.txnId;
-  transaction.details.amount = BigInt(transactionEvent.cycles);
-  transaction.details.currency = { symbol: 'XTC', decimals: 5 };
-  transaction.details.fee.amount = BigInt(transactionEvent.fee);
-  transaction.details.fee.currency = { symbol: 'XTC', decimals: 5 };
   transaction.timestamp = xtcTransaction.event.timestamp;
+  const details = {
+    amount: BigInt(transactionEvent.cycles),
+    currency: { symbol: 'XTC', decimals: 5 },
+    fee: {
+      amount: BigInt(transactionEvent.fee),
+      currency: { symbol: 'XTC', decimals: 5 },
+    },
+    status: 'COMPLETED',
+  };
   switch (Object.keys(transactionEvent.kind)[0]) {
     case 'Transfer':
-      return { ...formatTransfer(principalId, xtcTransaction), ...transaction };
+      return {
+        ...transaction,
+        ...formatTransfer(principalId, xtcTransaction, details),
+      };
     case 'Burn':
-      return { ...formatBurn(principalId, xtcTransaction), ...transaction };
+      return {
+        ...transaction,
+        ...formatBurn(principalId, xtcTransaction, details),
+      };
     case 'Mint':
-      return { ...formatMint(principalId, xtcTransaction), ...transaction };
+      return {
+        ...transaction,
+        ...formatMint(principalId, xtcTransaction, details),
+      };
     case 'CanisterCalled':
       return {
-        ...formatCanisterCalled(principalId, xtcTransaction),
         ...transaction,
+        ...formatCanisterCalled(principalId, xtcTransaction, details),
       };
     case 'CanisterCreated':
       return {
-        ...formatCanisterCreated(principalId, xtcTransaction),
         ...transaction,
+        ...formatCanisterCreated(principalId, xtcTransaction, details),
       };
     default:
       throw Error;

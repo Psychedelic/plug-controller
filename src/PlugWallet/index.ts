@@ -331,8 +331,6 @@ class PlugWallet {
     const capTransactions = await getCapTransactions(this.principal);
     // merge and format all trx. sort by timestamp
     // TODO: any custom token impelmenting archive should be queried. (0.4.0)
-    console.log('cap transactions');
-    console.log(capTransactions);
     const transactions = {
       total: icpTrxs.total + xtcTransactions.total + capTransactions.total,
       transactions: [
