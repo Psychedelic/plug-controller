@@ -40,23 +40,19 @@ interface RosettaTransaction {
 
 export interface InferredTransaction {
   hash: string;
-  from: string;
-  to: string;
-  amount: bigint;
-  currency: Currency;
-  fee: {
-    amount: bigint;
-    currency: Currency;
-  };
-  timestamp: number;
-  status: 'COMPLETED' | 'REVERTED' | 'PENDING';
-  type:
-    | 'SEND'
-    | 'RECEIVE'
-    | 'BURN'
-    | 'MINT'
-    | 'CANISTER_CALLED'
-    | 'CANISTER_CREATED';
+  // from: string;
+  // to: string;
+  // amount?: bigint;
+  // currency?: Currency;
+  // fee?: {
+  //   amount: bigint;
+  //   currency: Currency;
+  // };
+  timestamp: bigint;
+  // status: 'COMPLETED' | 'REVERTED' | 'PENDING';
+  type: string;
+  details?: { [key: string]: any };
+  caller: string;
 }
 
 export interface GetTransactionsResponse {
@@ -73,26 +69,31 @@ const getTransactionInfo = (
     metadata: { timestamp },
     transaction_identifier: { hash },
   } = rosettaTransaction;
-  const transaction: any = { status: 'COMPLETED', fee: {} };
+  const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
   operations.forEach(operation => {
     const amount = BigInt(operation.amount.value);
     if (operation.type === 'FEE') {
-      transaction.fee.amount = amount;
-      transaction.fee.currency = operation.amount.currency;
+      transaction.details.fee.amount = amount;
+      transaction.details.fee.currency = operation.amount.currency;
       return;
     }
 
-    if (amount > 0) transaction.to = operation.account.address;
-    if (amount < 0) transaction.from = operation.account.address;
-    if (transaction.status === 'COMPLETED' && operation.status !== 'COMPLETED')
-      transaction.status = operation.status;
+    if (amount > 0) transaction.details.to = operation.account.address;
+    if (amount < 0) transaction.details.from = operation.account.address;
+    if (
+      transaction.details.status === 'COMPLETED' &&
+      operation.status !== 'COMPLETED'
+    )
+      transaction.details.status = operation.status;
 
-    transaction.type = transaction.to === accountId ? 'RECEIVE' : 'SEND';
-    transaction.amount = amount;
-    transaction.currency = operation.amount.currency;
+    transaction.type =
+      transaction.details.to === accountId ? 'RECEIVE' : 'SEND';
+    transaction.details.amount = amount;
+    transaction.details.currency = operation.amount.currency;
   });
   return {
     ...transaction,
+    caller: transaction.details.from,
     hash,
     timestamp: timestamp / MILI_PER_SECOND,
   } as InferredTransaction;

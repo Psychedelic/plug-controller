@@ -29,6 +29,8 @@ import {
 } from '../utils/dfx/history/xtcHistory';
 
 import { ConnectedApp } from '../interfaces/account';
+import { getCapTransactions } from '../utils/dfx/history/cap';
+import { recursiveParseBigint } from '../utils/object';
 
 export interface TokenBalance {
   name: string;
@@ -326,15 +328,20 @@ class PlugWallet {
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
     const icpTrxs = await getICPTransactions(this.accountId);
     const xtcTransactions = await getXTCTransactions(this.principal);
+    const capTransactions = await getCapTransactions(this.principal);
     // merge and format all trx. sort by timestamp
     // TODO: any custom token impelmenting archive should be queried. (0.4.0)
-    return {
-      total: icpTrxs.total + xtcTransactions.total,
+    console.log('cap transactions');
+    console.log(capTransactions);
+    const transactions = {
+      total: icpTrxs.total + xtcTransactions.total + capTransactions.total,
       transactions: [
+        ...capTransactions.transactions,
         ...icpTrxs.transactions,
         ...xtcTransactions.transactions,
-      ].sort((a, b) => b.timestamp - a.timestamp),
+      ].sort((a, b) => (b.timestamp - a.timestamp < 0 ? -1 : 1)),
     };
+    return recursiveParseBigint(transactions);
   };
 
   public send = async (

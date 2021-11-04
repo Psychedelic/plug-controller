@@ -50,10 +50,12 @@ const formatTransfer = (
   { event }: XtcTransactions
 ): InferredTransaction => {
   if (!('Transfer' in event.kind)) throw Error();
-  const transaction: any = { status: 'COMPLETED', fee: {} };
-  transaction.from = event.kind.Transfer.from; // check with @b0xtch how to instance Principal from api answer
-  transaction.to = event.kind.Transfer.to;
-  transaction.type = transaction.to === principalId ? 'RECEIVE' : 'SEND';
+  const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
+  transaction.details.from = event.kind.Transfer.from; // check with @b0xtch how to instance Principal from api answer
+  transaction.details.to = event.kind.Transfer.to;
+  transaction.caller = event.kind.Transfer.from;
+  transaction.type =
+    transaction.details.to === principalId ? 'RECEIVE' : 'SEND';
 
   return transaction as InferredTransaction;
 };
@@ -63,10 +65,10 @@ const formatBurn = (
   { event }: XtcTransactions
 ): InferredTransaction => {
   if (!('Burn' in event.kind)) throw Error();
-  const transaction: any = { status: 'COMPLETED', fee: {} };
-  transaction.from = event.kind.Burn.from;
-
-  transaction.to = event.kind.Burn.to;
+  const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
+  transaction.details.from = event.kind.Burn.from;
+  transaction.details.to = event.kind.Burn.to;
+  transaction.caller = event.kind.Burn.from;
   transaction.type = 'BURN';
 
   return transaction as InferredTransaction;
@@ -77,9 +79,10 @@ const formatMint = (
   { event }: XtcTransactions
 ): InferredTransaction => {
   if (!('Mint' in event.kind)) throw Error();
-  const transaction: any = { status: 'COMPLETED', fee: {} };
-  transaction.from = 'Mint';
-  transaction.to = event.kind.Mint.to;
+  const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
+  transaction.details.from = 'Mint';
+  transaction.details.to = event.kind.Mint.to;
+  transaction.caller = _principalId;
   transaction.type = 'MINT';
 
   return transaction as InferredTransaction;
@@ -90,9 +93,10 @@ const formatCanisterCalled = (
   { event }: XtcTransactions
 ): InferredTransaction => {
   if (!('CanisterCalled' in event.kind)) throw Error();
-  const transaction: any = { status: 'COMPLETED', fee: {} };
-  transaction.from = event.kind.CanisterCalled.from;
-  transaction.to = `${event.kind.CanisterCalled.canister}_${event.kind.CanisterCalled.method_name}`;
+  const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
+  transaction.details.from = event.kind.CanisterCalled.from;
+  transaction.caller = event.kind.CanisterCalled.from;
+  transaction.details.to = `${event.kind.CanisterCalled.canister}_${event.kind.CanisterCalled.method_name}`;
   transaction.type = 'CANISTER_CALLED';
 
   return transaction as InferredTransaction;
@@ -103,25 +107,26 @@ const formatCanisterCreated = (
   { event }: XtcTransactions
 ): InferredTransaction => {
   if (!('CanisterCreated' in event.kind)) throw Error();
-  const transaction: any = { status: 'COMPLETED', fee: {} };
-  transaction.from = event.kind.CanisterCreated.from;
-  transaction.to = event.kind.CanisterCreated.canister;
+  const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
+  transaction.details.from = event.kind.CanisterCreated.from;
+  transaction.caller = event.kind.CanisterCreated.from;
+  transaction.details.to = event.kind.CanisterCreated.canister;
   transaction.type = 'CANISTER_CREATED';
 
   return transaction as InferredTransaction;
 };
 
-const formatXTCTrancaction = (
+const formatXTCTransaction = (
   principalId: string,
   xtcTransaction: XtcTransactions
 ): InferredTransaction => {
   const transactionEvent = xtcTransaction.event;
-  const transaction: any = { status: 'COMPLETED', fee: {} };
+  const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
   transaction.hash = xtcTransaction.txnId;
-  transaction.amount = BigInt(transactionEvent.cycles);
-  transaction.currency = { symbol: 'XTC', decimals: 5 };
-  transaction.fee.amount = BigInt(transactionEvent.fee);
-  transaction.fee.currency = { symbol: 'XTC', decimals: 5 };
+  transaction.details.amount = BigInt(transactionEvent.cycles);
+  transaction.details.currency = { symbol: 'XTC', decimals: 5 };
+  transaction.details.fee.amount = BigInt(transactionEvent.fee);
+  transaction.details.fee.currency = { symbol: 'XTC', decimals: 5 };
   transaction.timestamp = xtcTransaction.event.timestamp;
   switch (Object.keys(transactionEvent.kind)[0]) {
     case 'Transfer':
@@ -157,7 +162,7 @@ export const getXTCTransactions = async (
     return {
       total: response.data.length,
       transactions: response.data.map(transaction =>
-        formatXTCTrancaction(principalId, transaction)
+        formatXTCTransaction(principalId, transaction)
       ),
     } as GetTransactionsResponse;
   } catch (e) {

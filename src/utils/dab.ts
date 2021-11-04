@@ -5,6 +5,7 @@ import {
 import { HttpAgent } from '@dfinity/agent';
 import fetch from 'cross-fetch';
 
+import { Principal } from '@dfinity/principal';
 import { IC_HOST } from './dfx/constants';
 
 export interface CanisterInfo {
@@ -32,7 +33,10 @@ export const getMultipleCanisterInfo = async (
   const finalAgent =
     agent || new HttpAgent({ host: process.env.DFX_HOST || IC_HOST, fetch });
 
-  const result = await getMultipleCanisterInfoFromDab(canisterIds, finalAgent);
+  const result = await getMultipleCanisterInfoFromDab(
+    canisterIds.map(id => Principal.from(id)),
+    finalAgent
+  );
 
   return result.map(canisterMetadata => ({
     ...canisterMetadata,
