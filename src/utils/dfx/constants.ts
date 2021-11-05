@@ -1,6 +1,6 @@
 export const LEDGER_CANISTER_ID = 'ryjl3-tyaaa-aaaaa-aaaba-cai';
 export const NNS_CANISTER_ID = 'qoctq-giaaa-aaaaa-aaaea-cai';
-export const PLUG_PROXY_HOST = 'https://plugproxy-test.fleek.co/';
+export const PLUG_PROXY_HOST = 'https://mainnet.plugwallet.ooo/';
 export const IC_URL_HOST = 'ic0.app';
 export const NET_ID = {
   blockchain: 'Internet Computer',
