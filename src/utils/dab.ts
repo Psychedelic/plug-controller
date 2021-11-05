@@ -5,7 +5,7 @@ import {
 import { HttpAgent } from '@dfinity/agent';
 
 import { PLUG_PROXY_HOST } from './dfx/constants';
-import { wrappedFetch } from './dfx';
+import { wrappedFetch } from './dfx/wrappedFetch';
 
 export interface CanisterInfo {
   name: string;
