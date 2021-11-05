@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/camelcase */
-
 import fetch from 'cross-fetch';
 import { ERRORS } from '../../../errors';
 import { NET_ID, ROSETTA_URL } from '../constants';
@@ -40,16 +39,7 @@ interface RosettaTransaction {
 
 export interface InferredTransaction {
   hash: string;
-  // from: string;
-  // to: string;
-  // amount?: bigint;
-  // currency?: Currency;
-  // fee?: {
-  //   amount: bigint;
-  //   currency: Currency;
-  // };
   timestamp: bigint;
-  // status: 'COMPLETED' | 'REVERTED' | 'PENDING';
   type: string;
   details?: { [key: string]: any };
   caller: string;
