@@ -48,7 +48,7 @@ const formatTransaction = (
   hash: sk,
   timestamp: transaction.time,
   type: transaction.operation,
-  details: transaction.details,
+  details: { ...transaction.details, canisterId: getTransactionCanister(sk) },
   caller: Principal.fromUint8Array((transaction.caller as any)._arr).toString(),
 });
 
