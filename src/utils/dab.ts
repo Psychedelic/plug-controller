@@ -3,6 +3,7 @@ import {
   getMultipleCanisterInfo as getMultipleCanisterInfoFromDab,
 } from '@psychedelic/dab-js';
 import { HttpAgent } from '@dfinity/agent';
+import { Principal } from '@dfinity/principal';
 
 import { PLUG_PROXY_HOST } from './dfx/constants';
 import { wrappedFetch } from './dfx/wrappedFetch';
@@ -40,7 +41,10 @@ export const getMultipleCanisterInfo = async (
       fetch: wrappedFetch,
     });
 
-  const result = await getMultipleCanisterInfoFromDab(canisterIds, finalAgent);
+  const result = await getMultipleCanisterInfoFromDab(
+    canisterIds.map(id => Principal.from(id)),
+    finalAgent
+  );
 
   return result.map(canisterMetadata => ({
     ...canisterMetadata,

@@ -4,10 +4,10 @@
 import { HttpAgent } from '@dfinity/agent';
 import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
 import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
-import { wrappedFetch } from './wrappedFetch'
+import { wrappedFetch } from './wrappedFetch';
 
 // import TokenService from '../../interfaces/token';
-import { IC_URL_HOST, PLUG_PROXY_HOST } from './constants';
+import { PLUG_PROXY_HOST } from './constants';
 
 export interface CreateAgentArgs {
   secretKey: BinaryBlob;
