@@ -4,8 +4,7 @@ import axios from 'axios';
 
 import { GetTransactionsResponse, InferredTransaction } from './rosetta';
 
-const KYASHU_URL =
-  'https://gxdmhoifte.execute-api.us-west-2.amazonaws.com/prod';
+const KYASHU_URL = 'https://kyasshu.fleek.co';
 
 type TransactionKind =
   | {
@@ -199,6 +198,7 @@ export const requestCacheUpdate = async (
   try {
     const response = await axios.post(`${KYASHU_URL}/txn/${principalId}`, {
       body: {
+        pid: principalId,
         txnIds: txnIds?.map(tx => tx.toString()),
       },
     });
