@@ -5,9 +5,10 @@ import { HttpAgent } from '@dfinity/agent';
 import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
 import crossFetch from 'cross-fetch';
 import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
+import { wrappedFetch } from './wrappedFetch';
 
 // import TokenService from '../../interfaces/token';
-import { IC_HOST } from './constants';
+import { PLUG_PROXY_HOST } from './constants';
 
 export interface CreateAgentArgs {
   secretKey: BinaryBlob;
@@ -27,7 +28,11 @@ export const createAgent = async ({
   const identity =
     defaultIdentity || createIdentity(blobFromUint8Array(secretKey));
   const agent = await Promise.resolve(
-    new HttpAgent({ host: process.env.DFX_HOST || IC_HOST, fetch, identity })
+    new HttpAgent({
+      host: process.env.DFX_HOST || PLUG_PROXY_HOST,
+      fetch: wrappedFetch,
+      identity,
+    })
   ).then(async ag => {
     await ag.fetchRootKey();
     return ag;

@@ -96,29 +96,35 @@ const createManyTransactions = (): GetTransactionsResponse => {
     transactions.transactions.push({
       timestamp: RandomBigInt(32),
       hash: RandomBigInt(32),
-      from: 'string',
-      to: 'string',
-      amount: BigInt(1000),
-      currency: { symbol: 'ICP', decimals: 8 },
-      fee: {
+      details: {
+        from: 'string',
+        to: 'string',
         amount: BigInt(1000),
         currency: { symbol: 'ICP', decimals: 8 },
+        fee: {
+          amount: BigInt(1000),
+          currency: { symbol: 'ICP', decimals: 8 },
+        },
+        status: 'COMPLETED',
       },
-      status: 'COMPLETED',
       type: 'SEND',
+      caller: 'stirng',
     });
     transactions.transactions.push({
       timestamp: RandomBigInt(32),
       hash: RandomBigInt(32),
-      from: 'string',
-      to: 'string',
-      amount: BigInt(1000),
-      currency: { symbol: 'XTC', decimals: 5 },
-      fee: {
+      details: {
+        from: 'string',
+        to: 'string',
         amount: BigInt(1000),
         currency: { symbol: 'XTC', decimals: 5 },
+        fee: {
+          amount: BigInt(1000),
+          currency: { symbol: 'XTC', decimals: 5 },
+        },
+        status: 'COMPLETED',
       },
-      status: 'COMPLETED',
+      caller: 'string',
       type: 'SEND',
     });
   }
