@@ -1,17 +1,19 @@
-import { ActorSubclass } from '@dfinity/agent';
+import { ActorSubclass, Actor } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
+import { SendResponse } from '.';
 import { ERRORS } from '../../../errors';
 
 import ExtService, { Balance, Metadata } from '../../../interfaces/ext';
+import { BurnParams, InternalTokenMethods, SendParams } from './methods';
 
 const send = async (
   actor: ActorSubclass<ExtService>,
-  to: string,
-  from: string,
-  amount: bigint,
-  token: string
-): Promise<bigint> => {
+  { to,
+    from,
+    amount, }: SendParams
+): Promise<SendResponse> => {
   const dummyMemmo = new Array(32).fill(0);
+  const token = Actor.canisterIdOf(actor).toText();
 
   const data = {
     to: { principal: Principal.fromText(to) },
@@ -26,15 +28,16 @@ const send = async (
 
   const transferResult = await actor.transfer(data);
 
-  if ('ok' in transferResult) return transferResult.ok;
+  if ('ok' in transferResult) return { amount: transferResult.ok };
 
   throw new Error(Object.keys(transferResult.error)[0]);
 };
 
-const metadata = async (
+const getMetadata = async (
   actor: ActorSubclass<ExtService>,
-  token: string
 ): Promise<Metadata> => {
+  const token = Actor.canisterIdOf(actor).toText();
+
   const extensions = await actor.extensions();
   if (!extensions.includes('@ext/common'))
     throw new Error(ERRORS.TOKEN_NOT_SUPPORT_METADATA);
@@ -45,11 +48,12 @@ const metadata = async (
   throw new Error(Object.keys(metadataResult.error)[0]);
 };
 
-const balance = async (
+const getBalance = async (
   actor: ActorSubclass<ExtService>,
-  token: string,
   user: Principal
 ): Promise<Balance> => {
+  const token = Actor.canisterIdOf(actor).toText();
+
   const balanceResult = await actor.balance({
     token,
     user: { principal: user },
@@ -60,4 +64,8 @@ const balance = async (
   throw new Error(Object.keys(balanceResult.error)[0]);
 };
 
-export default { send, metadata, balance };
+const burnXTC = async (_actor: ActorSubclass<ExtService>, _params: BurnParams) => {
+  throw new Error('BURN NOT SUPPORTED');
+}
+
+export default { send, getMetadata, getBalance, burnXTC } as InternalTokenMethods;

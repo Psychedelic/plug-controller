@@ -1,93 +1,59 @@
-import { Actor, ActorSubclass } from '@dfinity/agent';
+import { ActorSubclass } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
 
-import extMethods from './extMethods';
-import xtcMethods from './xtcMethods';
-
-import ExtService, { Metadata } from '../../../interfaces/ext';
-import XtcService, { BurnResult } from '../../../interfaces/xtc';
-import { XTC_ID } from '../constants';
+import { Metadata } from '../../../interfaces/ext';
+import { BurnResult } from '../../../interfaces/xtc';
 
 export type SendResponse =
   | { height: bigint }
   | { amount: bigint }
   | { transactionId: bigint };
 
+export interface SendParams {
+  to: string;
+  from: string;
+  amount: bigint;
+}
+
+export interface BurnParams {
+  to: Principal;
+  amount: bigint;
+}
 export interface TokenServiceExtended {
-  send: (to: string, from: string, amount: bigint) => Promise<SendResponse>;
+  send: ({ to, from, amount }: SendParams) => Promise<SendResponse>;
   getMetadata: () => Promise<Metadata>;
   getBalance: (user: Principal) => Promise<bigint>;
-  burnXTC: (params: { to: Principal; amount: bigint }) => Promise<BurnResult>;
+  burnXTC: ({ to, amount }: BurnParams) => Promise<BurnResult>;
+}
+
+export interface InternalTokenMethods {
+  send: (actor: ActorSubclass<any>, { to, from, amount }: SendParams) => Promise<SendResponse>;
+  getMetadata: (actor: ActorSubclass<any>,) => Promise<Metadata>;
+  getBalance: (actor: ActorSubclass<any>, user: Principal) => Promise<bigint>;
+  burnXTC: (actor: ActorSubclass<any>, { to, amount }: BurnParams) => Promise<BurnResult>;
 }
 
 const send = async (
-  actor: ActorSubclass<ExtService | XtcService>,
-  to: string,
-  from: string,
-  amount: bigint
-): Promise<SendResponse> => {
-  const token = Actor.canisterIdOf(actor).toText();
-
-  switch (token) {
-    case XTC_ID:
-      return {
-        transactionId: await xtcMethods.send(
-          actor as ActorSubclass<XtcService>,
-          Principal.fromText(to),
-          amount
-        ),
-      };
-    default:
-      return {
-        amount: await extMethods.send(
-          actor as ActorSubclass<ExtService>,
-          to,
-          from,
-          amount,
-          token
-        ),
-      };
-  }
+  _actor: ActorSubclass<any>,
+  _params: SendParams): Promise<SendResponse> => {
+  throw Error('Standard Not Implemented');
 };
 
 const getMetadata = async (
-  actor: ActorSubclass<ExtService | XtcService>
+  _actor: ActorSubclass<any>
 ): Promise<Metadata> => {
-  const token = Actor.canisterIdOf(actor).toText();
-  switch (token) {
-    case XTC_ID:
-      return xtcMethods.metadata(actor as ActorSubclass<XtcService>);
-    default:
-      return extMethods.metadata(actor as ActorSubclass<ExtService>, token);
-  }
+  throw Error('Standard Not Implemented');
 };
 
 const getBalance = async (
-  actor: ActorSubclass<ExtService | XtcService>,
-  user: Principal
+  _actor: ActorSubclass<any>,
+  _user: Principal
 ): Promise<bigint> => {
-  const token = Actor.canisterIdOf(actor).toText();
-
-  switch (token) {
-    case XTC_ID:
-      return xtcMethods.balance(actor as ActorSubclass<XtcService>, user);
-    default:
-      return extMethods.balance(
-        actor as ActorSubclass<ExtService>,
-        token,
-        user
-      );
-  }
+  throw Error('Standard Not Implemented');
 };
 
-const burnXTC = async (actor, params) => {
-  const token = Actor.canisterIdOf(actor).toText();
-  switch (token) {
-    case XTC_ID:
-      return xtcMethods.burn(actor as ActorSubclass<XtcService>, params);
-    default:
-      throw new Error('BURN NOT SUPPORTED');
-  }
+const burnXTC = async (_actor: ActorSubclass<any>, _params: BurnParams) => {
+  throw Error('Standard Not Implemented');
 };
 
-export default { send, getMetadata, getBalance, burnXTC };
+export default { send, getMetadata, getBalance, burnXTC } as InternalTokenMethods;
