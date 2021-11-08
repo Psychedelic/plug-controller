@@ -30,7 +30,6 @@ import {
 
 import { ConnectedApp } from '../interfaces/account';
 import { getCapTransactions } from '../utils/dfx/history/cap';
-import { recursiveParseBigint } from '../utils/object';
 
 export interface TokenBalance {
   name: string;
@@ -343,7 +342,7 @@ class PlugWallet {
         ...xtcTransactions.transactions,
       ].sort((a, b) => (b.timestamp - a.timestamp < 0 ? -1 : 1)),
     };
-    return recursiveParseBigint(transactions);
+    return transactions;
   };
 
   public send = async (

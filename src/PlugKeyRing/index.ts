@@ -3,7 +3,6 @@ import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import { NFTDetails, NFTCollection } from '@psychedelic/dab-js';
-import fetch from 'cross-fetch';
 import JsonBigInt from 'json-bigint';
 
 import { ERRORS } from '../errors';
@@ -17,6 +16,7 @@ import { validatePrincipalId } from './utils';
 import { StandardToken } from '../interfaces/ext';
 import { BurnResult } from '../interfaces/xtc';
 import { ConnectedApp } from '../interfaces/account';
+import { recursiveParseBigint } from '../utils/object';
 
 interface StorageData {
   vault: PlugState;
@@ -81,7 +81,7 @@ class PlugKeyRing {
     this.currentWalletId = 0;
     this.storage = StorageAdapter;
     this.crypto = CryptoAdapter;
-    this.fetch = FetchAdapter || fetch;
+    this.fetch = FetchAdapter;
   }
 
   public init = async (): Promise<void> => {
@@ -234,7 +234,7 @@ class PlugKeyRing {
   public getState = async (): Promise<PlugState> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    return JsonBigInt.stringify({
+    return recursiveParseBigint({
       ...this.state,
       currentWalletId: this.currentWalletId,
     });

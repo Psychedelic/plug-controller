@@ -22,7 +22,7 @@ export const getCanisterInfo = async (
     agent ||
     new HttpAgent({
       host: process.env.DFX_HOST || PLUG_PROXY_HOST,
-      fetch: wrappedFetch,
+      fetch: wrappedFetch(),
     });
 
   const result = await getCanisterInfoFromDab(canisterId, finalAgent);
@@ -38,7 +38,7 @@ export const getMultipleCanisterInfo = async (
     agent ||
     new HttpAgent({
       host: process.env.DFX_HOST || PLUG_PROXY_HOST,
-      fetch: wrappedFetch,
+      fetch: wrappedFetch(),
     });
 
   const result = await getMultipleCanisterInfoFromDab(

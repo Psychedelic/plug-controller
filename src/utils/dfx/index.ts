@@ -24,13 +24,12 @@ export const createAgent = async ({
   defaultIdentity,
   fetch = crossFetch,
 }: CreateAgentArgs): Promise<HttpAgent> => {
-  console.log('creating agent with fetch', fetch);
   const identity =
     defaultIdentity || createIdentity(blobFromUint8Array(secretKey));
   const agent = await Promise.resolve(
     new HttpAgent({
       host: process.env.DFX_HOST || PLUG_PROXY_HOST,
-      fetch: wrappedFetch,
+      fetch: wrappedFetch(fetch),
       identity,
     })
   ).then(async ag => {
