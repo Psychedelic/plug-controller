@@ -42,7 +42,7 @@ interface PlugWalletArgs {
   walletNumber: number;
   mnemonic: string;
   icon?: string;
-  registeredTokens?: Array<StandardToken>;
+  registeredTokens?: { [canisterId: string]: StandardToken };
   connectedApps?: Array<ConnectedApp>;
   assets?: Array<TokenBalance>;
   collections?: Array<NFTCollection>;
@@ -55,7 +55,7 @@ interface JSONWallet {
   principal: string;
   accountId: string;
   icon?: string;
-  registeredTokens: Array<StandardToken>;
+  registeredTokens: { [canisterId: string]: StandardToken };
   connectedApps: Array<ConnectedApp>;
   assets?: Array<{
     name: string;
@@ -92,7 +92,7 @@ class PlugWallet {
 
   fetch: any;
 
-  registeredTokens: Array<StandardToken>;
+  registeredTokens: { [key: string]: StandardToken };
 
   connectedApps: Array<ConnectedApp>;
 
@@ -109,7 +109,7 @@ class PlugWallet {
     icon,
     walletNumber,
     mnemonic,
-    registeredTokens = [],
+    registeredTokens = {},
     connectedApps = [],
     assets = DEFAULT_ASSETS,
     collections = [],
@@ -119,10 +119,10 @@ class PlugWallet {
     this.icon = icon;
     this.walletNumber = walletNumber;
     this.assets = assets;
-    this.registeredTokens = uniqueByObjKey(
-      [...registeredTokens, TOKENS.XTC],
-      'symbol'
-    ) as StandardToken[];
+    this.registeredTokens =
+      TOKENS.XTC.canisterId in registeredTokens
+        ? registeredTokens
+        : { ...registeredTokens, [TOKENS.XTC.canisterId]: TOKENS.XTC };
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -197,14 +197,15 @@ class PlugWallet {
   };
 
   public registerToken = async (
-    canisterId: string
+    canisterId: string,
+    standard: string
   ): Promise<StandardToken[]> => {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey, fetch: this.fetch });
-    const tokenActor = await createTokenActor(canisterId, agent);
+    const tokenActor = await createTokenActor(canisterId, agent, standard);
 
     const metadata = await tokenActor.getMetadata();
 
@@ -212,11 +213,19 @@ class PlugWallet {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
     }
     const color = randomColor({ luminosity: 'light' });
-    const tokenDescriptor = { ...metadata.fungible, canisterId, color };
-    const newTokens = [...this.registeredTokens, tokenDescriptor];
-    const unique = uniqueByObjKey(newTokens, 'symbol') as StandardToken[];
-    this.registeredTokens = unique;
-    return unique;
+    const tokenDescriptor = {
+      ...metadata.fungible,
+      canisterId,
+      color,
+      standard,
+    };
+    const newTokens = {
+      ...this.registeredTokens,
+      [canisterId]: tokenDescriptor,
+    };
+    // const unique = uniqueByObjKey(newTokens, 'symbol') as StandardToken[];
+    this.registeredTokens = newTokens;
+    return Object.values(newTokens);
   };
 
   public toJSON = (): JSONWallet => ({
@@ -246,7 +255,11 @@ class PlugWallet {
     }
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey, fetch: this.fetch });
-    const xtcActor = await createTokenActor(TOKENS.XTC.canisterId, agent);
+    const xtcActor = await createTokenActor(
+      TOKENS.XTC.canisterId,
+      agent,
+      'xtc'
+    );
     const burnResult = await xtcActor.burnXTC({
       to: Principal.fromText(to),
       amount,
@@ -269,17 +282,16 @@ class PlugWallet {
     const ledger = await createLedgerActor(agent);
     const icpBalance = await ledger.getBalance(this.accountId);
     // Add XTC if it was not in the first place (backwards compatibility)
-    if (
-      !this.registeredTokens.some(
-        token => token.canisterId === TOKENS.XTC.canisterId
-      )
-    ) {
-      this.registeredTokens.push(TOKENS.XTC);
-    }
+    if (!(TOKENS.XTC.canisterId in this.registeredTokens))
+      this.registeredTokens[TOKENS.XTC.canisterId] = TOKENS.XTC;
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
-      this.registeredTokens.map(async token => {
-        const tokenActor = await createTokenActor(token.canisterId, agent);
+      Object.values(this.registeredTokens).map(async token => {
+        const tokenActor = await createTokenActor(
+          token.canisterId,
+          agent,
+          token.standard
+        );
         const tokenBalance = await tokenActor.getBalance(
           this.identity.getPrincipal()
         );
@@ -312,7 +324,12 @@ class PlugWallet {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
     const agent = await createAgent({ secretKey, fetch: this.fetch });
-    const tokenActor = await createTokenActor(canisterId, agent);
+    const savedToken = this.registeredTokens[canisterId];
+    const tokenActor = await createTokenActor(
+      canisterId,
+      agent,
+      savedToken.standard
+    );
 
     const metadataResult = await tokenActor.getMetadata();
 
@@ -323,7 +340,11 @@ class PlugWallet {
     const tokenBalance = await tokenActor.getBalance(
       this.identity.getPrincipal()
     );
-    const token = { ...metadata.fungible, canisterId };
+    const token = {
+      ...metadata.fungible,
+      canisterId,
+      standard: savedToken.standard,
+    };
 
     return { token, amount: tokenBalance };
   };
@@ -406,13 +427,18 @@ class PlugWallet {
   ): Promise<SendResponse> {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey, fetch: this.fetch });
-    const tokenActor = await createTokenActor(canisterId, agent);
-
-    const result = await tokenActor.send(
-      to,
-      this.identity.getPrincipal().toString(),
-      amount
+    const savedToken = this.registeredTokens[canisterId];
+    const tokenActor = await createTokenActor(
+      canisterId,
+      agent,
+      savedToken.standard
     );
+
+    const result = await tokenActor.send({
+      to,
+      from: this.identity.getPrincipal().toString(),
+      amount,
+    });
     if (canisterId === TOKENS.XTC.canisterId) {
       try {
         if ('transactionId' in result) {

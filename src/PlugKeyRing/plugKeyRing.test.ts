@@ -362,7 +362,7 @@ describe('Plug KeyRing', () => {
     it('should persist data encypted correctly after registering a new token', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai'); // register XTC
+      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 'xtc'); // register XTC
       const { currentWalletId, ...state } = await keyRing.getState();
       const encryptedState = CryptoJS.AES.encrypt(
         JSON.stringify(state),
@@ -528,9 +528,9 @@ describe('Plug KeyRing', () => {
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.createPrincipal();
       await keyRing.createPrincipal();
-      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 1); // register WTC to other subaccounts
-      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 2); // register WTC
-      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 2); // register WTC twice
+      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 'xtc', 1); // register WTC to other subaccounts
+      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 'xtc', 2); // register WTC
+      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 'xtc', 2); // register WTC twice
 
       const { wallets } = await keyRing.getState();
       expect(wallets[0].registeredTokens).toMatchObject([TOKENS.XTC]);
@@ -546,12 +546,13 @@ describe('Plug KeyRing', () => {
     test('should fail to register an invalid canister id', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      await expect(() => keyRing.registerToken('test')).rejects.toEqual(
+      await expect(() => keyRing.registerToken('test', 'xtc')).rejects.toEqual(
         new Error(ERRORS.INVALID_CANISTER_ID)
       );
       await expect(() =>
         keyRing.registerToken(
-          'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe'
+          'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+          'xtc'
         )
       ).rejects.toEqual(new Error(ERRORS.INVALID_CANISTER_ID));
     });
