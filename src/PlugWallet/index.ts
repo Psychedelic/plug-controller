@@ -30,7 +30,6 @@ import {
 
 import { ConnectedApp } from '../interfaces/account';
 import { getCapTransactions } from '../utils/dfx/history/cap';
-import { recursiveParseBigint } from '../utils/object';
 
 export interface TokenBalance {
   name: string;
@@ -47,6 +46,7 @@ interface PlugWalletArgs {
   connectedApps?: Array<ConnectedApp>;
   assets?: Array<TokenBalance>;
   collections?: Array<NFTCollection>;
+  fetch: any;
 }
 
 interface JSONWallet {
@@ -90,6 +90,8 @@ class PlugWallet {
 
   principal: string;
 
+  fetch: any;
+
   registeredTokens: Array<StandardToken>;
 
   connectedApps: Array<ConnectedApp>;
@@ -111,6 +113,7 @@ class PlugWallet {
     connectedApps = [],
     assets = DEFAULT_ASSETS,
     collections = [],
+    fetch,
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
@@ -129,6 +132,7 @@ class PlugWallet {
     this.principal = identity.getPrincipal().toText();
     this.connectedApps = [...connectedApps];
     this.collections = [...collections];
+    this.fetch = fetch;
   }
 
   public setName(val: string): void {
@@ -172,7 +176,7 @@ class PlugWallet {
       throw new Error(ERRORS.INVALID_PRINCIPAL_ID);
     }
     const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     try {
       const NFT = getNFTActor(token.canister, agent, token.standard);
 
@@ -199,7 +203,7 @@ class PlugWallet {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
     const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     const tokenActor = await createTokenActor(canisterId, agent);
 
     const metadata = await tokenActor.getMetadata();
@@ -241,7 +245,7 @@ class PlugWallet {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
     const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     const xtcActor = await createTokenActor(TOKENS.XTC.canisterId, agent);
     const burnResult = await xtcActor.burnXTC({
       to: Principal.fromText(to),
@@ -261,7 +265,7 @@ class PlugWallet {
   public getBalance = async (): Promise<Array<TokenBalance>> => {
     const { secretKey } = this.identity.getKeyPair();
     // Get ICP Balance
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     const ledger = await createLedgerActor(agent);
     const icpBalance = await ledger.getBalance(this.accountId);
     // Add XTC if it was not in the first place (backwards compatibility)
@@ -279,7 +283,6 @@ class PlugWallet {
         const tokenBalance = await tokenActor.getBalance(
           this.identity.getPrincipal()
         );
-
         return {
           name: token.name,
           symbol: token.symbol,
@@ -308,7 +311,7 @@ class PlugWallet {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     const tokenActor = await createTokenActor(canisterId, agent);
 
     const metadataResult = await tokenActor.getMetadata();
@@ -339,7 +342,7 @@ class PlugWallet {
         ...xtcTransactions.transactions,
       ].sort((a, b) => (b.timestamp - a.timestamp < 0 ? -1 : 1)),
     };
-    return recursiveParseBigint(transactions);
+    return transactions;
   };
 
   public send = async (
@@ -391,7 +394,7 @@ class PlugWallet {
     opts?: SendOpts
   ): Promise<bigint> {
     const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     const ledger = await createLedgerActor(agent);
     return ledger.sendICP({ to, amount, opts });
   }
@@ -402,7 +405,7 @@ class PlugWallet {
     canisterId: string
   ): Promise<SendResponse> {
     const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey });
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
     const tokenActor = await createTokenActor(canisterId, agent);
 
     const result = await tokenActor.send(

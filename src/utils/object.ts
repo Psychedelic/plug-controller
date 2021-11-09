@@ -1,17 +1,4 @@
+import JsonBigInt from 'json-bigint';
+
 // eslint-disable-next-line
-export const recursiveParseBigint = obj =>
-  Object.entries(obj).reduce(
-    (acum, [key, val]) => {
-      if (val instanceof Object) {
-        const res = Array.isArray(val)
-          ? val.map(el => recursiveParseBigint(el))
-          : recursiveParseBigint(val);
-        return { ...acum, [key]: res };
-      }
-      if (typeof val === 'bigint') {
-        return { ...acum, [key]: val.toString() };
-      }
-      return { ...acum, [key]: val };
-    },
-    { ...obj }
-  );
+export const recursiveParseBigint = obj => JsonBigInt.parse(JsonBigInt.stringify(obj));

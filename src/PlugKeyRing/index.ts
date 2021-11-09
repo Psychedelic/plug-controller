@@ -3,6 +3,7 @@ import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import { NFTDetails, NFTCollection } from '@psychedelic/dab-js';
+import JsonBigInt from 'json-bigint';
 
 import { ERRORS } from '../errors';
 import { GetTransactionsResponse } from '../utils/dfx/history/rosetta';
@@ -59,6 +60,8 @@ class PlugKeyRing {
 
   private storage: KeyringStorage;
 
+  private fetch: any;
+
   private crypto: any; // TODO: see what functions are needed and create an interface.
 
   public isUnlocked = false;
@@ -69,7 +72,8 @@ class PlugKeyRing {
 
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
-    CryptoAdapter = CryptoJS
+    CryptoAdapter = CryptoJS,
+    FetchAdapter?: any
   ) {
     this.state = { wallets: [] };
     this.isUnlocked = false;
@@ -77,6 +81,7 @@ class PlugKeyRing {
     this.currentWalletId = 0;
     this.storage = StorageAdapter;
     this.crypto = CryptoAdapter;
+    this.fetch = FetchAdapter;
   }
 
   public init = async (): Promise<void> => {
@@ -145,6 +150,7 @@ class PlugKeyRing {
           new PlugWallet({
             ...wallet,
             mnemonic: decrypted.mnemonic as string,
+            fetch: this.fetch,
           })
       );
       this.state = { ...decrypted, wallets };
@@ -207,9 +213,10 @@ class PlugKeyRing {
     await this.checkInitialized();
     this.checkUnlocked();
     const wallet = new PlugWallet({
+      ...opts,
       mnemonic: this.state.mnemonic as string,
       walletNumber: this.state.wallets.length,
-      ...opts,
+      fetch: this.fetch,
     });
     const wallets = [...this.state.wallets, wallet];
     await this.saveEncryptedState({ wallets }, this.state.password);
@@ -416,8 +423,13 @@ class PlugKeyRing {
     name,
   }: CreateAndPersistKeyRingOptions): Promise<PlugWallet> => {
     if (!password) throw new Error(ERRORS.PASSWORD_REQUIRED);
-
-    const wallet = new PlugWallet({ icon, name, mnemonic, walletNumber: 0 });
+    const wallet = new PlugWallet({
+      icon,
+      name,
+      mnemonic,
+      walletNumber: 0,
+      fetch: this.fetch,
+    });
 
     const data = {
       wallets: [wallet.toJSON()],
@@ -437,9 +449,7 @@ class PlugKeyRing {
   };
 
   private saveEncryptedState = async (newState, password): Promise<void> => {
-    const stringData = JSON.stringify(
-      recursiveParseBigint({ ...this.state, ...newState })
-    );
+    const stringData = JsonBigInt.stringify({ ...this.state, ...newState });
     const encrypted = this.crypto.AES.encrypt(stringData, password);
     await this.storage.set({ vault: encrypted.toString() });
   };

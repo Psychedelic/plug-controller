@@ -4,6 +4,7 @@ import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import RandomBigInt from 'random-bigint';
 import { Principal } from '@dfinity/principal';
+import fetch from 'cross-fetch';
 
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
@@ -135,6 +136,7 @@ describe('Plug KeyRing', () => {
     name: 'test',
     mnemonic: TEST_MNEMONIC,
     walletNumber: 0,
+    fetch,
   });
   let keyRing: PlugKeyRing;
   const cleanup = async (): Promise<void> => {
