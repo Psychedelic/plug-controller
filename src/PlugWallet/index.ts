@@ -119,10 +119,7 @@ class PlugWallet {
     this.icon = icon;
     this.walletNumber = walletNumber;
     this.assets = assets;
-    this.registeredTokens =
-      TOKENS.XTC.canisterId in registeredTokens
-        ? registeredTokens
-        : { ...registeredTokens, [TOKENS.XTC.canisterId]: TOKENS.XTC };
+    this.registeredTokens = { ...registeredTokens, [TOKENS.XTC.canisterId]: TOKENS.XTC };
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -282,8 +279,7 @@ class PlugWallet {
     const ledger = await createLedgerActor(agent);
     const icpBalance = await ledger.getBalance(this.accountId);
     // Add XTC if it was not in the first place (backwards compatibility)
-    if (!(TOKENS.XTC.canisterId in this.registeredTokens))
-      this.registeredTokens[TOKENS.XTC.canisterId] = TOKENS.XTC;
+    this.registeredTokens[TOKENS.XTC.canisterId] = TOKENS.XTC;
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
       Object.values(this.registeredTokens).map(async token => {
