@@ -3,15 +3,10 @@ import * as bip39 from 'bip39';
 import { derivePath } from 'ed25519-hd-key';
 import HDKey from 'hdkey';
 import Secp256k1 from 'secp256k1';
-import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
+import { Secp256k1PublicKey } from '@dfinity/identity';
+import { KeyPair } from '@dfinity/agent';
 
 import { DERIVATION_PATH } from '../account/constants';
-import Secp256k1PublicKey from './secpk256k1/publicKey';
-
-export interface Secp256k1KeyPair {
-  publicKey: Secp256k1PublicKey;
-  secretKey: BinaryBlob;
-}
 
 export const createKeyPair = (
   mnemonic: string,
@@ -28,7 +23,7 @@ export const createKeyPair = (
 export const createSecp256K1KeyPair = (
   mnemonic: string,
   index = 0
-): Secp256k1KeyPair => {
+): KeyPair => {
   // Generate bip39 mnemonic. [Curve agnostic]
   const seed = bip39.mnemonicToSeedSync(mnemonic);
   const masterKey = HDKey.fromMasterSeed(seed);
@@ -39,6 +34,6 @@ export const createSecp256K1KeyPair = (
   const publicKey = Secp256k1.publicKeyCreate(privateKey, false);
   return {
     secretKey: privateKey,
-    publicKey: Secp256k1PublicKey.fromRaw(blobFromUint8Array(publicKey)),
+    publicKey: Secp256k1PublicKey.fromRaw(publicKey),
   };
 };
