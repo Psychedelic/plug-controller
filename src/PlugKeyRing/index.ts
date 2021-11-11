@@ -1,6 +1,5 @@
 import CryptoJS from 'crypto-js';
 import { PublicKey } from '@dfinity/agent';
-import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import { NFTDetails, NFTCollection } from '@psychedelic/dab-js';
 import JsonBigInt from 'json-bigint';
@@ -241,9 +240,9 @@ class PlugKeyRing {
   };
 
   public sign = async (
-    payload: BinaryBlob,
+    payload: Uint8Array,
     subAccount?: number
-  ): Promise<BinaryBlob> => {
+  ): Promise<Uint8Array> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
