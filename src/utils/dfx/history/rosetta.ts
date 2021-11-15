@@ -68,8 +68,8 @@ const getTransactionInfo = (
       return;
     }
 
-    if (amount > 0) transaction.details.to = operation.account.address;
-    if (amount < 0) transaction.details.from = operation.account.address;
+    if (amount >= 0) transaction.details.to = operation.account.address;
+    if (amount <= 0) transaction.details.from = operation.account.address;
     if (
       transaction.details.status === 'COMPLETED' &&
       operation.status !== 'COMPLETED'
