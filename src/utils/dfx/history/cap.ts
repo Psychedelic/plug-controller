@@ -45,7 +45,7 @@ const parsePrincipal = pidObj =>
     ? Principal.fromUint8Array(
         new Uint8Array(Object.values((pidObj as any)._arr))
       ).toString()
-    : null;
+    : pidObj;
 
 const getTransactionCanister = (contract: string): string | undefined =>
   contract?.split('#')?.[1];
