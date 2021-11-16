@@ -25,7 +25,10 @@ export const getCanisterInfo = async (
       fetch: wrappedFetch(),
     });
 
-  const result = await getCanisterInfoFromDab(canisterId, finalAgent);
+  const result = await getCanisterInfoFromDab({
+    canisterId,
+    agent: finalAgent,
+  });
   if (result) return { ...result, icon: result.logo_url };
   return undefined;
 };
@@ -41,10 +44,10 @@ export const getMultipleCanisterInfo = async (
       fetch: wrappedFetch(),
     });
 
-  const result = await getMultipleCanisterInfoFromDab(
-    canisterIds.map(id => Principal.from(id)),
-    finalAgent
-  );
+  const result = await getMultipleCanisterInfoFromDab({
+    canisterIds: canisterIds.map(id => Principal.from(id)),
+    agent: finalAgent,
+  });
 
   return result.map(canisterMetadata => ({
     ...canisterMetadata,

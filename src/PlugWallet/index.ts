@@ -1,10 +1,10 @@
 import { PublicKey } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
 import {
-  getBatchedNFTs,
   getNFTActor,
   NFTCollection,
   NFTDetails,
+  getCachedUserNFTs,
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 import { Secp256k1KeyIdentity } from '@dfinity/identity';
@@ -148,22 +148,13 @@ class PlugWallet {
   }
 
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
-  public getNFTs = async (): Promise<NFTCollection[] | null> => {
-    let collections: NFTCollection[] = [];
-    if (!this.lock) {
-      this.lock = true;
-      collections = await getBatchedNFTs({
-        principal: Principal.fromText(this.principal),
-        callback: collection => {
-          this.collections = uniqueByObjKey(
-            [...this.collections, collection],
-            'canisterId'
-          );
-        },
-      });
-      this.collections = collections;
-      return collections;
-    }
+  public getNFTs = async (
+    refresh?: boolean
+  ): Promise<NFTCollection[] | null> => {
+    this.collections = await getCachedUserNFTs({
+      userPID: this.principal,
+      refresh,
+    });
     return null;
   };
 
@@ -178,7 +169,11 @@ class PlugWallet {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey, fetch: this.fetch });
     try {
-      const NFT = getNFTActor(token.canister, agent, token.standard);
+      const NFT = getNFTActor({
+        canisterId: token.canister,
+        agent,
+        standard: token.standard,
+      });
 
       await NFT.transfer(
         Principal.fromText(to),
@@ -190,6 +185,9 @@ class PlugWallet {
         tokens: col.tokens.filter(tok => tok.id !== token.id),
       }));
       this.collections = collections.filter(col => col.tokens.length);
+      getCachedUserNFTs({ userPID: this.principal, refresh: true }).catch(
+        console.warn
+      );
       return true;
     } catch (e) {
       throw new Error(ERRORS.TRANSFER_NFT_ERROR);
@@ -198,7 +196,7 @@ class PlugWallet {
 
   public registerToken = async (
     canisterId: string,
-    standard: string
+    standard = 'ext'
   ): Promise<StandardToken[]> => {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
