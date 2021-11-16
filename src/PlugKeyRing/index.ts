@@ -439,6 +439,9 @@ class PlugKeyRing {
 
     this.isInitialized = true;
     this.currentWalletId = 0;
+
+    // Fixes firefox bug
+    await this.storage.set({});
     await this.storage.set({
       isInitialized: true,
       isUnlocked: false,
