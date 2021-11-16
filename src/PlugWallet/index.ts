@@ -151,11 +151,15 @@ class PlugWallet {
   public getNFTs = async (
     refresh?: boolean
   ): Promise<NFTCollection[] | null> => {
-    this.collections = await getCachedUserNFTs({
-      userPID: this.principal,
-      refresh,
-    });
-    return null;
+    try {
+      this.collections = await getCachedUserNFTs({
+        userPID: this.principal,
+        refresh,
+      });
+      return this.collections;
+    } catch (e) {
+      return null;
+    }
   };
 
   public transferNFT = async (args: {
