@@ -124,17 +124,17 @@ class PlugKeyRing {
     token: NFTDetails;
     to: string;
     standard: string;
-  }): Promise<boolean> => {
+  }): Promise<NFTCollection[]> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
-    const success = await wallet.transferNFT({ token, to });
+    const collections = await wallet.transferNFT({ token, to });
     wallets.splice(index, 1, wallet);
     this.state.wallets = wallets;
     await this.saveEncryptedState({ wallets }, this.state.password);
-    return success;
+    return collections;
   };
 
   private loadFromPersistance = async (password: string): Promise<void> => {
@@ -441,8 +441,7 @@ class PlugKeyRing {
     this.isInitialized = true;
     this.currentWalletId = 0;
 
-    // Fixes firefox bug
-    await this.storage.set({});
+    await this.storage.clear();
     await this.storage.set({
       isInitialized: true,
       isUnlocked: false,

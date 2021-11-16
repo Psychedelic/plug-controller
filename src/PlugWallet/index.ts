@@ -165,7 +165,7 @@ class PlugWallet {
   public transferNFT = async (args: {
     token: NFTDetails;
     to: string;
-  }): Promise<boolean> => {
+  }): Promise<NFTCollection[]> => {
     const { token, to } = args;
     if (!validatePrincipalId(to)) {
       throw new Error(ERRORS.INVALID_PRINCIPAL_ID);
@@ -192,7 +192,7 @@ class PlugWallet {
       getCachedUserNFTs({ userPID: this.principal, refresh: true }).catch(
         console.warn
       );
-      return true;
+      return this.collections;
     } catch (e) {
       throw new Error(ERRORS.TRANSFER_NFT_ERROR);
     }
@@ -225,7 +225,6 @@ class PlugWallet {
       ...this.registeredTokens,
       [canisterId]: tokenDescriptor,
     };
-    // const unique = uniqueByObjKey(newTokens, 'symbol') as StandardToken[];
     this.registeredTokens = newTokens;
     return Object.values(newTokens);
   };
