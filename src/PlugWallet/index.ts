@@ -2,7 +2,7 @@ import { PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import {
-  getBatchedNFTs,
+  getCachedUserNFTs,
   getNFTActor,
   NFTCollection,
   NFTDetails,
@@ -119,7 +119,10 @@ class PlugWallet {
     this.icon = icon;
     this.walletNumber = walletNumber;
     this.assets = assets;
-    this.registeredTokens = { ...registeredTokens, [TOKENS.XTC.canisterId]: TOKENS.XTC };
+    this.registeredTokens = {
+      ...registeredTokens,
+      [TOKENS.XTC.canisterId]: TOKENS.XTC,
+    };
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -145,29 +148,24 @@ class PlugWallet {
   }
 
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
-  public getNFTs = async (): Promise<NFTCollection[] | null> => {
-    let collections: NFTCollection[] = [];
-    if (!this.lock) {
-      this.lock = true;
-      collections = await getBatchedNFTs({
-        principal: Principal.fromText(this.principal),
-        callback: collection => {
-          this.collections = uniqueByObjKey(
-            [...this.collections, collection],
-            'canisterId'
-          );
-        },
+  public getNFTs = async (
+    refresh?: boolean
+  ): Promise<NFTCollection[] | null> => {
+    try {
+      this.collections = await getCachedUserNFTs({
+        userPID: this.principal,
+        refresh,
       });
-      this.collections = collections;
-      return collections;
+      return this.collections;
+    } catch (e) {
+      return null;
     }
-    return null;
   };
 
   public transferNFT = async (args: {
     token: NFTDetails;
     to: string;
-  }): Promise<boolean> => {
+  }): Promise<NFTCollection[]> => {
     const { token, to } = args;
     if (!validatePrincipalId(to)) {
       throw new Error(ERRORS.INVALID_PRINCIPAL_ID);
@@ -175,7 +173,11 @@ class PlugWallet {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey, fetch: this.fetch });
     try {
-      const NFT = getNFTActor(token.canister, agent, token.standard);
+      const NFT = getNFTActor({
+        canisterId: token.canister,
+        agent,
+        standard: token.standard,
+      });
 
       await NFT.transfer(
         Principal.fromText(to),
@@ -187,7 +189,10 @@ class PlugWallet {
         tokens: col.tokens.filter(tok => tok.id !== token.id),
       }));
       this.collections = collections.filter(col => col.tokens.length);
-      return true;
+      getCachedUserNFTs({ userPID: this.principal, refresh: true }).catch(
+        console.warn
+      );
+      return this.collections;
     } catch (e) {
       throw new Error(ERRORS.TRANSFER_NFT_ERROR);
     }
@@ -195,7 +200,7 @@ class PlugWallet {
 
   public registerToken = async (
     canisterId: string,
-    standard: string
+    standard = 'ext'
   ): Promise<StandardToken[]> => {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
