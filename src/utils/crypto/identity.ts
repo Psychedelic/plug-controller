@@ -12,10 +12,12 @@ const PRIV_KEY_INIT =
 const KEY_SEPARATOR = 'a144034200';
 
 export const getPem = (identity: Secp256k1KeyIdentity): string => {
-  const { secretKey, publicKey } = identity.getKeyPair();
+  const {
+    secretKey,
+    publicKey,
+  }: { secretKey: ArrayBuffer; publicKey: any } = identity.getKeyPair();
   const rawPrivateKey = Buffer.from(secretKey).toString('hex');
-  const rawPublicKey = Buffer.from(publicKey).toString('hex');
-
+  const rawPublicKey = Buffer.from(publicKey.toRaw()).toString('hex');
   return `${PEM_BEGIN}\n${Buffer.from(
     `${PRIV_KEY_INIT}${rawPrivateKey}${KEY_SEPARATOR}${rawPublicKey}`,
     'hex'
