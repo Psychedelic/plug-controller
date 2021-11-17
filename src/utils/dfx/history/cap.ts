@@ -6,20 +6,18 @@ import {
   prettifyCapTransactions,
   TransactionPrettified,
 } from '@psychedelic/cap-js';
-import { getCanisterInfo } from '../../dab';
+import { getMultipleCanisterInfo } from '../../dab';
 import { InferredTransaction } from './rosetta';
 
 const KYASHU_URL = 'https://kyasshu.fleek.co';
 
 interface KyashuItem {
-  contractId: string;
   event: any;
   pk: string;
   sk: string;
   userId: string;
   gs1sk: string;
   gs1pk: string;
-  caller: Principal;
 }
 
 interface LastEvaluatedKey {
@@ -40,32 +38,18 @@ export interface GetUserTransactionResponse {
   lastEvaluatedKey?: LastEvaluatedKey;
 }
 
-const parsePrincipal = pidObj =>
-  pidObj?._isPrincipal
-    ? Principal.fromUint8Array(
-        new Uint8Array(Object.values((pidObj as any)._arr))
-      ).toString()
-    : pidObj;
-
-const getTransactionCanister = (contract: string): string | undefined =>
-  contract?.split('#')?.[1];
+const getTransactionCanister = (sk: string): string | undefined =>
+  sk?.split('#')?.[1];
 
 const formatTransaction = (
   transaction: TransactionPrettified,
-  sk: string,
-  contractId: string
+  sk: string
 ): InferredTransaction => ({
   hash: sk,
   timestamp: transaction.time,
   type: transaction.operation,
-  details: {
-    ...transaction.details,
-    canisterId: getTransactionCanister(contractId),
-    tokenId: transaction.details?.token_id || transaction.details?.token || '',
-    to: parsePrincipal(transaction?.details?.to),
-    from: parsePrincipal(transaction?.details?.from),
-  },
-  caller: parsePrincipal(transaction.caller) || '',
+  details: { ...transaction.details, canisterId: getTransactionCanister(sk) },
+  caller: Principal.fromUint8Array((transaction.caller as any)._arr).toString(),
 });
 
 export const getCapTransactions = async (
@@ -79,32 +63,21 @@ export const getCapTransactions = async (
     const response = await axios.get<any, AxiosResponse<KyashuResponse>>(url);
     const canisterIds = [
       ...new Set(
-        response.data.Items.map(item => getTransactionCanister(item.contractId))
+        response.data.Items.map(item => getTransactionCanister(item.sk))
       ),
     ].filter(value => value) as string[];
-    const dabInfo = await Promise.all(
-      canisterIds.map(async canisterId => {
-        let canisterInfo = { canisterId };
-        try {
-          const fetchedCanisterInfo = await getCanisterInfo(canisterId);
-          canisterInfo = { canisterId, ...fetchedCanisterInfo };
-        } catch (error) {
-          /* eslint-disable-next-line */
-        console.error("DAB error: ", error);
-        }
-        return canisterInfo;
-      })
-    );
-    const canistersInfo = dabInfo.reduce(
-      (acum, info) => ({ ...acum, [info.canisterId]: info }),
+    const canistersInfo = (await getMultipleCanisterInfo(canisterIds)).reduce(
+      (acum, canisterInfo, idx) => ({
+        ...acum,
+        [canisterIds[idx]]: { canisterId: canisterIds[idx], ...canisterInfo },
+      }),
       {}
     );
     const transactions = response.data.Items.map(item => {
-      const canisterId = getTransactionCanister(item.contractId);
+      const canisterId = getTransactionCanister(item.sk);
       const formattedTx = formatTransaction(
         prettifyCapTransactions(item.event),
-        item.sk,
-        item.contractId
+        item.sk
       );
       return {
         ...formattedTx,
@@ -117,7 +90,6 @@ export const getCapTransactions = async (
       transactions,
     };
   } catch (e) {
-    console.log('CAP error: ', e);
     return {
       total: 0,
       transactions: [],

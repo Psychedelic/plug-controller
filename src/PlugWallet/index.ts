@@ -1,18 +1,19 @@
 import { PublicKey } from '@dfinity/agent';
+import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import {
+  getBatchedNFTs,
   getNFTActor,
   NFTCollection,
   NFTDetails,
-  getCachedUserNFTs,
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
-import { Secp256k1KeyIdentity } from '@dfinity/identity';
 
 import { ERRORS } from '../errors';
 import { StandardToken } from '../interfaces/ext';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
+import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
 import { createTokenActor, SendResponse } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
@@ -29,7 +30,6 @@ import {
 
 import { ConnectedApp } from '../interfaces/account';
 import { getCapTransactions } from '../utils/dfx/history/cap';
-import { getPem } from '../utils/crypto/identity';
 
 export interface TokenBalance {
   name: string;
@@ -119,10 +119,7 @@ class PlugWallet {
     this.icon = icon;
     this.walletNumber = walletNumber;
     this.assets = assets;
-    this.registeredTokens = {
-      ...registeredTokens,
-      [TOKENS.XTC.canisterId]: TOKENS.XTC,
-    };
+    this.registeredTokens = { ...registeredTokens, [TOKENS.XTC.canisterId]: TOKENS.XTC };
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -139,8 +136,8 @@ class PlugWallet {
     this.name = val;
   }
 
-  public async sign(payload: Uint8Array): Promise<Uint8Array> {
-    return new Uint8Array(await this.identity.sign(payload.buffer));
+  public async sign(payload: BinaryBlob): Promise<BinaryBlob> {
+    return this.identity.sign(payload);
   }
 
   public setIcon(val: string): void {
@@ -148,24 +145,29 @@ class PlugWallet {
   }
 
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
-  public getNFTs = async (
-    refresh?: boolean
-  ): Promise<NFTCollection[] | null> => {
-    try {
-      this.collections = await getCachedUserNFTs({
-        userPID: this.principal,
-        refresh,
+  public getNFTs = async (): Promise<NFTCollection[] | null> => {
+    let collections: NFTCollection[] = [];
+    if (!this.lock) {
+      this.lock = true;
+      collections = await getBatchedNFTs({
+        principal: Principal.fromText(this.principal),
+        callback: collection => {
+          this.collections = uniqueByObjKey(
+            [...this.collections, collection],
+            'canisterId'
+          );
+        },
       });
-      return this.collections;
-    } catch (e) {
-      return null;
+      this.collections = collections;
+      return collections;
     }
+    return null;
   };
 
   public transferNFT = async (args: {
     token: NFTDetails;
     to: string;
-  }): Promise<NFTCollection[]> => {
+  }): Promise<boolean> => {
     const { token, to } = args;
     if (!validatePrincipalId(to)) {
       throw new Error(ERRORS.INVALID_PRINCIPAL_ID);
@@ -173,11 +175,7 @@ class PlugWallet {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey, fetch: this.fetch });
     try {
-      const NFT = getNFTActor({
-        canisterId: token.canister,
-        agent,
-        standard: token.standard,
-      });
+      const NFT = getNFTActor(token.canister, agent, token.standard);
 
       await NFT.transfer(
         Principal.fromText(to),
@@ -189,10 +187,7 @@ class PlugWallet {
         tokens: col.tokens.filter(tok => tok.id !== token.id),
       }));
       this.collections = collections.filter(col => col.tokens.length);
-      getCachedUserNFTs({ userPID: this.principal, refresh: true }).catch(
-        console.warn
-      );
-      return this.collections;
+      return true;
     } catch (e) {
       throw new Error(ERRORS.TRANSFER_NFT_ERROR);
     }
@@ -200,7 +195,7 @@ class PlugWallet {
 
   public registerToken = async (
     canisterId: string,
-    standard = 'ext'
+    standard: string
   ): Promise<StandardToken[]> => {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
@@ -225,6 +220,7 @@ class PlugWallet {
       ...this.registeredTokens,
       [canisterId]: tokenDescriptor,
     };
+    // const unique = uniqueByObjKey(newTokens, 'symbol') as StandardToken[];
     this.registeredTokens = newTokens;
     return Object.values(newTokens);
   };
@@ -406,7 +402,7 @@ class PlugWallet {
   }
 
   public get pemFile(): string {
-    return getPem(this.identity);
+    return this.identity.getPem();
   }
 
   private async sendICP(
