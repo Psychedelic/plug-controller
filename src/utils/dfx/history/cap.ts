@@ -117,7 +117,6 @@ export const getCapTransactions = async (
       transactions,
     };
   } catch (e) {
-    console.log('CAP error: ', e);
     return {
       total: 0,
       transactions: [],

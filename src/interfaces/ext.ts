@@ -2,6 +2,7 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/camelcase */
 import { Principal } from '@dfinity/principal';
+import { BinaryBlob } from '@dfinity/candid';
 
 export type AccountIdentifier = string;
 
@@ -85,12 +86,12 @@ export type TransferResponse = Result<Balance, TransferError>;
 
 export interface FungibleMetadata {
   fungible: TokenMetaData & {
-    metadata?: Uint8Array;
+    metadata?: BinaryBlob;
   };
 }
 export interface NonFungibleMetadata {
   nonfungible: {
-    metadata: Uint8Array;
+    metadata: BinaryBlob;
   };
 }
 export type Metadata = FungibleMetadata | NonFungibleMetadata;

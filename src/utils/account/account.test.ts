@@ -1,8 +1,7 @@
-import { KeyPair } from '@dfinity/agent';
-import { Secp256k1PublicKey } from '@dfinity/identity';
 import { Principal } from '@dfinity/principal';
 import { ERRORS } from '../../errors';
 import { AccountCredentials } from '../../interfaces/account';
+import { Secp256k1KeyPair } from '../crypto/keys';
 import { verify, sign } from '../signature';
 import {
   createAccount,
@@ -12,7 +11,7 @@ import {
 
 describe('Account utils', () => {
   let globalAccount: AccountCredentials;
-  let globalKeys: KeyPair;
+  let globalKeys: Secp256k1KeyPair;
   const MAX_ACCOUNTS = 5;
 
   beforeAll(() => {
@@ -142,11 +141,7 @@ describe('Account utils', () => {
       const { secretKey, publicKey } = globalKeys;
       const message = 'This is a secret message!';
       const signed = sign(message, secretKey);
-      const opened = verify(
-        message,
-        signed,
-        Secp256k1PublicKey.from(publicKey)
-      );
+      const opened = verify(message, signed, publicKey);
       expect(opened).toBe(true);
     });
   });

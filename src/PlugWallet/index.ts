@@ -1,18 +1,19 @@
 import { PublicKey } from '@dfinity/agent';
+import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import {
+  getCachedUserNFTs,
   getNFTActor,
   NFTCollection,
   NFTDetails,
-  getCachedUserNFTs,
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
-import { Secp256k1KeyIdentity } from '@dfinity/identity';
 
 import { ERRORS } from '../errors';
 import { StandardToken } from '../interfaces/ext';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
+import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
 import { createTokenActor, SendResponse } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
@@ -29,7 +30,6 @@ import {
 
 import { ConnectedApp } from '../interfaces/account';
 import { getCapTransactions } from '../utils/dfx/history/cap';
-import { getPem } from '../utils/crypto/identity';
 
 export interface TokenBalance {
   name: string;
@@ -139,8 +139,8 @@ class PlugWallet {
     this.name = val;
   }
 
-  public async sign(payload: Uint8Array): Promise<Uint8Array> {
-    return new Uint8Array(await this.identity.sign(payload.buffer));
+  public async sign(payload: BinaryBlob): Promise<BinaryBlob> {
+    return this.identity.sign(payload);
   }
 
   public setIcon(val: string): void {
@@ -225,6 +225,7 @@ class PlugWallet {
       ...this.registeredTokens,
       [canisterId]: tokenDescriptor,
     };
+    // const unique = uniqueByObjKey(newTokens, 'symbol') as StandardToken[];
     this.registeredTokens = newTokens;
     return Object.values(newTokens);
   };
@@ -317,19 +318,17 @@ class PlugWallet {
   };
 
   public getTokenInfo = async (
-    canisterId: string
+    canisterId: string,
+    standard = 'ext'
   ): Promise<{ token: StandardToken; amount: bigint }> => {
     const { secretKey } = this.identity.getKeyPair();
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
     const agent = await createAgent({ secretKey, fetch: this.fetch });
-    const savedToken = this.registeredTokens[canisterId];
-    const tokenActor = await createTokenActor(
-      canisterId,
-      agent,
-      savedToken.standard
-    );
+    const savedStandard =
+      this.registeredTokens[canisterId]?.standard || standard;
+    const tokenActor = await createTokenActor(canisterId, agent, savedStandard);
 
     const metadataResult = await tokenActor.getMetadata();
 
@@ -343,7 +342,7 @@ class PlugWallet {
     const token = {
       ...metadata.fungible,
       canisterId,
-      standard: savedToken.standard,
+      standard: savedStandard,
     };
 
     return { token, amount: tokenBalance };
@@ -406,7 +405,7 @@ class PlugWallet {
   }
 
   public get pemFile(): string {
-    return getPem(this.identity);
+    return this.identity.getPem();
   }
 
   private async sendICP(

@@ -1,5 +1,6 @@
 import CryptoJS from 'crypto-js';
 import { PublicKey } from '@dfinity/agent';
+import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import { NFTDetails, NFTCollection } from '@psychedelic/dab-js';
 import JsonBigInt from 'json-bigint';
@@ -99,15 +100,14 @@ class PlugKeyRing {
   };
 
   public getNFTs = async (
-    subAccount?: number,
-    refresh?: boolean
+    subAccount?: number
   ): Promise<NFTCollection[] | null> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
     const { wallets } = this.state;
     this.validateSubaccount(index);
     const wallet = wallets[index];
-    const nfts = await wallet.getNFTs(refresh);
+    const nfts = await wallet.getNFTs();
 
     wallets.splice(index, 1, wallet);
     this.state.wallets = wallets;
@@ -241,9 +241,9 @@ class PlugKeyRing {
   };
 
   public sign = async (
-    payload: Uint8Array,
+    payload: BinaryBlob,
     subAccount?: number
-  ): Promise<Uint8Array> => {
+  ): Promise<BinaryBlob> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
@@ -290,7 +290,7 @@ class PlugKeyRing {
 
   public registerToken = async (
     canisterId: string,
-    standard: string,
+    standard = 'ext',
     subAccount?: number
   ): Promise<Array<StandardToken>> => {
     this.checkUnlocked();
@@ -440,7 +440,6 @@ class PlugKeyRing {
 
     this.isInitialized = true;
     this.currentWalletId = 0;
-
     await this.storage.clear();
     await this.storage.set({
       isInitialized: true,

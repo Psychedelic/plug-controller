@@ -1,9 +1,9 @@
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import { Principal } from '@dfinity/principal';
-import { Secp256k1KeyIdentity, Secp256k1PublicKey } from '@dfinity/identity';
 
 import { ERRORS } from '../../errors';
+import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
 import { AccountCredentials } from '../../interfaces/account';
 import { ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO } from './constants';
 import {
@@ -54,7 +54,7 @@ const getAccountCredentials = (
   const keyPair = createSecp256K1KeyPair(mnemonic, subAccount || 0);
   // Identity has boths keys via getKeyPair and PID via getPrincipal
   const identity = Secp256k1KeyIdentity.fromKeyPair(
-    Secp256k1PublicKey.from(keyPair.publicKey).toRaw(),
+    keyPair.publicKey.toRaw(),
     keyPair.secretKey
   );
   const accountId = getAccountId(identity.getPrincipal());
