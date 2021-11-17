@@ -318,19 +318,17 @@ class PlugWallet {
   };
 
   public getTokenInfo = async (
-    canisterId: string
+    canisterId: string,
+    standard = 'ext'
   ): Promise<{ token: StandardToken; amount: bigint }> => {
     const { secretKey } = this.identity.getKeyPair();
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
     const agent = await createAgent({ secretKey, fetch: this.fetch });
-    const savedToken = this.registeredTokens[canisterId];
-    const tokenActor = await createTokenActor(
-      canisterId,
-      agent,
-      savedToken.standard
-    );
+    const savedStandard =
+      this.registeredTokens[canisterId]?.standard || standard;
+    const tokenActor = await createTokenActor(canisterId, agent, savedStandard);
 
     const metadataResult = await tokenActor.getMetadata();
 
@@ -344,7 +342,7 @@ class PlugWallet {
     const token = {
       ...metadata.fungible,
       canisterId,
-      standard: savedToken.standard,
+      standard: savedStandard,
     };
 
     return { token, amount: tokenBalance };
