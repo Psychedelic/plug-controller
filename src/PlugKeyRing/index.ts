@@ -290,7 +290,7 @@ class PlugKeyRing {
 
   public registerToken = async (
     canisterId: string,
-    standard: string,
+    standard = 'ext',
     subAccount?: number
   ): Promise<Array<StandardToken>> => {
     this.checkUnlocked();
