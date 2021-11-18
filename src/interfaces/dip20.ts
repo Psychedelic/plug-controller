@@ -1,4 +1,8 @@
+/* eslint-disable @typescript-eslint/class-name-casing */
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/camelcase */
 import type { Principal } from '@dfinity/principal';
+
 export interface Metadata {
     'fee': bigint,
     'decimals': number,
@@ -13,7 +17,7 @@ export type Operation = { 'transferFrom': null } |
 { 'approve': null } |
 { 'transfer': null };
 export type Time = bigint;
-export interface Token {
+export default interface _SERVICE {
     'allowance': (arg_0: Principal, arg_1: Principal) => Promise<bigint>,
     'approve': (arg_0: Principal, arg_1: bigint) => Promise<TxReceipt>,
     'balanceOf': (arg_0: Principal) => Promise<bigint>,
@@ -80,4 +84,3 @@ export interface TxRecord {
     'index': bigint,
     'amount': bigint,
 }
-export default interface _SERVICE extends Token { }

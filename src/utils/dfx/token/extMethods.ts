@@ -1,16 +1,18 @@
 import { ActorSubclass, Actor } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
-import { SendResponse } from '.';
 import { ERRORS } from '../../../errors';
 
 import ExtService, { Balance, Metadata } from '../../../interfaces/ext';
-import { BurnParams, InternalTokenMethods, SendParams } from './methods';
+import {
+  BurnParams,
+  InternalTokenMethods,
+  SendParams,
+  SendResponse,
+} from './methods';
 
 const send = async (
   actor: ActorSubclass<ExtService>,
-  { to,
-    from,
-    amount, }: SendParams
+  { to, from, amount }: SendParams
 ): Promise<SendResponse> => {
   const dummyMemmo = new Array(32).fill(0);
   const token = Actor.canisterIdOf(actor).toText();
@@ -34,7 +36,7 @@ const send = async (
 };
 
 const getMetadata = async (
-  actor: ActorSubclass<ExtService>,
+  actor: ActorSubclass<ExtService>
 ): Promise<Metadata> => {
   const token = Actor.canisterIdOf(actor).toText();
 
@@ -64,8 +66,16 @@ const getBalance = async (
   throw new Error(Object.keys(balanceResult.error)[0]);
 };
 
-const burnXTC = async (_actor: ActorSubclass<ExtService>, _params: BurnParams) => {
+const burnXTC = async (
+  _actor: ActorSubclass<ExtService>,
+  _params: BurnParams
+) => {
   throw new Error('BURN NOT SUPPORTED');
-}
+};
 
-export default { send, getMetadata, getBalance, burnXTC } as InternalTokenMethods;
+export default {
+  send,
+  getMetadata,
+  getBalance,
+  burnXTC,
+} as InternalTokenMethods;

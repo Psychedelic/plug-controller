@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/class-name-casing */
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/camelcase */
 export const mockRosettaTransaction = {
   ok: true,
   json: () => ({
