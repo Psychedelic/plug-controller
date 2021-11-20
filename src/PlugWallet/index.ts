@@ -15,7 +15,11 @@ import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
-import { createTokenActor, formatStorageTokens, SendResponse } from '../utils/dfx/token';
+import {
+  createTokenActor,
+  parseBalance,
+  SendResponse,
+} from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import {
   getICPTransactions,
@@ -60,7 +64,7 @@ interface JSONWallet {
   assets?: Array<{
     name: string;
     symbol: string;
-    amount: number;
+    amount: string;
     canisterId: string | null;
   }>;
   nftCollections?: Array<{
@@ -240,7 +244,7 @@ class PlugWallet {
     connectedApps: this.connectedApps,
     assets: this.assets.map(asset => ({
       ...asset,
-      amount: parseInt(asset.amount.toString(), 10),
+      amount: asset.amount.toString(),
     })),
     nftCollections: this.collections.map(collection => ({
       ...collection,
@@ -251,7 +255,7 @@ class PlugWallet {
     })),
   });
 
-  public burnXTC = async (to: string, amount: bigint) => {
+  public burnXTC = async (to: string, amount: string) => {
     if (!validateCanisterId(to)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
@@ -293,13 +297,13 @@ class PlugWallet {
           agent,
           token.standard
         );
-        const tokenBalance = await tokenActor.getBalance(
+        const balance = await tokenActor.getBalance(
           this.identity.getPrincipal()
         );
         return {
           name: token.name,
           symbol: token.symbol,
-          amount: tokenBalance.toString(10),
+          amount: parseBalance(balance),
           canisterId: token.canisterId,
         };
       })
@@ -308,7 +312,7 @@ class PlugWallet {
       {
         name: 'ICP',
         symbol: 'ICP',
-        amount: icpBalance.toString(10),
+        amount: parseBalance(icpBalance),
         canisterId: null,
       },
       ...tokenBalances,
@@ -320,7 +324,7 @@ class PlugWallet {
   public getTokenInfo = async (
     canisterId: string,
     standard = 'ext'
-  ): Promise<{ token: StandardToken; amount: bigint }> => {
+  ): Promise<{ token: StandardToken; amount: string }> => {
     const { secretKey } = this.identity.getKeyPair();
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
@@ -345,7 +349,7 @@ class PlugWallet {
       standard: savedStandard,
     };
 
-    return { token, amount: tokenBalance };
+    return { token, amount: parseBalance(tokenBalance) };
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
@@ -367,7 +371,7 @@ class PlugWallet {
 
   public send = async (
     to: string,
-    amount: bigint,
+    amount: string,
     canisterId?: string,
     opts?: SendOpts
   ): Promise<SendResponse> => {
@@ -410,9 +414,9 @@ class PlugWallet {
 
   private async sendICP(
     to: string,
-    amount: bigint,
+    amount: string,
     opts?: SendOpts
-  ): Promise<bigint> {
+  ): Promise<string> {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey, fetch: this.fetch });
     const ledger = await createLedgerActor(agent);
@@ -421,7 +425,7 @@ class PlugWallet {
 
   private async sendCustomToken(
     to: string,
-    amount: bigint,
+    amount: string,
     canisterId: string
   ): Promise<SendResponse> {
     const { secretKey } = this.identity.getKeyPair();
@@ -442,7 +446,7 @@ class PlugWallet {
       try {
         if ('transactionId' in result) {
           const trxId = result.transactionId;
-          await requestCacheUpdate(this.principal, [trxId]);
+          await requestCacheUpdate(this.principal, [BigInt(trxId)]);
         }
       } catch (e) {
         console.log('Kyasshu error', e);

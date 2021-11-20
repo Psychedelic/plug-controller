@@ -3,6 +3,7 @@
 import fetch from 'cross-fetch';
 import { ERRORS } from '../../../errors';
 import { NET_ID, ROSETTA_URL } from '../constants';
+import { parseBalance } from '../token';
 
 export const MILI_PER_SECOND = 1_000_000;
 
@@ -61,15 +62,17 @@ const getTransactionInfo = (
   } = rosettaTransaction;
   const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
   operations.forEach(operation => {
-    const amount = BigInt(operation.amount.value);
+    const value = BigInt(operation.amount.value);
+    const { decimals } = operation.amount.currency;
+    const amount = parseBalance({ value: value.toString(), decimals });
     if (operation.type === 'FEE') {
       transaction.details.fee.amount = amount;
       transaction.details.fee.currency = operation.amount.currency;
       return;
     }
 
-    if (amount >= 0) transaction.details.to = operation.account.address;
-    if (amount <= 0) transaction.details.from = operation.account.address;
+    if (value >= 0) transaction.details.to = operation.account.address;
+    if (value <= 0) transaction.details.from = operation.account.address;
 
     if (
       transaction.details.status === 'COMPLETED' &&

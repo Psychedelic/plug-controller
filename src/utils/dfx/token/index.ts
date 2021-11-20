@@ -4,6 +4,7 @@ import { IDL } from '@dfinity/candid';
 
 import { createExtendedActorClass } from '../actorFactory';
 import defaultMethods, {
+  Balance,
   InternalTokenMethods,
   TokenServiceExtended,
 } from './methods';
@@ -29,7 +30,7 @@ const getIdl = (standard: string): IDL.InterfaceFactory => {
     ext: extIDL,
     dip20: dip20IDL,
   }[standard];
-  if (!idl) throw new Error('Standard Not Implemented');
+  if (!idl) throw new Error(`Standard ${standard} Not Implemented`);
   return idl;
 };
 
@@ -62,6 +63,10 @@ export const formatStorageTokens = (
     }),
     {}
   );
+
+export const parseBalance = (balance: Balance): string => {
+  return (parseInt(balance.value, 10) / 10 ** balance.decimals).toString();
+};
 
 export default {};
 
