@@ -3,36 +3,40 @@ import { Principal } from '@dfinity/principal';
 import { IDL } from '@dfinity/candid';
 
 import { createExtendedActorClass } from '../actorFactory';
-import defaultMethods, { InternalTokenMethods, TokenServiceExtended } from './methods';
+import defaultMethods, {
+  InternalTokenMethods,
+  TokenServiceExtended,
+} from './methods';
 import xtcMethods from './xtcMethods';
 import extMethods from './extMethods';
 import dip20Methods from './dip20Methods';
 import extIDL from '../../../idls/ext.did';
 import xtcIDL from '../../../idls/xtc.did';
-import dip20IDL from '../../../idls/dip20.did'
-import { XTC_ID } from '../constants';
+import dip20IDL from '../../../idls/dip20.did';
+import { TOKENS } from '../../../constants/tokens';
+import { StandardToken } from '../../../interfaces/ext';
 
-
-const getMethods = (standard: string): InternalTokenMethods => ({
-  xtc: xtcMethods,
-  ext: extMethods,
-  dip20: dip20Methods
-})[standard] || defaultMethods
+const getMethods = (standard: string): InternalTokenMethods =>
+  ({
+    xtc: xtcMethods,
+    ext: extMethods,
+    dip20: dip20Methods,
+  }[standard] || defaultMethods);
 
 const getIdl = (standard: string): IDL.InterfaceFactory => {
   const idl = {
     xtc: xtcIDL,
     ext: extIDL,
     dip20: dip20IDL,
-  }[standard]
+  }[standard];
   if (!idl) throw new Error('Standard Not Implemented');
   return idl;
-}
+};
 
 export const createTokenActor = async (
   canisterId: string | Principal,
   agent: HttpAgent,
-  standard: string,
+  standard: string
 ): Promise<ActorSubclass<TokenServiceExtended>> => {
   const idl = getIdl(standard);
 
@@ -44,6 +48,20 @@ export const createTokenActor = async (
   ))() as unknown) as ActorSubclass<TokenServiceExtended>;
   return actor;
 };
+
+export const formatStorageTokens = (
+  tokens: any[]
+): { [tokenCanister: string]: StandardToken } =>
+  Object.values(tokens).reduce(
+    (acum, token) => ({
+      ...acum,
+      [token.canisterId]: {
+        ...token,
+        standard: TOKENS?.[token.symbol]?.standard || 'ext',
+      },
+    }),
+    {}
+  );
 
 export default {};
 

@@ -15,7 +15,7 @@ import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
-import { createTokenActor, SendResponse } from '../utils/dfx/token';
+import { createTokenActor, formatStorageTokens, SendResponse } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import {
   getICPTransactions,
@@ -119,10 +119,10 @@ class PlugWallet {
     this.icon = icon;
     this.walletNumber = walletNumber;
     this.assets = assets;
-    this.registeredTokens = {
+    this.registeredTokens = formatStorageTokens({
       ...registeredTokens,
       [TOKENS.XTC.canisterId]: TOKENS.XTC,
-    };
+    } as any);
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
