@@ -4,15 +4,17 @@ import { ActorSubclass } from '@dfinity/agent';
 
 import Dip20Service from '../../../interfaces/dip20';
 import { Metadata } from '../../../interfaces/ext';
-import { BurnParams, InternalTokenMethods, SendParams } from './methods';
-import { SendResponse } from '.';
+import {
+  BurnParams,
+  InternalTokenMethods,
+  SendParams,
+  SendResponse,
+} from './methods';
 
 const send = async (
   actor: ActorSubclass<Dip20Service>,
-  {
-    to,
-    amount
-  }: SendParams): Promise<SendResponse> => {
+  { to, amount }: SendParams
+): Promise<SendResponse> => {
   const transferResult = await actor.transfer(Principal.fromText(to), amount);
 
   if ('ok' in transferResult) return { transactionId: transferResult.ok };
@@ -40,8 +42,16 @@ const getMetadata = async (
   };
 };
 
-const burnXTC = async (_actor: ActorSubclass<Dip20Service>, _params: BurnParams) => {
+const burnXTC = async (
+  _actor: ActorSubclass<Dip20Service>,
+  _params: BurnParams
+) => {
   throw new Error('BURN NOT SUPPORTED');
-}
+};
 
-export default { send, getMetadata, getBalance, burnXTC } as InternalTokenMethods;
+export default {
+  send,
+  getMetadata,
+  getBalance,
+  burnXTC,
+} as InternalTokenMethods;

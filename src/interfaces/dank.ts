@@ -1,17 +1,21 @@
+/* eslint-disable @typescript-eslint/class-name-casing */
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/camelcase */
 import type { Principal } from '@dfinity/principal';
+
 export interface AllowanceRule {
   'max_portion' : [] | [bigint],
   'max_allowed_calls_per_day' : [] | [number],
   'stop_threshold' : [] | [bigint],
   'max_cycles' : [] | [bigint],
-};
+}
 export interface Event {
   'fee' : bigint,
   'status' : TransactionStatus,
   'detail' : EventDetail,
   'timestamp' : bigint,
   'amount' : bigint,
-};
+}
 export type EventDetail = {
     'Withdraw' : { 'to' : Principal, 'from' : Principal }
   } |
@@ -23,7 +27,7 @@ export type EventDetail = {
 export interface EventsConnection {
   'data' : Array<Event>,
   'next_canister_id' : [] | [Principal],
-};
+}
 export type GetTransactionResult = { 'None' : null } |
   { 'Some' : Event };
 export type ResultCall = { 'Ok' : { 'return' : Array<number> } } |
@@ -70,4 +74,4 @@ export default interface _SERVICE {
   'withdraw' : (
       arg_0: { 'canister_id' : Principal, 'amount' : bigint },
     ) => Promise<WithdrawResult>,
-};
+}

@@ -4,16 +4,16 @@ import { ActorSubclass } from '@dfinity/agent';
 
 import XtcService from '../../../interfaces/xtc';
 import { Metadata } from '../../../interfaces/ext';
-import { InternalTokenMethods, SendParams } from './methods';
-import { SendResponse } from '.';
+import { InternalTokenMethods, SendParams, SendResponse } from './methods';
 
 const send = async (
   actor: ActorSubclass<XtcService>,
-  {
-    to,
+  { to, amount }: SendParams
+): Promise<SendResponse> => {
+  const transferResult = await actor.transferErc20(
+    Principal.fromText(to),
     amount
-  }: SendParams): Promise<SendResponse> => {
-  const transferResult = await actor.transferErc20(Principal.fromText(to), amount);
+  );
 
   if ('Ok' in transferResult) return { transactionId: transferResult.Ok };
 
@@ -43,4 +43,9 @@ const getMetadata = async (
 const burnXTC = async (actor: ActorSubclass<XtcService>, { to, amount }) =>
   actor.burn({ canister_id: to, amount });
 
-export default { send, getMetadata, getBalance, burnXTC } as InternalTokenMethods;
+export default {
+  send,
+  getMetadata,
+  getBalance,
+  burnXTC,
+} as InternalTokenMethods;

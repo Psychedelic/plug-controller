@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/class-name-casing */
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/camelcase */
 export default ({ IDL }) => {
   const AccountIdentifier = IDL.Text;
   const AttachCanisterRequest = IDL.Record({
@@ -78,8 +81,8 @@ export default ({ IDL }) => {
   const Transfer = IDL.Variant({
     Burn: IDL.Record({ amount: ICPTs }),
     Mint: IDL.Record({ amount: ICPTs }),
-    Send: Send,
-    Receive: Receive,
+    Send,
+    Receive,
   });
   const Transaction = IDL.Record({
     memo: IDL.Nat64,

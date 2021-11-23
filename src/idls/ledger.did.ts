@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/class-name-casing */
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/camelcase */
 export default ({ IDL }) => {
   const AccountIdentifier = IDL.Text;
   const Duration = IDL.Record({ secs: IDL.Nat64, nanos: IDL.Nat32 });
