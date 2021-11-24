@@ -165,7 +165,7 @@ class PlugKeyRing {
     subAccount,
   }: {
     to: string;
-    amount: bigint;
+    amount: string;
     subAccount: number;
   }): Promise<BurnResult> => {
     this.checkUnlocked();
@@ -318,7 +318,7 @@ class PlugKeyRing {
   public getTokenInfo = async (
     canisterId: string,
     subAccount?: number
-  ): Promise<{ token: StandardToken; amount: bigint }> => {
+  ): Promise<{ token: StandardToken; amount: string }> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
@@ -351,7 +351,7 @@ class PlugKeyRing {
 
   public send = async (
     to: string,
-    amount: bigint,
+    amount: string,
     canisterId?: string,
     opts?: SendOpts
   ): Promise<SendResponse> => {

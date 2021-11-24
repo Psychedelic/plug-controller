@@ -5,29 +5,14 @@ import { ActorSubclass } from '@dfinity/agent';
 import Dip20Service from '../../../interfaces/dip20';
 import { Metadata } from '../../../interfaces/ext';
 import {
+  Balance,
   BurnParams,
+  getDecimals,
   InternalTokenMethods,
+  parseAmountToSend,
   SendParams,
   SendResponse,
 } from './methods';
-
-const send = async (
-  actor: ActorSubclass<Dip20Service>,
-  { to, amount }: SendParams
-): Promise<SendResponse> => {
-  const transferResult = await actor.transfer(Principal.fromText(to), amount);
-
-  if ('ok' in transferResult) return { transactionId: transferResult.ok };
-
-  throw new Error(Object.keys(transferResult.err)[0]);
-};
-
-const getBalance = (
-  actor: ActorSubclass<Dip20Service>,
-  user: Principal
-): Promise<bigint> => {
-  return actor.balanceOf(user);
-};
 
 const getMetadata = async (
   actor: ActorSubclass<Dip20Service>
@@ -40,6 +25,34 @@ const getMetadata = async (
       name: metadataResult.name,
     },
   };
+};
+
+const send = async (
+  actor: ActorSubclass<Dip20Service>,
+  { to, amount }: SendParams
+): Promise<SendResponse> => {
+  const decimals = getDecimals(await getMetadata(actor));
+
+  const parsedAmount = parseAmountToSend(amount, decimals);
+
+  const transferResult = await actor.transfer(
+    Principal.fromText(to),
+    parsedAmount
+  );
+
+  if ('ok' in transferResult)
+    return { transactionId: transferResult.ok.toString() };
+
+  throw new Error(Object.keys(transferResult.err)[0]);
+};
+
+const getBalance = async (
+  actor: ActorSubclass<Dip20Service>,
+  user: Principal
+): Promise<Balance> => {
+  const decimals = getDecimals(await getMetadata(actor));
+  const value = (await actor.balanceOf(user)).toString();
+  return { value, decimals };
 };
 
 const burnXTC = async (

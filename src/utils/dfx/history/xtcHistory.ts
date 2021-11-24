@@ -1,10 +1,12 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-underscore-dangle */
 import axios from 'axios';
+import { parseBalance } from '../token';
 
 import { GetTransactionsResponse, InferredTransaction } from './rosetta';
 
 const KYASHU_URL = 'https://kyasshu.fleek.co';
+const XTC_DECIMALS = 5;
 
 type TransactionKind =
   | {
@@ -129,11 +131,17 @@ const formatXTCTransaction = (
   transaction.hash = xtcTransaction.txnId;
   transaction.timestamp = xtcTransaction.event.timestamp;
   const details = {
-    amount: BigInt(transactionEvent.cycles),
-    currency: { symbol: 'XTC', decimals: 5 },
+    amount: parseBalance({
+      value: transactionEvent.cycles.toString(),
+      decimals: XTC_DECIMALS,
+    }),
+    currency: { symbol: 'XTC', decimals: XTC_DECIMALS },
     fee: {
-      amount: BigInt(transactionEvent.fee),
-      currency: { symbol: 'XTC', decimals: 5 },
+      amount: parseBalance({
+        value: transactionEvent.fee.toString(),
+        decimals: XTC_DECIMALS,
+      }),
+      currency: { symbol: 'XTC', decimals: XTC_DECIMALS },
     },
     status: 'COMPLETED',
   };
