@@ -19,6 +19,7 @@ import {
   createTokenActor,
   parseBalance,
   SendResponse,
+  formatStorageTokens,
 } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import {
