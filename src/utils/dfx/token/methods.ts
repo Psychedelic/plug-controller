@@ -5,24 +5,29 @@ import { Metadata } from '../../../interfaces/ext';
 import { BurnResult } from '../../../interfaces/xtc';
 
 export type SendResponse =
-  | { height: bigint }
-  | { amount: bigint }
-  | { transactionId: bigint };
+  | { height: string }
+  | { amount: string }
+  | { transactionId: string };
 
 export interface SendParams {
   to: string;
   from: string;
-  amount: bigint;
+  amount: string;
 }
 
 export interface BurnParams {
   to: Principal;
-  amount: bigint;
+  amount: string;
+}
+
+export interface Balance {
+  value: string;
+  decimals: number;
 }
 export interface TokenServiceExtended {
   send: ({ to, from, amount }: SendParams) => Promise<SendResponse>;
   getMetadata: () => Promise<Metadata>;
-  getBalance: (user: Principal) => Promise<bigint>;
+  getBalance: (user: Principal) => Promise<Balance>;
   burnXTC: ({ to, amount }: BurnParams) => Promise<BurnResult>;
 }
 
@@ -32,7 +37,7 @@ export interface InternalTokenMethods {
     { to, from, amount }: SendParams
   ) => Promise<SendResponse>;
   getMetadata: (actor: ActorSubclass<any>) => Promise<Metadata>;
-  getBalance: (actor: ActorSubclass<any>, user: Principal) => Promise<bigint>;
+  getBalance: (actor: ActorSubclass<any>, user: Principal) => Promise<Balance>;
   burnXTC: (
     actor: ActorSubclass<any>,
     { to, amount }: BurnParams
@@ -53,12 +58,20 @@ const getMetadata = async (_actor: ActorSubclass<any>): Promise<Metadata> => {
 const getBalance = async (
   _actor: ActorSubclass<any>,
   _user: Principal
-): Promise<bigint> => {
+): Promise<Balance> => {
   throw Error('Standard Not Implemented');
 };
 
 const burnXTC = async (_actor: ActorSubclass<any>, _params: BurnParams) => {
   throw Error('Standard Not Implemented');
+};
+
+export const getDecimals = (metadata: Metadata): number => {
+  return 'fungible' in metadata ? metadata.fungible.decimals : 0;
+};
+
+export const parseAmountToSend = (amount: string, decimals: number): bigint => {
+  return BigInt(parseFloat(amount) * 10 ** decimals);
 };
 
 export default {
