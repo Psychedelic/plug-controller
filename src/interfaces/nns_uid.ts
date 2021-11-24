@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/class-name-casing */
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/camelcase */
 import { Principal } from '@dfinity/principal';
 
 export interface AccountDetails {

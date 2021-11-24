@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/class-name-casing */
+/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/camelcase */
 import { IDL } from '@dfinity/candid';
 
 const walletIDLFactory: IDL.InterfaceFactory = ({ IDL }) => {
