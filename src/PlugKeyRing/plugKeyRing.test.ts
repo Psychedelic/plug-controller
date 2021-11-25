@@ -717,7 +717,7 @@ describe('Plug KeyRing', () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = wallets[ind].principal;
 
-      await keyRing.send(to.toString(), amount);
+      await keyRing.send(to.toString(), amount.toString());
       expect(createAgent).toHaveBeenCalled();
     });
     it('call sendICP with to account', async () => {
@@ -726,9 +726,11 @@ describe('Plug KeyRing', () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = getAccountId(Principal.fromText(wallets[ind].principal));
 
-      await keyRing.send(to, amount);
+      await keyRing.send(to, amount.toString());
       expect(createAgent).toHaveBeenCalled();
-      expect(mockSendICP.mock.calls[0][0].amount).toEqual(amount);
+      expect(mockSendICP.mock.calls[0][0].amount.toString()).toEqual(
+        amount.toString()
+      );
       expect(mockSendICP.mock.calls[0][0].to).toEqual(to);
     });
 
@@ -738,9 +740,11 @@ describe('Plug KeyRing', () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = wallets[ind].principal;
 
-      await keyRing.send(to.toString(), amount);
+      await keyRing.send(to.toString(), amount.toString());
       expect(createAgent).toHaveBeenCalled();
-      expect(mockSendICP.mock.calls[0][0].amount).toEqual(amount);
+      expect(mockSendICP.mock.calls[0][0].amount.toString()).toEqual(
+        amount.toString()
+      );
       expect(mockSendICP.mock.calls[0][0].to).toEqual(
         getAccountId(Principal.fromText(to))
       );
