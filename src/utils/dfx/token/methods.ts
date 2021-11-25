@@ -3,6 +3,7 @@ import { Principal } from '@dfinity/principal';
 
 import { Metadata } from '../../../interfaces/ext';
 import { BurnResult } from '../../../interfaces/xtc';
+import { OldMethodsExtendedActor } from '../actorFactory';
 
 export type SendResponse =
   | { height: string }
@@ -24,12 +25,15 @@ export interface Balance {
   value: string;
   decimals: number;
 }
-export interface TokenServiceExtended {
+
+interface AddedMehtodsToken {
   send: ({ to, from, amount }: SendParams) => Promise<SendResponse>;
   getMetadata: () => Promise<Metadata>;
   getBalance: (user: Principal) => Promise<Balance>;
   burnXTC: ({ to, amount }: BurnParams) => Promise<BurnResult>;
 }
+
+export type TokenServiceExtended<T> = OldMethodsExtendedActor<T> & AddedMehtodsToken
 
 export interface InternalTokenMethods {
   send: (

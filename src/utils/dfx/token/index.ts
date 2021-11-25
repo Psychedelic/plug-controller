@@ -34,11 +34,11 @@ const getIdl = (standard: string): IDL.InterfaceFactory => {
   return idl;
 };
 
-export const createTokenActor = async (
+export const createTokenActor = async <T>(
   canisterId: string | Principal,
   agent: HttpAgent,
   standard: string
-): Promise<ActorSubclass<TokenServiceExtended>> => {
+): Promise<ActorSubclass<TokenServiceExtended<T>>> => {
   const idl = getIdl(standard);
 
   const actor = (new (createExtendedActorClass(
@@ -46,7 +46,7 @@ export const createTokenActor = async (
     getMethods(standard),
     canisterId,
     idl
-  ))() as unknown) as ActorSubclass<TokenServiceExtended>;
+  ))() as unknown) as ActorSubclass<TokenServiceExtended<any>>;
   return actor;
 };
 
