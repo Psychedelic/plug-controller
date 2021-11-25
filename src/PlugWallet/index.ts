@@ -287,9 +287,7 @@ class PlugWallet {
     // Get ICP Balance
     const agent = await createAgent({ secretKey, fetch: this.fetch });
     const ledger = await createLedgerActor(agent);
-    console.log('getting ledger balance');
     const icpBalance = await ledger.getBalance(this.accountId);
-    console.log('ledger balance: ', icpBalance);
     // Add XTC if it was not in the first place (backwards compatibility)
     this.registeredTokens[TOKENS.XTC.canisterId] = TOKENS.XTC;
     // Get Custom Token Balances
