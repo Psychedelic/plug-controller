@@ -3,6 +3,7 @@ import { Principal } from '@dfinity/principal';
 import { ERRORS } from '../../../errors';
 
 import ExtService, { Metadata } from '../../../interfaces/ext';
+import { BaseMethodsExtendedActor } from '../actorFactory';
 import {
   Balance,
   BurnParams,
@@ -11,17 +12,21 @@ import {
   SendParams,
   SendResponse,
   parseAmountToSend,
+  TokenServiceExtended,
 } from './methods';
 
+type BaseExtService = BaseMethodsExtendedActor<ExtService>
+
 const getMetadata = async (
-  actor: ActorSubclass<ExtService>
+  actor: ActorSubclass<BaseExtService>
 ): Promise<Metadata> => {
+  actor._balance
   const token = Actor.canisterIdOf(actor).toText();
 
-  const extensions = await actor.extensions();
+  const extensions = await actor._extensions();
   if (!extensions.includes('@ext/common'))
     throw new Error(ERRORS.TOKEN_NOT_SUPPORT_METADATA);
-  const metadataResult = await actor.metadata(token);
+  const metadataResult = await actor._metadata(token);
 
   if ('ok' in metadataResult) return metadataResult.ok;
 
@@ -29,7 +34,7 @@ const getMetadata = async (
 };
 
 const send = async (
-  actor: ActorSubclass<ExtService>,
+  actor: ActorSubclass<BaseExtService>,
   { to, from, amount }: SendParams
 ): Promise<SendResponse> => {
   const dummyMemmo = new Array(32).fill(0);
@@ -49,7 +54,7 @@ const send = async (
     fee: BigInt(1),
   };
 
-  const transferResult = await actor.transfer(data);
+  const transferResult = await actor._transfer(data);
 
   if ('ok' in transferResult) return { amount: transferResult.ok.toString() };
 
@@ -57,12 +62,12 @@ const send = async (
 };
 
 const getBalance = async (
-  actor: ActorSubclass<ExtService>,
+  actor: ActorSubclass<BaseExtService>,
   user: Principal
 ): Promise<Balance> => {
   const token = Actor.canisterIdOf(actor).toText();
 
-  const balanceResult = await actor.balance({
+  const balanceResult = await actor._balance({
     token,
     user: { principal: user },
   });
@@ -76,7 +81,7 @@ const getBalance = async (
 };
 
 const burnXTC = async (
-  _actor: ActorSubclass<ExtService>,
+  _actor: ActorSubclass<BaseExtService>,
   _params: BurnParams
 ) => {
   throw new Error('BURN NOT SUPPORTED');

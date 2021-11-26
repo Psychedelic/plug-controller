@@ -13,11 +13,14 @@ import {
   SendParams,
   SendResponse,
 } from './methods';
+import { BaseMethodsExtendedActor } from '../actorFactory';
+
+type BaseDip20Service = BaseMethodsExtendedActor<Dip20Service>;
 
 const getMetadata = async (
-  actor: ActorSubclass<Dip20Service>
+  actor: ActorSubclass<BaseDip20Service>
 ): Promise<Metadata> => {
-  const metadataResult = await actor.getMetadata();
+  const metadataResult = await actor._getMetadata();
   return {
     fungible: {
       symbol: metadataResult.symbol,
@@ -28,14 +31,14 @@ const getMetadata = async (
 };
 
 const send = async (
-  actor: ActorSubclass<Dip20Service>,
+  actor: ActorSubclass<BaseDip20Service>,
   { to, amount }: SendParams
 ): Promise<SendResponse> => {
   const decimals = getDecimals(await getMetadata(actor));
 
   const parsedAmount = parseAmountToSend(amount, decimals);
 
-  const transferResult = await actor.transfer(
+  const transferResult = await actor._transfer(
     Principal.fromText(to),
     parsedAmount
   );
@@ -47,16 +50,16 @@ const send = async (
 };
 
 const getBalance = async (
-  actor: ActorSubclass<Dip20Service>,
+  actor: ActorSubclass<BaseDip20Service>,
   user: Principal
 ): Promise<Balance> => {
   const decimals = getDecimals(await getMetadata(actor));
-  const value = (await actor.balanceOf(user)).toString();
+  const value = (await actor._balanceOf(user)).toString();
   return { value, decimals };
 };
 
 const burnXTC = async (
-  _actor: ActorSubclass<Dip20Service>,
+  _actor: ActorSubclass<BaseDip20Service>,
   _params: BurnParams
 ) => {
   throw new Error('BURN NOT SUPPORTED');
