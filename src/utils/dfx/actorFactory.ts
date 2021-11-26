@@ -4,7 +4,7 @@ import { Principal } from '@dfinity/principal';
 
 type ExtendedActorConstructor = new () => ActorSubclass;
 
-export type OldMethodsExtendedActor<T> = {
+export type BaseMethodsExtendedActor<T> = {
   [K in keyof T as `_${Uncapitalize<string & K>}`]: T[K];
 }
 

@@ -3,7 +3,7 @@ import { Principal } from '@dfinity/principal';
 import { ERRORS } from '../../../errors';
 
 import ExtService, { Metadata } from '../../../interfaces/ext';
-import { OldMethodsExtendedActor } from '../actorFactory';
+import { BaseMethodsExtendedActor } from '../actorFactory';
 import {
   Balance,
   BurnParams,
@@ -15,10 +15,10 @@ import {
   TokenServiceExtended,
 } from './methods';
 
-type OldExtService = OldMethodsExtendedActor<ExtService>
+type BaseExtService = BaseMethodsExtendedActor<ExtService>
 
 const getMetadata = async (
-  actor: ActorSubclass<OldExtService>
+  actor: ActorSubclass<BaseExtService>
 ): Promise<Metadata> => {
   actor._balance
   const token = Actor.canisterIdOf(actor).toText();
@@ -34,7 +34,7 @@ const getMetadata = async (
 };
 
 const send = async (
-  actor: ActorSubclass<OldExtService>,
+  actor: ActorSubclass<BaseExtService>,
   { to, from, amount }: SendParams
 ): Promise<SendResponse> => {
   const dummyMemmo = new Array(32).fill(0);
@@ -62,7 +62,7 @@ const send = async (
 };
 
 const getBalance = async (
-  actor: ActorSubclass<OldExtService>,
+  actor: ActorSubclass<BaseExtService>,
   user: Principal
 ): Promise<Balance> => {
   const token = Actor.canisterIdOf(actor).toText();
@@ -81,7 +81,7 @@ const getBalance = async (
 };
 
 const burnXTC = async (
-  _actor: ActorSubclass<OldExtService>,
+  _actor: ActorSubclass<BaseExtService>,
   _params: BurnParams
 ) => {
   throw new Error('BURN NOT SUPPORTED');

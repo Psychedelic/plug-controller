@@ -13,12 +13,12 @@ import {
   SendParams,
   SendResponse,
 } from './methods';
-import { OldMethodsExtendedActor } from '../actorFactory';
+import { BaseMethodsExtendedActor } from '../actorFactory';
 
-type OldXtcService = OldMethodsExtendedActor<XtcService>
+type BaseXtcService = BaseMethodsExtendedActor<XtcService>
 
 const getMetadata = async (
-  actor: ActorSubclass<OldXtcService>
+  actor: ActorSubclass<BaseXtcService>
 ): Promise<Metadata> => {
   const metadataResult = await actor._meta();
   return {
@@ -31,7 +31,7 @@ const getMetadata = async (
 };
 
 const send = async (
-  actor: ActorSubclass<OldXtcService>,
+  actor: ActorSubclass<BaseXtcService>,
   { to, amount }: SendParams
 ): Promise<SendResponse> => {
   const decimals = getDecimals(await getMetadata(actor));
@@ -49,7 +49,7 @@ const send = async (
 };
 
 const getBalance = async (
-  actor: ActorSubclass<OldXtcService>,
+  actor: ActorSubclass<BaseXtcService>,
   user: Principal
 ): Promise<Balance> => {
   const decimals = getDecimals(await getMetadata(actor));
@@ -58,7 +58,7 @@ const getBalance = async (
 };
 
 const burnXTC = async (
-  actor: ActorSubclass<OldXtcService>,
+  actor: ActorSubclass<BaseXtcService>,
   { to, amount }: BurnParams
 ): Promise<BurnResult> => {
   const decimals = getDecimals(await getMetadata(actor));

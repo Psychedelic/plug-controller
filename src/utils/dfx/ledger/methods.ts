@@ -5,7 +5,7 @@ import { ActorSubclass } from '@dfinity/agent';
 
 import LedgerService, { TimeStamp } from '../../../interfaces/ledger';
 import { Balance } from '../token/methods';
-import { OldMethodsExtendedActor } from '../actorFactory';
+import { BaseMethodsExtendedActor } from '../actorFactory';
 
 const DECIMALS = 8;
 
@@ -22,14 +22,14 @@ interface SendICPArgs {
   opts?: SendOpts;
 }
 
-type OldLedgerService = OldMethodsExtendedActor<LedgerService>
-export interface LedgerServiceExtended extends OldLedgerService {
+type BaseLedgerService = BaseMethodsExtendedActor<LedgerService>
+export interface LedgerServiceExtended extends BaseLedgerService {
   sendICP: (args_0: SendICPArgs) => Promise<string>;
   getBalance: (accountId: string) => Promise<Balance>;
 }
 
 const sendICP = async (
-  actor: ActorSubclass<OldLedgerService>,
+  actor: ActorSubclass<BaseLedgerService>,
   args: SendICPArgs
 ): Promise<bigint> => {
   const { to, amount, opts } = args;
@@ -49,7 +49,7 @@ const sendICP = async (
 };
 
 const getBalance = async (
-  actor: ActorSubclass<OldLedgerService>,
+  actor: ActorSubclass<BaseLedgerService>,
   accountId: string
 ): Promise<Balance> => {
   const balance = await actor._account_balance_dfx({ account: accountId });

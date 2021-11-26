@@ -6,15 +6,15 @@ import { ActorSubclass } from '@dfinity/agent';
 import NNSService, {
   GetTransactionsResponse,
 } from '../../../interfaces/nns_uid';
-import { OldMethodsExtendedActor } from '../actorFactory';
+import { BaseMethodsExtendedActor } from '../actorFactory';
 
-type OldNNSService = OldMethodsExtendedActor<NNSService>
-export interface NNSServiceExtended extends OldNNSService {
+type BaseNNSService = BaseMethodsExtendedActor<NNSService>
+export interface NNSServiceExtended extends BaseNNSService {
   getTransactions: (accountId: string) => Promise<GetTransactionsResponse>;
 }
 
 const getTransactions = (
-  actor: ActorSubclass<OldNNSService>,
+  actor: ActorSubclass<BaseNNSService>,
   accountId: string
 ): Promise<GetTransactionsResponse> => {
   return actor._get_transactions({

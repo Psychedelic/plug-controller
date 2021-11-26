@@ -13,12 +13,12 @@ import {
   SendParams,
   SendResponse,
 } from './methods';
-import { OldMethodsExtendedActor } from '../actorFactory';
+import { BaseMethodsExtendedActor } from '../actorFactory';
 
-type OldDip20Service = OldMethodsExtendedActor<Dip20Service>;
+type BaseDip20Service = BaseMethodsExtendedActor<Dip20Service>;
 
 const getMetadata = async (
-  actor: ActorSubclass<OldDip20Service>
+  actor: ActorSubclass<BaseDip20Service>
 ): Promise<Metadata> => {
   const metadataResult = await actor._getMetadata();
   return {
@@ -31,7 +31,7 @@ const getMetadata = async (
 };
 
 const send = async (
-  actor: ActorSubclass<OldDip20Service>,
+  actor: ActorSubclass<BaseDip20Service>,
   { to, amount }: SendParams
 ): Promise<SendResponse> => {
   const decimals = getDecimals(await getMetadata(actor));
@@ -50,7 +50,7 @@ const send = async (
 };
 
 const getBalance = async (
-  actor: ActorSubclass<OldDip20Service>,
+  actor: ActorSubclass<BaseDip20Service>,
   user: Principal
 ): Promise<Balance> => {
   const decimals = getDecimals(await getMetadata(actor));
@@ -59,7 +59,7 @@ const getBalance = async (
 };
 
 const burnXTC = async (
-  _actor: ActorSubclass<OldDip20Service>,
+  _actor: ActorSubclass<BaseDip20Service>,
   _params: BurnParams
 ) => {
   throw new Error('BURN NOT SUPPORTED');
