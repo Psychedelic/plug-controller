@@ -5,7 +5,7 @@ import { ERRORS } from '../../../errors';
 import { NET_ID, ROSETTA_URL } from '../constants';
 import { parseBalance } from '../token';
 
-export const MILI_PER_SECOND = 1_000_000;
+export const MILI_PER_SECOND = 1000000;
 
 interface Operation {
   account: {

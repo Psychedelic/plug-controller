@@ -1,8 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable camelcase */
-
-import RandomBigInt from 'random-bigint';
 import { ActorSubclass } from '@dfinity/agent';
 
 import LedgerService, { TimeStamp } from '../../../interfaces/ledger';
@@ -35,7 +33,7 @@ const sendICP = async (
   const { to, amount, opts } = args;
   const defaultArgs = {
     fee: BigInt(10000),
-    memo: RandomBigInt(32),
+    memo: BigInt(0),
   };
   const parsedAmount = BigInt(parseFloat(amount) * 10 ** DECIMALS);
   return actor.send_dfx({
