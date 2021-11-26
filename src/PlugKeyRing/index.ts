@@ -317,8 +317,8 @@ class PlugKeyRing {
 
   public getTokenInfo = async (
     canisterId: string,
+    standard = 'ext',
     subAccount?: number,
-    standard?: string
   ): Promise<{ token: StandardToken; amount: string }> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
