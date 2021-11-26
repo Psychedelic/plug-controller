@@ -56,7 +56,7 @@
     "typescript": "^4.5"
   },
   "name": "@psychedelic/plug-controller",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "Internet Computer Plug wallet's controller",
   "main": "dist/index.js",
   "scripts": {
@@ -66,7 +66,8 @@
     "test": "export NODE_ENV='test' && jest",
     "lint": "eslint --ext ts,js ./src",
     "watch": "tsc --watch",
-    "publish": "npm run build && npm publish"
+    "publish": "npm run build && npm publish",
+    "postinstall": "npx patch-package --use-yarn"
   },
   "repository": {
     "type": "git",
