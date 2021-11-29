@@ -9,7 +9,7 @@ index d97a72b..9caed53 100644
 -        const min = BigInt(2) ** BigInt(this._bits - 1) * BigInt(-1);
 -        const max = BigInt(2) ** BigInt(this._bits - 1) - BigInt(1);
 +        const min = Math.pow(2, this._bits - 1) * BigInt(-1);
-+        const max = Math.pow(2, this._bits - 1) - BigInt(-1);
++        const max = Math.pow(2, this._bits - 1) - BigInt(1);
          if (typeof x === 'bigint') {
              return x >= min && x <= max;
          }
@@ -21,4 +21,35 @@ index d97a72b..9caed53 100644
 +        const max = Math.pow(2, this.bits);
          if (typeof x === 'bigint' && x >= BigInt(0)) {
              return x < max;
+         }
+diff --git a/node_modules/@dfinity/candid/lib/cjs/utils/leb128.js b/node_modules/@dfinity/candid/lib/cjs/utils/leb128.js
+index aacdb30..1bec0f1 100644
+--- a/node_modules/@dfinity/candid/lib/cjs/utils/leb128.js
++++ b/node_modules/@dfinity/candid/lib/cjs/utils/leb128.js
+@@ -34,8 +34,9 @@ function lebEncode(value) {
+     const pipe = new buffer_pipe_1.default();
+     while (true) {
+         const i = Number(value & BigInt(0x7f));
+-        value /= BigInt(0x80);
+-        if (value === BigInt(0)) {
++        value = BigInt(Math.floor(Number(value / BigInt(0x80)))); // Esto me esta dando decimal, tengo que trucnar
++        console.log('parsed leb value', value, value.equals(BigInt(0)));
++        if (value.equals(BigInt(0))) {
+             pipe.write([i]);
+             break;
+         }
+@@ -79,10 +80,11 @@ function slebEncode(value) {
+     const pipe = new buffer_pipe_1.default();
+     while (true) {
+         const i = getLowerBytes(value);
+-        value /= BigInt(0x80);
++        value = BigInt(Math.floor(Number(value / BigInt(0x80)))); // Esto me esta dando decimal, tengo que trucnar
++        console.log('parsed sleb value', value, 'equals', value.equals(BigInt(0)));
+         // prettier-ignore
+-        if ((isNeg && value === BigInt(0) && (i & 0x40) !== 0)
+-            || (!isNeg && value === BigInt(0) && (i & 0x40) === 0)) {
++        if ((isNeg && value.equals(BigInt(0)) && (i & 0x40) !== 0)
++            || (!isNeg && value.equals(BigInt(0)) && (i & 0x40) === 0)) {
+             pipe.write([i]);
+             break;
          }
