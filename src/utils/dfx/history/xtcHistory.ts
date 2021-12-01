@@ -6,7 +6,7 @@ import { parseBalance } from '../token';
 import { GetTransactionsResponse, InferredTransaction } from './rosetta';
 
 const KYASHU_URL = 'https://kyasshu.fleek.co';
-const XTC_DECIMALS = 5;
+const XTC_DECIMALS = 12;
 
 type TransactionKind =
   | {
