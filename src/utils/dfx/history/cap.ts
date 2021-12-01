@@ -6,6 +6,8 @@ import {
   prettifyCapTransactions,
   TransactionPrettified,
 } from '@psychedelic/cap-js';
+import crossFetch from 'cross-fetch';
+
 import { getCanisterInfo } from '../../dab';
 import { InferredTransaction } from './rosetta';
 
@@ -68,10 +70,15 @@ const formatTransaction = (
   caller: parsePrincipal(transaction.caller) || '',
 });
 
-export const getCapTransactions = async (
+export const getCapTransactions = async ({
+  principalId,
+  lastEvaluatedKey,
+  fetch,
+} :{
   principalId: string,
-  lastEvaluatedKey?: string
-): Promise<GetUserTransactionResponse> => {
+  lastEvaluatedKey?: string,
+  fetch?: typeof crossFetch,
+}): Promise<GetUserTransactionResponse> => {
   const url = `${KYASHU_URL}/cap/user/txns/${principalId}${
     lastEvaluatedKey ? `?LastEvaluatedKey=${lastEvaluatedKey}` : ''
   }`;
@@ -86,7 +93,7 @@ export const getCapTransactions = async (
       canisterIds.map(async canisterId => {
         let canisterInfo = { canisterId };
         try {
-          const fetchedCanisterInfo = await getCanisterInfo(canisterId);
+          const fetchedCanisterInfo = await getCanisterInfo({ canisterId, fetch });
           canisterInfo = { canisterId, ...fetchedCanisterInfo };
         } catch (error) {
           /* eslint-disable-next-line */

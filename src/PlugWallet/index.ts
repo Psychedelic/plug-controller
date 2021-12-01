@@ -356,7 +356,7 @@ class PlugWallet {
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
     const icpTrxs = await getICPTransactions(this.accountId);
     const xtcTransactions = await getXTCTransactions(this.principal);
-    const capTransactions = await getCapTransactions(this.principal);
+    const capTransactions = await getCapTransactions({ principalId: this.principal, fetch: this.fetch });
     // merge and format all trx. sort by timestamp
     // TODO: any custom token impelmenting archive should be queried. (0.4.0)
     const transactions = {
