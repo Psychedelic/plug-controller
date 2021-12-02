@@ -38,14 +38,18 @@ const sendICP = async (
     memo: BigInt(0),
   };
   const parsedAmount = BigInt(parseFloat(amount) * 10 ** DECIMALS);
-  return actor._send_dfx({
+  const params = {
     to,
     fee: { e8s: opts?.fee || defaultArgs.fee },
     amount: { e8s: parsedAmount },
     memo: opts?.memo ? BigInt(opts.memo) : defaultArgs.memo,
-    from_subaccount: [], // For now, using default subaccount to handle ICP
-    created_at_time: [],
-  });
+    from_subaccount: [] as [], // For now, using default subaccount to handle ICP
+    created_at_time: [] as [],
+  };
+  console.log('send parameters');
+  console.log(params);
+  console.log(typeof parsedAmount);
+  return actor._send_dfx(params);
 };
 
 const getBalance = async (

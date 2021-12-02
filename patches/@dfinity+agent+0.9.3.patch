@@ -1,8 +1,12 @@
 diff --git a/node_modules/@dfinity/agent/lib/cjs/agent/http/index.js b/node_modules/@dfinity/agent/lib/cjs/agent/http/index.js
-index 1ae0e0b..3f1a98b 100644
+index 1ae0e0b..bb6db67 100644
 --- a/node_modules/@dfinity/agent/lib/cjs/agent/http/index.js
 +++ b/node_modules/@dfinity/agent/lib/cjs/agent/http/index.js
-@@ -151,6 +151,7 @@ class HttpAgent {
+@@ -148,9 +148,11 @@ class HttpAgent {
+         }));
+         // Apply transform for identity.
+         transformedRequest = await id.transformRequest(transformedRequest);
++        console.log('Encoding in CALL', transformedRequest.body);
          const body = cbor.encode(transformedRequest.body);
          // Run both in parallel. The fetch is quite expensive, so we have plenty of time to
          // calculate the requestId locally.
@@ -10,7 +14,7 @@ index 1ae0e0b..3f1a98b 100644
          const [response, requestId] = await Promise.all([
              this._fetch('' + new URL(`/api/v2/canister/${ecid.toText()}/call`, this._host), Object.assign(Object.assign({}, transformedRequest.request), { body })),
              request_id_1.requestIdOf(submit),
-@@ -194,6 +195,7 @@ class HttpAgent {
+@@ -194,6 +196,7 @@ class HttpAgent {
          // Apply transform for identity.
          transformedRequest = await id.transformRequest(transformedRequest);
          const body = cbor.encode(transformedRequest.body);
@@ -18,7 +22,7 @@ index 1ae0e0b..3f1a98b 100644
          const response = await this._fetch('' + new URL(`/api/v2/canister/${canister.toText()}/query`, this._host), Object.assign(Object.assign({}, transformedRequest.request), { body }));
          if (!response.ok) {
              throw new Error(`Server returned an error:\n` +
-@@ -224,6 +226,7 @@ class HttpAgent {
+@@ -224,6 +227,7 @@ class HttpAgent {
          // Apply transform for identity.
          transformedRequest = await id.transformRequest(transformedRequest);
          const body = cbor.encode(transformedRequest.body);
@@ -26,7 +30,7 @@ index 1ae0e0b..3f1a98b 100644
          const response = await this._fetch('' + new URL(`/api/v2/canister/${canister}/read_state`, this._host), Object.assign(Object.assign({}, transformedRequest.request), { body }));
          if (!response.ok) {
              throw new Error(`Server returned an error:\n` +
-@@ -238,6 +241,7 @@ class HttpAgent {
+@@ -238,6 +242,7 @@ class HttpAgent {
                  Authorization: 'Basic ' + btoa(this._credentials),
              }
              : {};
@@ -14232,7 +14236,7 @@ index 0000000..6172b7a
 +export var __wbindgen_malloc = retasmFunc.__wbindgen_malloc;
 \ No newline at end of file
 diff --git a/node_modules/@dfinity/agent/lib/cjs/vendor/bls/bls.js b/node_modules/@dfinity/agent/lib/cjs/vendor/bls/bls.js
-index 0c899c6..97c341d 100644
+index 0c899c6..fd84d09 100644
 --- a/node_modules/@dfinity/agent/lib/cjs/vendor/bls/bls.js
 +++ b/node_modules/@dfinity/agent/lib/cjs/vendor/bls/bls.js
 @@ -20,824 +20,20 @@ var __importStar = (this && this.__importStar) || function (mod) {
@@ -15111,3 +15115,4 @@ index 0c899c6..97c341d 100644
  exports.default = init;
 +
  //# sourceMappingURL=bls.js.map
+\ No newline at end of file
