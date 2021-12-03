@@ -20,7 +20,7 @@ type BaseDip20Service = BaseMethodsExtendedActor<Dip20Service>;
 const getMetadata = async (
   actor: ActorSubclass<BaseDip20Service>
 ): Promise<Metadata> => {
-  const metadataResult = await actor._getMetadata();
+  const metadataResult = await actor._getMetadta();
   return {
     fungible: {
       symbol: metadataResult.symbol,
@@ -43,10 +43,10 @@ const send = async (
     parsedAmount
   );
 
-  if ('ok' in transferResult)
-    return { transactionId: transferResult.ok.toString() };
+  if ('Ok' in transferResult)
+    return { transactionId: transferResult.Ok.toString() };
 
-  throw new Error(Object.keys(transferResult.err)[0]);
+  throw new Error(Object.keys(transferResult.Err)[0]);
 };
 
 const getBalance = async (

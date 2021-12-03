@@ -1,100 +1,74 @@
-/* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/camelcase */
 export default ({ IDL }) => {
-  const TxReceipt = IDL.Variant({
-    ok: IDL.Nat,
-    err: IDL.Variant({
-      InsufficientAllowance: IDL.Null,
-      InsufficientBalance: IDL.Null,
-    }),
+  const TxError = IDL.Variant({
+    'InsufficientAllowance' : IDL.Null,
+    'InsufficientBalance' : IDL.Null,
+    'ErrorOperationStyle' : IDL.Null,
+    'Unauthorized' : IDL.Null,
+    'LedgerTrap' : IDL.Null,
+    'ErrorTo' : IDL.Null,
+    'Other' : IDL.Null,
+    'BlockUsed' : IDL.Null,
+    'AmountTooSmall' : IDL.Null,
   });
+  const Result = IDL.Variant({ 'Ok' : IDL.Nat, 'Err' : TxError });
   const Metadata = IDL.Record({
-    fee: IDL.Nat,
-    decimals: IDL.Nat8,
-    owner: IDL.Principal,
-    logo: IDL.Text,
-    name: IDL.Text,
-    totalSupply: IDL.Nat,
-    symbol: IDL.Text,
+    'fee' : IDL.Nat,
+    'deploy_time' : IDL.Nat64,
+    'decimals' : IDL.Nat8,
+    'fee_to' : IDL.Principal,
+    'owner' : IDL.Principal,
+    'history_size' : IDL.Nat64,
+    'logo' : IDL.Text,
+    'name' : IDL.Text,
+    'total_supply' : IDL.Nat,
+    'symbol' : IDL.Text,
   });
-  const Time = IDL.Int;
   const TokenInfo = IDL.Record({
-    holderNumber: IDL.Nat,
-    deployTime: Time,
-    metadata: Metadata,
-    historySize: IDL.Nat,
-    cycles: IDL.Nat,
-    feeTo: IDL.Principal,
+    'holder_number' : IDL.Nat64,
+    'metadata' : Metadata,
+    'cycles' : IDL.Nat64,
   });
-  const Operation = IDL.Variant({
-    transferFrom: IDL.Null,
-    mint: IDL.Null,
-    approve: IDL.Null,
-    transfer: IDL.Null,
+  return IDL.Service({
+    'allowance' : IDL.Func(
+        [IDL.Principal, IDL.Principal],
+        [IDL.Nat],
+        ['query'],
+      ),
+    'approve' : IDL.Func([IDL.Principal, IDL.Nat], [Result], []),
+    'balanceOf' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
+    'decimals' : IDL.Func([], [IDL.Nat8], ['query']),
+    'getAllowanceSize' : IDL.Func([], [IDL.Nat64], ['query']),
+    'getHolders' : IDL.Func(
+        [IDL.Nat64, IDL.Nat64],
+        [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Nat))],
+        ['query'],
+      ),
+    'getLogo' : IDL.Func([], [IDL.Text], ['query']),
+    'getMetadta' : IDL.Func([], [Metadata], ['query']),
+    'getTokenInfo' : IDL.Func([], [TokenInfo], ['query']),
+    'getUserApprovals' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Nat))],
+        ['query'],
+      ),
+    'historySize' : IDL.Func([], [IDL.Nat64], ['query']),
+    'mint' : IDL.Func([IDL.Opt(IDL.Vec(IDL.Nat8)), IDL.Nat64], [Result], []),
+    'name' : IDL.Func([], [IDL.Text], ['query']),
+    'owner' : IDL.Func([], [IDL.Principal], ['query']),
+    'setFee' : IDL.Func([IDL.Nat], [], []),
+    'setFeeTo' : IDL.Func([IDL.Principal], [], []),
+    'setLogo' : IDL.Func([IDL.Text], [], []),
+    'setOwner' : IDL.Func([IDL.Principal], [], []),
+    'symbol' : IDL.Func([], [IDL.Text], ['query']),
+    'totalSupply' : IDL.Func([], [IDL.Nat], ['query']),
+    'transfer' : IDL.Func([IDL.Principal, IDL.Nat], [Result], []),
+    'transferFrom' : IDL.Func(
+        [IDL.Principal, IDL.Principal, IDL.Nat],
+        [Result],
+        [],
+      ),
+    'withdraw' : IDL.Func([IDL.Nat64, IDL.Text], [Result], []),
   });
-  const TransactionStatus = IDL.Variant({
-    inprogress: IDL.Null,
-    failed: IDL.Null,
-    succeeded: IDL.Null,
-  });
-  const TxRecord = IDL.Record({
-    op: Operation,
-    to: IDL.Principal,
-    fee: IDL.Nat,
-    status: TransactionStatus,
-    from: IDL.Principal,
-    timestamp: Time,
-    caller: IDL.Opt(IDL.Principal),
-    index: IDL.Nat,
-    amount: IDL.Nat,
-  });
-  const Token = IDL.Service({
-    allowance: IDL.Func([IDL.Principal, IDL.Principal], [IDL.Nat], ['query']),
-    approve: IDL.Func([IDL.Principal, IDL.Nat], [TxReceipt], []),
-    balanceOf: IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
-    decimals: IDL.Func([], [IDL.Nat8], ['query']),
-    getAllowanceSize: IDL.Func([], [IDL.Nat], ['query']),
-    getHolders: IDL.Func(
-      [IDL.Nat, IDL.Nat],
-      [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Nat))],
-      ['query']
-    ),
-    getMetadata: IDL.Func([], [Metadata], ['query']),
-    getTokenInfo: IDL.Func([], [TokenInfo], ['query']),
-    getTransaction: IDL.Func([IDL.Nat], [TxRecord], ['query']),
-    getTransactions: IDL.Func(
-      [IDL.Nat, IDL.Nat],
-      [IDL.Vec(TxRecord)],
-      ['query']
-    ),
-    getUserApprovals: IDL.Func(
-      [IDL.Principal],
-      [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Nat))],
-      ['query']
-    ),
-    getUserTransactionAmount: IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
-    getUserTransactions: IDL.Func(
-      [IDL.Principal, IDL.Nat, IDL.Nat],
-      [IDL.Vec(TxRecord)],
-      ['query']
-    ),
-    historySize: IDL.Func([], [IDL.Nat], ['query']),
-    logo: IDL.Func([], [IDL.Text], ['query']),
-    name: IDL.Func([], [IDL.Text], ['query']),
-    setFee: IDL.Func([IDL.Nat], [], ['oneway']),
-    setFeeTo: IDL.Func([IDL.Principal], [], ['oneway']),
-    setLogo: IDL.Func([IDL.Text], [], ['oneway']),
-    setOwner: IDL.Func([IDL.Principal], [], ['oneway']),
-    symbol: IDL.Func([], [IDL.Text], ['query']),
-    totalSupply: IDL.Func([], [IDL.Nat], ['query']),
-    transfer: IDL.Func([IDL.Principal, IDL.Nat], [TxReceipt], []),
-    transferFrom: IDL.Func(
-      [IDL.Principal, IDL.Principal, IDL.Nat],
-      [TxReceipt],
-      []
-    ),
-  });
-  return Token;
 };
 export const init = ({ IDL }) => {
   return [
@@ -102,8 +76,9 @@ export const init = ({ IDL }) => {
     IDL.Text,
     IDL.Text,
     IDL.Nat8,
-    IDL.Nat,
     IDL.Principal,
     IDL.Nat,
+    IDL.Principal,
+    IDL.Principal,
   ];
 };
