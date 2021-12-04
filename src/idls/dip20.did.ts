@@ -44,7 +44,7 @@ export default ({ IDL }) => {
         ['query'],
       ),
     'getLogo' : IDL.Func([], [IDL.Text], ['query']),
-    'getMetadta' : IDL.Func([], [Metadata], ['query']),
+    'getMetadata' : IDL.Func([], [Metadata], ['query']),
     'getTokenInfo' : IDL.Func([], [TokenInfo], ['query']),
     'getUserApprovals' : IDL.Func(
         [IDL.Principal],

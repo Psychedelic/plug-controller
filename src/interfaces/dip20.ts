@@ -38,7 +38,7 @@ export default interface _SERVICE {
         Array<[Principal, bigint]>
       >,
     'getLogo' : () => Promise<string>,
-    'getMetadta' : () => Promise<Metadata>,
+    'getMetadata' : () => Promise<Metadata>,
     'getTokenInfo' : () => Promise<TokenInfo>,
     'getUserApprovals' : (arg_0: Principal) => Promise<
         Array<[Principal, bigint]>

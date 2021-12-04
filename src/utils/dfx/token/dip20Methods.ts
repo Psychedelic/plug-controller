@@ -2,8 +2,7 @@
 import { Principal } from '@dfinity/principal';
 import { ActorSubclass } from '@dfinity/agent';
 
-import Dip20Service from '../../../interfaces/dip20';
-import { Metadata } from '../../../interfaces/ext';
+import Dip20Service, { Metadata } from '../../../interfaces/dip20';
 import {
   Balance,
   BurnParams,
@@ -19,15 +18,9 @@ type BaseDip20Service = BaseMethodsExtendedActor<Dip20Service>;
 
 const getMetadata = async (
   actor: ActorSubclass<BaseDip20Service>
-): Promise<Metadata> => {
-  const metadataResult = await actor._getMetadta();
-  return {
-    fungible: {
-      symbol: metadataResult.symbol,
-      decimals: metadataResult.decimals,
-      name: metadataResult.name,
-    },
-  };
+): Promise<{ fungible: Metadata }> => {
+  const metadataResult = await actor._getMetadata();
+  return { fungible: metadataResult };
 };
 
 const send = async (
