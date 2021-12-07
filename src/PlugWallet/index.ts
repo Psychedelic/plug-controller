@@ -425,7 +425,7 @@ class PlugWallet {
 
   private addDefaultTokens() {
     DEFAULT_CUSTOM_TOKENS.map(token => {
-      this.registerToken[token.canisterId] = token;
+      this.registeredTokens[token.canisterId] = token;
     })
   }
 
