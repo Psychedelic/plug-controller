@@ -56,7 +56,7 @@
     "typescript": "^4.5"
   },
   "name": "@psychedelic/plug-controller",
-  "version": "0.12.4",
+  "version": "0.12.5",
   "description": "Internet Computer Plug wallet's controller",
   "main": "dist/index.js",
   "scripts": {
