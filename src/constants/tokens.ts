@@ -19,9 +19,18 @@ export const TOKENS = {
     decimals: 5,
     standard: 'ext',
   },
+  WICP: {
+    symbol: 'WICP',
+    canisterId: 'utozz-siaaa-aaaam-qaaxq-cai',
+    name: 'Wrapped ICP',
+    decimals: 5,
+    standard: 'dip20'
+  },
 };
 
-export const DEFAULT_TOKENS = [TOKENS.ICP, TOKENS.XTC];
+export const DEFAULT_TOKENS = [TOKENS.ICP, TOKENS.XTC, TOKENS.WICP];
+
+export const DEFAULT_CUSTOM_TOKENS = [TOKENS.XTC, TOKENS.WICP];
 
 export const DEFAULT_ASSETS = Object.values(DEFAULT_TOKENS).map(token => ({
   ...token,
