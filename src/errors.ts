@@ -16,6 +16,6 @@ export const ERRORS = {
   INVALID_PRINCIPAL_ID: 'Invalid principal id',
   GET_NFT_ERROR: 'Error while fetching NFT data',
   TRANSFER_NFT_ERROR:
-    'Error while trying to transfer the NFT. Please verify you own the NFT you are trying to transfer',
+    'Error while trying to transfer the NFT.\n Please verify that the NFT you are trying to transfer is not locked or listed for sale',
   INVALID_APP: 'Invalid app',
 };
