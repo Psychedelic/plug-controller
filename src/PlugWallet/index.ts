@@ -26,7 +26,7 @@ import {
   getICPTransactions,
   GetTransactionsResponse,
 } from '../utils/dfx/history/rosetta';
-import { TOKENS, DEFAULT_ASSETS } from '../constants/tokens';
+import { TOKENS, DEFAULT_ASSETS, DEFAULT_CUSTOM_TOKENS } from '../constants/tokens';
 import { uniqueByObjKey } from '../utils/array';
 import {
   getXTCTransactions,
@@ -138,6 +138,7 @@ class PlugWallet {
     this.connectedApps = [...connectedApps];
     this.collections = [...collections];
     this.fetch = fetch;
+    this.addDefaultTokens();
   }
 
   public setName(val: string): void {
@@ -288,8 +289,6 @@ class PlugWallet {
     const agent = await createAgent({ secretKey, fetch: this.fetch });
     const ledger = await createLedgerActor(agent);
     const icpBalance = await ledger.getBalance(this.accountId);
-    // Add XTC if it was not in the first place (backwards compatibility)
-    this.registeredTokens[TOKENS.XTC.canisterId] = TOKENS.XTC;
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
       Object.values(this.registeredTokens).map(async token => {
@@ -422,6 +421,12 @@ class PlugWallet {
     const agent = await createAgent({ secretKey, fetch: this.fetch });
     const ledger = await createLedgerActor(agent);
     return ledger.sendICP({ to, amount, opts });
+  }
+
+  private addDefaultTokens() {
+    DEFAULT_CUSTOM_TOKENS.map(token => {
+      this.registeredTokens[token.canisterId] = token;
+    })
   }
 
   private async sendCustomToken(
