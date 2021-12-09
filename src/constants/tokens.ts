@@ -23,7 +23,7 @@ export const TOKENS = {
     symbol: 'WICP',
     canisterId: 'utozz-siaaa-aaaam-qaaxq-cai',
     name: 'Wrapped ICP',
-    decimals: 5,
+    decimals: 8,
     standard: 'dip20'
   },
 };
