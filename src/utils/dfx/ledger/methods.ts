@@ -37,7 +37,7 @@ const sendICP = async (
     fee: BigInt(10000),
     memo: BigInt(0),
   };
-  const parsedAmount = BigInt(parseFloat(amount) * 10 ** DECIMALS);
+  const parsedAmount = BigInt((parseFloat(amount) * 10 ** DECIMALS).toFixed(0));
   return actor._send_dfx({
     to,
     fee: { e8s: opts?.fee || defaultArgs.fee },

@@ -7,6 +7,16 @@ export interface NotifyArgs {
   'canister_id': Principal,
   'method_name': string,
 }
+
+export interface Metadata {
+  decimals: number,
+  fee: number,
+  logo: string,
+  name: string,
+  owner: Principal,
+  symbol: string,
+  totalSupply: number,
+ };
 export interface TokenMetaData {
   'features': Array<string>,
   'name': string,
@@ -41,8 +51,10 @@ export type TransferResult = { 'Ok': TransactionId } |
 export type TxReceipt = {'Ok': bigint} | {'Err': {'InsufficientAllowance': null, 'InsufficientBalance': null}}
 export default interface _SERVICE {
   'meta': () => Promise<TokenMetaData>,
+  'getMetadata': () => Promise<Metadata>,
   'meta_certified': () => Promise<TokenMetaData>,
   'balance': (arg_0: [] | [Principal]) => Promise<bigint>,
+  'balanceOf': (arg_0: Principal) => Promise<number>,
   'burn': (arg_0: {
     canister_id: Principal,
     amount: bigint

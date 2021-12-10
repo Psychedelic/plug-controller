@@ -19,6 +19,15 @@ export default ({ IDL }) => {
     Ok: TransactionId,
     Err: BurnError,
   });
+  const Metadata = IDL.Record ({
+   decimals: IDL.Nat8,
+   fee: IDL.Nat,
+   logo: IDL.Text,
+   name: IDL.Text,
+   owner: IDL.Principal,
+   symbol: IDL.Text,
+   totalSupply: IDL.Nat,
+  });
   const TokenMetaData = IDL.Record({
     features: IDL.Vec(IDL.Text),
     name: IDL.Text,
@@ -41,8 +50,10 @@ export default ({ IDL }) => {
   });
   return IDL.Service({
     meta: IDL.Func([], [TokenMetaData], ['query']),
+    getMetadata: IDL.Func([], [Metadata], ['query']),
     meta_certified: IDL.Func([], [TokenMetaData], []),
     balance: IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Nat64], []),
+    balanceOf: IDL.Func([IDL.Principal], [IDL.Nat],  ['query']),
     burn: IDL.Func(
       [IDL.Record({ canister_id: IDL.Principal, amount: IDL.Nat64 })],
       [BurnResult],

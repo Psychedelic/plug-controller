@@ -20,11 +20,11 @@ type BaseXtcService = BaseMethodsExtendedActor<XtcService>
 const getMetadata = async (
   actor: ActorSubclass<BaseXtcService>
 ): Promise<Metadata> => {
-  const metadataResult = await actor._meta();
+  const metadataResult = await actor._getMetadata();
   return {
     fungible: {
       symbol: metadataResult.symbol,
-      decimals: metadataResult.decimal,
+      decimals: metadataResult.decimals,
       name: metadataResult.name,
     },
   };
@@ -53,7 +53,7 @@ const getBalance = async (
   user: Principal
 ): Promise<Balance> => {
   const decimals = getDecimals(await getMetadata(actor));
-  const value = (await actor._balance([user])).toString();
+  const value = (await actor._balanceOf(user)).toString();
   return { value, decimals };
 };
 
