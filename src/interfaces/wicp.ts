@@ -49,6 +49,7 @@ export default interface _SERVICE {
   'setFee' : (arg_0: bigint) => Promise<undefined>,
   'setFeeTo' : (arg_0: Principal) => Promise<undefined>,
   'setLogo' : (arg_0: string) => Promise<undefined>,
+  'setName' : (arg_0: string) => Promise<undefined>,
   'setOwner' : (arg_0: Principal) => Promise<undefined>,
   'symbol' : () => Promise<string>,
   'totalSupply' : () => Promise<bigint>,

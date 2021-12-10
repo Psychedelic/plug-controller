@@ -58,6 +58,7 @@ export default ({ IDL }) => {
       'setFee' : IDL.Func([IDL.Nat], [], []),
       'setFeeTo' : IDL.Func([IDL.Principal], [], []),
       'setLogo' : IDL.Func([IDL.Text], [], []),
+      'setName' : IDL.Func([IDL.Text], [], []),
       'setOwner' : IDL.Func([IDL.Principal], [], []),
       'symbol' : IDL.Func([], [IDL.Text], ['query']),
       'totalSupply' : IDL.Func([], [IDL.Nat], ['query']),
