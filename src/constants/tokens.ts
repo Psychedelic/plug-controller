@@ -10,7 +10,7 @@ export const TOKENS = {
     canisterId: 'aanaa-xaaaa-aaaah-aaeiq-cai',
     name: 'Cycles',
     decimals: 5,
-    standard: 'xtc',
+    standard: 'dip20',
   },
   WTC: {
     symbol: 'WTC',
