@@ -24,7 +24,7 @@ export const TOKENS = {
     canisterId: 'utozz-siaaa-aaaam-qaaxq-cai',
     name: 'Wrapped ICP',
     decimals: 8,
-    standard: 'dip20'
+    standard: 'wicp'
   },
 };
 
