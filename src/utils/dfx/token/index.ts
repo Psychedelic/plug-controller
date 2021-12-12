@@ -11,9 +11,11 @@ import defaultMethods, {
 import xtcMethods from './xtcMethods';
 import extMethods from './extMethods';
 import dip20Methods from './dip20Methods';
+import wicpMethods from './wicp';
 import extIDL from '../../../idls/ext.did';
 import xtcIDL from '../../../idls/xtc.did';
 import dip20IDL from '../../../idls/dip20.did';
+import wicpIDL from '../../../idls/wicp.did';
 import { TOKENS } from '../../../constants/tokens';
 import { StandardToken } from '../../../interfaces/ext';
 
@@ -22,6 +24,7 @@ const getMethods = (standard: string): InternalTokenMethods =>
     xtc: xtcMethods,
     ext: extMethods,
     dip20: dip20Methods,
+    wicp: wicpMethods
   }[standard] || defaultMethods);
 
 const getIdl = (standard: string): IDL.InterfaceFactory => {
@@ -29,6 +32,7 @@ const getIdl = (standard: string): IDL.InterfaceFactory => {
     xtc: xtcIDL,
     ext: extIDL,
     dip20: dip20IDL,
+    wicp: wicpIDL
   }[standard];
   if (!idl) throw new Error(`Standard ${standard} Not Implemented`);
   return idl;
