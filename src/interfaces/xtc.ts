@@ -104,7 +104,6 @@ export interface TxRecord {
 export default interface _SERVICE {
   'allowance' : (arg_0: Principal, arg_1: Principal) => Promise<bigint>,
   'approve' : (arg_0: Principal, arg_1: bigint) => Promise<TxReceipt>,
-  'balance' : (arg_0: [] | [Principal]) => Promise<bigint>,
   'balanceOf' : (arg_0: Principal) => Promise<bigint>,
   'burn' : (arg_0: { 'canister_id' : Principal, 'amount' : bigint }) => Promise<
       BurnResult
@@ -128,7 +127,6 @@ export default interface _SERVICE {
   'stats' : () => Promise<Stats>,
   'symbol' : () => Promise<string>,
   'totalSupply' : () => Promise<bigint>,
-  'transfer' : (arg_0: Principal, arg_1: bigint) => Promise<TxReceipt>,
   'transferErc20' : (arg_0: Principal, arg_1: bigint) => Promise<TxReceipt>,
   'transferFrom' : (
       arg_0: Principal,

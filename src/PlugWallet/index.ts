@@ -126,6 +126,7 @@ class PlugWallet {
     this.assets = assets;
     this.registeredTokens = formatStorageTokens({
       ...registeredTokens,
+      [TOKENS.TEST_XTC.canisterId]: TOKENS.TEST_XTC,
       [TOKENS.XTC.canisterId]: TOKENS.XTC,
     } as any);
     const { identity, accountId } = createAccountFromMnemonic(
