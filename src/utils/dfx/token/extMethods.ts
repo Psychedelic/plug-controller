@@ -20,7 +20,6 @@ type BaseExtService = BaseMethodsExtendedActor<ExtService>
 const getMetadata = async (
   actor: ActorSubclass<BaseExtService>
 ): Promise<Metadata> => {
-  actor._balance
   const token = Actor.canisterIdOf(actor).toText();
 
   const extensions = await actor._extensions();

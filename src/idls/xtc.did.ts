@@ -115,7 +115,6 @@ export default ({ IDL }) => {
         ['query'],
       ),
     'approve' : IDL.Func([IDL.Principal, IDL.Nat], [TxReceipt], []),
-    'balance' : IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Nat64], []),
     'balanceOf' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
     'burn' : IDL.Func(
         [IDL.Record({ 'canister_id' : IDL.Principal, 'amount' : IDL.Nat64 })],
@@ -141,7 +140,6 @@ export default ({ IDL }) => {
     'stats' : IDL.Func([], [Stats], ['query']),
     'symbol' : IDL.Func([], [IDL.Text], ['query']),
     'totalSupply' : IDL.Func([], [IDL.Nat], ['query']),
-    'transfer' : IDL.Func([IDL.Principal, IDL.Nat], [TxReceipt], []),
     'transferErc20' : IDL.Func([IDL.Principal, IDL.Nat], [TxReceipt], []),
     'transferFrom' : IDL.Func(
         [IDL.Principal, IDL.Principal, IDL.Nat],
