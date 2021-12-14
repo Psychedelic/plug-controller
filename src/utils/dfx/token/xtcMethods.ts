@@ -53,7 +53,6 @@ const getBalance = async (
   user: Principal
 ): Promise<Balance> => {
   const decimals = getDecimals(await getMetadata(actor));
-  console.log('Calling balance', actor);
   const value = (await actor._balanceOf(user)).toString();
   return { value, decimals };
 };
