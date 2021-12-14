@@ -12,13 +12,6 @@ export const TOKENS = {
     decimals: 5,
     standard: 'xtc',
   },
-  TXTC: {
-    symbol: 'TXTC',
-    canisterId: 'h5mgg-bqaaa-aaaaj-aad5a-cai',
-    name: 'Test Cycles',
-    decimals: 5,
-    standard: 'xtc',
-  },
   WTC: {
     symbol: 'WTC',
     canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai',
@@ -35,7 +28,7 @@ export const TOKENS = {
   },
 };
 
-export const DEFAULT_TOKENS = [TOKENS.ICP, TOKENS.XTC, TOKENS.WICP, TOKENS.TXTC];
+export const DEFAULT_TOKENS = [TOKENS.ICP, TOKENS.XTC, TOKENS.WICP];
 
 export const DEFAULT_CUSTOM_TOKENS = [TOKENS.XTC, TOKENS.WICP];
 
