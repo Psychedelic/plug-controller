@@ -43,10 +43,10 @@ const send = async (
     parsedAmount
   );
 
-  if ('ok' in transferResult)
-    return { transactionId: transferResult.ok.toString() };
+  if ('Ok' in transferResult)
+    return { transactionId: transferResult.Ok.toString() };
 
-  throw new Error(Object.keys(transferResult.err)[0]);
+  throw new Error(Object.keys(transferResult.Err)[0]);
 };
 
 const getBalance = async (
