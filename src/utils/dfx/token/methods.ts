@@ -75,7 +75,11 @@ export const getDecimals = (metadata: Metadata): number => {
 };
 
 export const parseAmountToSend = (amount: string, decimals: number): bigint => {
-  return BigInt(parseFloat(amount) * 10 ** decimals);
+  const commaIndex = amount.indexOf(".");
+  const integerPart = commaIndex === -1 ? amount : amount.substring(0, commaIndex);
+  const decimalPart = commaIndex === -1 ? '' : amount.substring(commaIndex + 1);
+  const zeros = commaIndex == -1 ? '0'.repeat(decimals) : decimalPart.length < decimals ? '0'.repeat(decimals - decimalPart.length) : '';
+  return BigInt(`${integerPart}${decimalPart}${zeros}`);
 };
 
 export default {
