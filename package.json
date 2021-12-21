@@ -5,10 +5,11 @@
     "@dfinity/identity": "0.9.3",
     "@dfinity/principal": "0.9.3",
     "@psychedelic/cap-js": "0.0.5",
-    "@psychedelic/dab-js": "0.3.0-comp",
+    "@psychedelic/dab-js": "0.4.3",
     "@types/secp256k1": "^4.0.3",
     "axios": "^0.21.1",
     "babel-jest": "^25.5.1",
+    "bigint-conversion": "^2.2.1",
     "bip39": "^3.0.4",
     "buffer-crc32": "^0.2.13",
     "create-hmac": "^1.1.7",
@@ -56,7 +57,7 @@
     "typescript": "^4.5"
   },
   "name": "@psychedelic/plug-controller",
-  "version": "0.12.6",
+  "version": "0.12.7",
   "description": "Internet Computer Plug wallet's controller",
   "main": "dist/index.js",
   "scripts": {

@@ -596,6 +596,11 @@
     "@types/yargs" "^15.0.0"
     chalk "^3.0.0"
 
+"@juanelas/base64@^1.0.1":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@juanelas/base64/-/base64-1.0.4.tgz#e457b9e8e10170f3d2ad685b7a82655bc4397c8b"
+  integrity sha512-KUidDSb+K7Rkoy2uJ/HdCnt4soNRlhNXONU8r8Cgic6Qq3E9BPg4kMSYXchM37WpYvGEGq2NUq/kCegMSLhtIg==
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -725,10 +730,10 @@
     axios "^0.24.0"
     cross-fetch "^3.1.4"
 
-"@psychedelic/dab-js@0.3.0-comp":
-  version "0.3.0-comp"
-  resolved "https://npm.pkg.github.com/download/@psychedelic/dab-js/0.3.0-comp/686dd0fb70e743963cb7ed94e1b831613e19196029d219405c92e21336b3802f#d10d4c64b401ef594a235cbd14a57388ba0b793c"
-  integrity sha512-kPEeVzHhe39n+GAS2NhZeGelhbushg7IU6LzGzfSkUd7qxcKpOA0m4XplC/8ze3HejQ8J3q0Q7cv46R6kttEOw==
+"@psychedelic/dab-js@0.4.3":
+  version "0.4.3"
+  resolved "https://npm.pkg.github.com/download/@psychedelic/dab-js/0.4.3/4225683948415af50ed1e8c6fcf54d33fc1dcb3907ce818db1b6f253ed41cbf2#039efce39acbeedaf141cdad9b3f29010ff507d5"
+  integrity sha512-GiZgpPsYybqrnit7dwYAREZ5zdFYVAQnc3uMzXxDqg01eBoqqEWST0cSHGUMawSNnQ0IRwI4OMsRoPQv/41pkw==
   dependencies:
     "@dfinity/agent" "0.9.3"
     "@dfinity/candid" "0.9.3"
@@ -1381,6 +1386,13 @@ bcrypt-pbkdf@^1.0.0:
   integrity sha1-pDAdOJtqQ/m2f/PKEaP2Y342Dp4=
   dependencies:
     tweetnacl "^0.14.3"
+
+bigint-conversion@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/bigint-conversion/-/bigint-conversion-2.2.1.tgz#08c9f17a826943c7e56d4bfa9f0fc7fe8050a940"
+  integrity sha512-9TvqpV+VZ04fPKv4KPLQRk5ZAFhgHX4F7bYQY263/BbJBFzEGbtBeTQV9oNuAGaqj88PXdov1OcSNQtq9K9MPA==
+  dependencies:
+    "@juanelas/base64" "^1.0.1"
 
 bignumber.js@^9.0.0:
   version "9.0.1"
