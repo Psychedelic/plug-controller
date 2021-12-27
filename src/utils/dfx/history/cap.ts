@@ -15,6 +15,7 @@ import { bufToBigint } from 'bigint-conversion'
 import { getCanisterInfo } from '../../dab';
 import { InferredTransaction } from './rosetta';
 import { parseBalance } from '../token';
+import { recursiveParseBigint } from '../../object';
 
 const KYASHU_URL = 'https://kyasshu.fleek.co';
 
@@ -95,7 +96,7 @@ const formatTransaction = (
     timestamp: transaction.time,
     type: transaction.operation,
     details: {
-      ...transaction.details,
+      ...recursiveParseBigint(transaction.details),
       amount: parsedAmount && symbol ? parseBySymbol(parsedAmount, symbol) : amount,
       canisterId: getTransactionCanister(contractId),
       tokenId: transaction.details?.token_id || transaction.details?.token || '',
