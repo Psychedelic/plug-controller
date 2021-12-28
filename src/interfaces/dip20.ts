@@ -68,9 +68,9 @@ export interface TokenInfo {
 export type TransactionStatus = { 'inprogress': null } |
 { 'failed': null } |
 { 'succeeded': null };
-export type TxReceipt = { 'ok': bigint } |
+export type TxReceipt = { 'Ok': bigint } |
 {
-    'err': { 'InsufficientAllowance': null } |
+    'Err': { 'InsufficientAllowance': null } |
     { 'InsufficientBalance': null }
 };
 export interface TxRecord {
