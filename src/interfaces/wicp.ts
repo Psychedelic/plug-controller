@@ -36,7 +36,7 @@ export default interface _SERVICE {
   'getHolders' : (arg_0: bigint, arg_1: bigint) => Promise<
       Array<[Principal, bigint]>
     >,
-  'getLogo' : () => Promise<string>,
+  'logo' : () => Promise<string>,
   'getMetadata' : () => Promise<Metadata>,
   'getTokenInfo' : () => Promise<TokenInfo>,
   'getUserApprovals' : (arg_0: Principal) => Promise<

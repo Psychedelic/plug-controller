@@ -2,8 +2,8 @@
 /* eslint-disable @typescript-eslint/camelcase */
 export default ({ IDL }) => {
   const TxReceipt = IDL.Variant({
-    ok: IDL.Nat,
-    err: IDL.Variant({
+    Ok: IDL.Nat,
+    Err: IDL.Variant({
       InsufficientAllowance: IDL.Null,
       InsufficientBalance: IDL.Null,
     }),

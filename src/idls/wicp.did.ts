@@ -43,7 +43,7 @@ export default ({ IDL }) => {
           [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Nat))],
           ['query'],
         ),
-      'getLogo' : IDL.Func([], [IDL.Text], ['query']),
+      'logo' : IDL.Func([], [IDL.Text], ['query']),
       'getMetadata' : IDL.Func([], [Metadata], ['query']),
       'getTokenInfo' : IDL.Func([], [TokenInfo], ['query']),
       'getUserApprovals' : IDL.Func(
