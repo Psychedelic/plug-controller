@@ -62,7 +62,7 @@ export const formatStorageTokens = (
       ...acum,
       [token.canisterId]: {
         ...token,
-        standard: TOKENS?.[token.symbol]?.standard || 'ext',
+        standard: TOKENS?.[token.symbol]?.standard || token?.standard || 'dip20',
       },
     }),
     {}
