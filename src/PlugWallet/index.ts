@@ -297,15 +297,25 @@ class PlugWallet {
           agent,
           token.standard
         );
-        const balance = await tokenActor.getBalance(
-          this.identity.getPrincipal()
-        );
-        return {
-          name: token.name,
-          symbol: token.symbol,
-          amount: parseBalance(balance),
-          canisterId: token.canisterId,
-        };
+        try {
+          const balance = await tokenActor.getBalance(
+            this.identity.getPrincipal()
+          );
+          return {
+            name: token.name,
+            symbol: token.symbol,
+            amount: parseBalance(balance),
+            canisterId: token.canisterId,
+          };
+        } catch (e) {
+          console.warn("Get Balance error:", e);
+          return {
+            name: token.name,
+            symbol: token.symbol,
+            amount: 'Error',
+            canisterId: token.canisterId,
+          };
+        }
       })
     );
     const assets = [
