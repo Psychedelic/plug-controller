@@ -236,6 +236,15 @@ class PlugWallet {
     return Object.values(newTokens);
   };
 
+  public removeToken = (tokenId: string) => {
+    if(!(tokenId in this.registeredTokens))
+      return Object.values(this.registeredTokens)
+
+    const {[tokenId]: removedToken, ...newTokens} = this.registeredTokens;
+    this.registeredTokens = newTokens;
+    return Object.values(newTokens);
+  }
+
   public toJSON = (): JSONWallet => ({
     name: this.name,
     walletNumber: this.walletNumber,
