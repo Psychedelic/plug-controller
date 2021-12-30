@@ -33,20 +33,13 @@ export const TOKENS = {
     decimals: 8,
     standard: 'dip20'
   },
-  WXTC: {
-    symbol: 'WXTC',
-    canisterId: 'cfoim-fqaaa-aaaai-qbcmq-cai', // TODO: CHANGE CANISTERID
-    name: 'Wrapped XTC',
-    decimals: 8,
-    standard: 'dip20'
-  },
   DUST: {
     symbol: 'DUST',
-    canisterId: 'cfoim-fqaaa-aaaai-qbcmq-cai', // TODO: CHANGE CANISTERID
+    canisterId: '4mvfv-piaaa-aaaak-aacia-cai',
     name: 'Dust Token',
     decimals: 8,
     standard: 'dip20'
-  },
+  }
 };
 
 export const DEFAULT_TOKENS = [TOKENS.ICP, TOKENS.XTC, TOKENS.WICP];
