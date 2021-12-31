@@ -306,6 +306,24 @@ class PlugKeyRing {
     return registeredTokens;
   };
 
+  public removeToken = async (
+    canisterId: string,
+    subAccount?: number
+  ): Promise<Array<StandardToken>> => {
+    this.checkUnlocked();
+    const index = (subAccount ?? this.currentWalletId) || 0;
+    const { wallets } = this.state;
+
+    this.validateSubaccount(index);
+    const wallet = wallets[index];
+    const registeredTokens = await wallet.removeToken(canisterId);
+    wallets.splice(index, 1, wallet);
+    this.state.wallets = wallets;
+    await this.saveEncryptedState({ wallets }, this.state.password);
+    return registeredTokens;
+  };
+
+
   public getBalance = async (
     subAccount?: number
   ): Promise<Array<TokenBalance>> => {
