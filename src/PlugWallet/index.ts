@@ -237,12 +237,12 @@ class PlugWallet {
   };
 
   public removeToken = (tokenId: string) => {
-    if(!(tokenId in this.registeredTokens))
+    if(!(Object.keys(this.registeredTokens).includes(tokenId))) {
       return Object.values(this.registeredTokens);
-
-    const {[tokenId]: removedToken, ...newTokens} = this.registeredTokens;
+    }
+    const { [tokenId]: removedToken, ...newTokens } = this.registeredTokens;
     this.registeredTokens = newTokens;
-    this.assets = this.assets.filter(asset => asset.canisterId !== tokenId);
+    this.assets = [...this.assets.filter(asset => asset.canisterId !== tokenId)];
     return Object.values(newTokens);
   }
 
