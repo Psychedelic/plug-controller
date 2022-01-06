@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-underscore-dangle */
+import { EventDetail } from '../../../interfaces/xtc';
 import axios from 'axios';
 import { parseBalance } from '../token';
 
@@ -8,39 +9,11 @@ import { GetTransactionsResponse, InferredTransaction } from './rosetta';
 const KYASHU_URL = 'https://kyasshu.fleek.co';
 const XTC_DECIMALS = 12;
 
-type TransactionKind =
-  | {
-      Burn: {
-        to: string;
-        from: string;
-      };
-    }
-  | { Mint: { to: string } }
-  | {
-      CanisterCreated: {
-        from: string;
-        canister: string;
-      };
-    }
-  | {
-      CanisterCalled: {
-        from: string;
-        method_name: string;
-        canister: string;
-      };
-    }
-  | {
-      Transfer: {
-        to: string;
-        from: string;
-      };
-    };
-
 interface XtcTransactions {
   txnId: string;
   event: {
     cycles: number;
-    kind: TransactionKind;
+    kind: EventDetail;
     fee: number;
     timestamp: number;
   };
@@ -62,6 +35,22 @@ const formatTransfer = (
   return transaction as InferredTransaction;
 };
 
+const formatTransferFrom = (
+  principalId: string,
+  { event }: XtcTransactions,
+  details: any
+): InferredTransaction => {
+  if (!('TransferFrom' in event.kind)) throw Error();
+  const transaction: any = { details };
+  transaction.details.from = event.kind.TransferFrom.from; // check with @b0xtch how to instance Principal from api answer
+  transaction.details.to = event.kind.TransferFrom.to;
+  transaction.caller = event.kind.TransferFrom.caller;
+  transaction.type =
+    transaction.details.to === principalId ? 'RECEIVE' : 'SEND';
+
+  return transaction as InferredTransaction;
+};
+
 const formatBurn = (
   _principalId: string,
   { event }: XtcTransactions,
@@ -73,6 +62,21 @@ const formatBurn = (
   transaction.details.to = event.kind.Burn.to;
   transaction.caller = event.kind.Burn.from;
   transaction.type = 'BURN';
+
+  return transaction as InferredTransaction;
+};
+
+const formatApprove = (
+  _principalId: string,
+  { event }: XtcTransactions,
+  details: any
+): InferredTransaction => {
+  if (!('Approve' in event.kind)) throw Error();
+  const transaction: any = { details };
+  transaction.details.from = event.kind.Approve.from;
+  transaction.details.to = event.kind.Approve.to;
+  transaction.caller = event.kind.Approve.from;
+  transaction.type = 'APPROVE';
 
   return transaction as InferredTransaction;
 };
@@ -171,6 +175,16 @@ const formatXTCTransaction = (
         ...transaction,
         ...formatCanisterCreated(principalId, xtcTransaction, details),
       };
+    case 'Approve':
+        return {
+          ...transaction,
+          ...formatApprove(principalId, xtcTransaction, details),
+      };
+    case 'TransferFrom':
+        return {
+          ...transaction,
+          ...formatTransferFrom(principalId, xtcTransaction, details),
+      };
     default:
       throw Error;
   }
@@ -192,6 +206,7 @@ export const getXTCTransactions = async (
       ),
     } as GetTransactionsResponse;
   } catch (e) {
+    console.log('getXTCTransactions error', e);
     return {
       total: 0,
       transactions: [],
