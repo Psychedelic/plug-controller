@@ -288,7 +288,7 @@ class PlugWallet {
         await requestCacheUpdate(this.principal, [trxId]);
       }
     } catch (e) {
-      console.log('Kyasshu error');
+      console.log('Kyasshu error', e);
     }
     return burnResult;
   };
