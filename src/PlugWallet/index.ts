@@ -23,6 +23,7 @@ import {
 } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import {
+  getICPBalance,
   getICPTransactions,
   GetTransactionsResponse,
 } from '../utils/dfx/history/rosetta';
@@ -297,8 +298,7 @@ class PlugWallet {
     const { secretKey } = this.identity.getKeyPair();
     // Get ICP Balance
     const agent = await createAgent({ secretKey, fetch: this.fetch });
-    const ledger = await createLedgerActor(agent);
-    const icpBalance = await ledger.getBalance(this.accountId);
+    const icpBalance = await getICPBalance(this.accountId);
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
       Object.values(this.registeredTokens).map(async token => {

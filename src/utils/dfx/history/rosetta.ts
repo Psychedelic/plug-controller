@@ -27,6 +27,11 @@ interface Currency {
   decimals: number;
 }
 
+export type Balance = {
+  value: string;
+  decimals: number;
+} | { error: string }
+
 interface RosettaTransaction {
   metadata: {
     block_height: number;
@@ -119,6 +124,34 @@ export const getICPTransactions = async (
     total: total_count,
     transactions: transactionsInfo,
   };
+};
+
+export const getICPBalance = async (accountId: string): Promise<Balance> => {
+  try {
+    const response = await fetch(`${ROSETTA_URL}/account/balance`, {
+      method: 'POST',
+      body: JSON.stringify({
+        network_identifier: NET_ID,
+        account_identifier: {
+          address: accountId,
+        },
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: '*/*',
+      },
+    });
+    if (!response.ok) {
+      return { error: response.statusText };
+    }
+    const { balances } = await response.json();
+    const [{ value, currency }] = balances;
+    return { value, decimals: currency.decimals };;
+  }
+  catch (error) {
+    console.log('getICPBalance error: ', error);
+    return { error: error.message };
+  }
 };
 
 export default {};

@@ -69,6 +69,9 @@ export const formatStorageTokens = (
   );
 
 export const parseBalance = (balance: Balance): string => {
+  if ('error' in balance) {
+    throw new Error('Error parsing balance');
+  }
   return (parseInt(balance.value, 10) / 10 ** balance.decimals).toString();
 };
 

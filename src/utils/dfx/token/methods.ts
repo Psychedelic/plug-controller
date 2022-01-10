@@ -21,10 +21,10 @@ export interface BurnParams {
   amount: string;
 }
 
-export interface Balance {
+export type Balance = {
   value: string;
   decimals: number;
-}
+} | { error: string };
 
 interface AddedMehtodsToken {
   send: ({ to, from, amount }: SendParams) => Promise<SendResponse>;
