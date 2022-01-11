@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/camelcase */
 import fetch from 'cross-fetch';
+import { TOKENS } from '../../../constants/tokens';
 import { ERRORS } from '../../../errors';
 import { NET_ID, ROSETTA_URL } from '../constants';
 import { parseBalance } from '../token';
@@ -22,15 +23,11 @@ interface Operation {
   type: 'TRANSACTION' | 'FEE';
 }
 
-interface Currency {
-  symbol: string;
-  decimals: number;
-}
-
-export type Balance = {
+interface Balance {
   value: string;
   decimals: number;
-} | { error: string }
+  error?: string;
+};
 
 interface RosettaTransaction {
   metadata: {
@@ -127,31 +124,25 @@ export const getICPTransactions = async (
 };
 
 export const getICPBalance = async (accountId: string): Promise<Balance> => {
-  try {
-    const response = await fetch(`${ROSETTA_URL}/account/balance`, {
-      method: 'POST',
-      body: JSON.stringify({
-        network_identifier: NET_ID,
-        account_identifier: {
-          address: accountId,
-        },
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: '*/*',
+  const response = await fetch(`${ROSETTA_URL}/account/balance`, {
+    method: 'POST',
+    body: JSON.stringify({
+      network_identifier: NET_ID,
+      account_identifier: {
+        address: accountId,
       },
-    });
-    if (!response.ok) {
-      return { error: response.statusText };
-    }
-    const { balances } = await response.json();
-    const [{ value, currency }] = balances;
-    return { value, decimals: currency.decimals };;
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: '*/*',
+    },
+  });
+  if (!response.ok) {
+    return { value: 'Error', decimals: TOKENS.ICP.decimals, error: response.statusText };
   }
-  catch (error) {
-    console.log('getICPBalance error: ', error);
-    return { error: error.message };
-  }
+  const { balances } = await response.json();
+  const [{ value, currency }] = balances;
+  return { value, decimals: currency.decimals };
 };
 
 export default {};
