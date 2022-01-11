@@ -3,20 +3,20 @@ export const TOKENS = {
     symbol: 'ICP',
     canisterId: null,
     name: 'ICP',
-    decimals: 5,
+    decimals: 8,
   },
   XTC: {
     symbol: 'XTC',
     canisterId: 'aanaa-xaaaa-aaaah-aaeiq-cai',
     name: 'Cycles',
-    decimals: 5,
+    decimals: 12,
     standard: 'xtc',
   },
   WTC: {
     symbol: 'WTC',
     canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai',
     name: 'Wrapped Cycles',
-    decimals: 5,
+    decimals: 12,
     standard: 'ext',
   },
   WICP: {
