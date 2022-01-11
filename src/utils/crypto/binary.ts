@@ -58,3 +58,20 @@ export const generateChecksum = (hash: Uint8Array) => {
   const hex = intToHex(crc);
   return hex.padStart(8, '0');
 };
+
+
+export const lebDecode = (pipe) =>{
+  let weight = BigInt(1);
+  let value = BigInt(0);
+  let byte;
+  do {
+    if (pipe.length < 1) {
+      throw new Error('unexpected end of buffer');
+    }
+    byte = pipe[0];
+    pipe = pipe.slice(1);
+    value += BigInt(byte & 0x7f).valueOf() * weight;
+    weight *= BigInt(128);
+  } while (byte >= 0x80);
+  return value;
+}

@@ -2,20 +2,17 @@
 /* eslint-disable no-underscore-dangle */
 import axios, { AxiosResponse } from 'axios';
 import { Principal } from '@dfinity/principal';
-import {
-  prettifyCapTransactions,
-  TransactionPrettified,
-} from '@psychedelic/cap-js';
+import { prettifyCapTransactions } from '@psychedelic/cap-js';
 import {
   getTokens,
   getAllNFTS
 } from '@psychedelic/dab-js';
-import { bufToBigint } from 'bigint-conversion'
 
 import { getCanisterInfo } from '../../dab';
 import { InferredTransaction } from './rosetta';
 import { parseBalance } from '../token';
 import { recursiveParseBigint } from '../../object';
+import { lebDecode } from '../../crypto/binary';
 
 const KYASHU_URL = 'https://kyasshu.fleek.co';
 
@@ -57,22 +54,6 @@ const parsePrincipal = pidObj =>
 
 const getTransactionCanister = (contract: string): string | undefined =>
   contract?.split('#')?.[1];
-
-  function lebDecode(pipe) {
-  let weight = BigInt(1);
-  let value = BigInt(0);
-  let byte;
-  do {
-    if (pipe.length < 1) {
-      throw new Error('unexpected end of buffer');
-    }
-    byte = pipe[0];
-    pipe = pipe.slice(1);
-    value += BigInt(byte & 0x7f).valueOf() * weight;
-    weight *= BigInt(128);
-  } while (byte >= 0x80);
-  return value;
-}
 
 const parseBySymbol = (amount: bigint, symbol: string): string => {
   switch(symbol) {

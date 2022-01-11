@@ -42,6 +42,7 @@ export interface TokenBalance {
   symbol: string;
   amount: string;
   canisterId: string | null;
+  error?: string;
 }
 interface PlugWalletArgs {
   name?: string;
@@ -294,6 +295,10 @@ class PlugWallet {
     return burnResult;
   };
 
+  /*
+  ** Returns XTC, ICP and WICP balances and all associated registered token balances
+  ** If any token balance fails to be fetched, it will be flagged with an error
+  */
   public getBalance = async (): Promise<Array<TokenBalance>> => {
     const { secretKey } = this.identity.getKeyPair();
     // Get ICP Balance
@@ -324,6 +329,7 @@ class PlugWallet {
             symbol: token.symbol,
             amount: 'Error',
             canisterId: token.canisterId,
+            error: e.message,
           };
         }
       })
