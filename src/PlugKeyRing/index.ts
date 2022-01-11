@@ -323,14 +323,23 @@ class PlugKeyRing {
     return registeredTokens;
   };
 
-
   public getBalance = async (
-    subAccount?: number
+    token: StandardToken,
+    subAccount?: number,
+  ): Promise<TokenBalance> => {
+    this.checkUnlocked();
+    const index = (subAccount ?? this.currentWalletId) || 0;
+    this.validateSubaccount(index);
+    return this.state.wallets[index].getBalance(token);
+  };
+
+  public getBalances = async (
+    subAccount?: number,
   ): Promise<Array<TokenBalance>> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
-    return this.state.wallets[index].getBalance();
+    return this.state.wallets[index].getBalances();
   };
 
   public getTokenInfo = async (
