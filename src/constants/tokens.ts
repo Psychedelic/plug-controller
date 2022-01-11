@@ -1,9 +1,12 @@
+import { LEDGER_CANISTER_ID } from "../utils/dfx/constants";
+
 export const TOKENS = {
   ICP: {
     symbol: 'ICP',
-    canisterId: null,
+    canisterId: LEDGER_CANISTER_ID,
     name: 'ICP',
     decimals: 8,
+    standard: 'ICP', 
   },
   XTC: {
     symbol: 'XTC',

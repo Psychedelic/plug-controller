@@ -36,6 +36,7 @@ import {
 
 import { ConnectedApp } from '../interfaces/account';
 import { getCapTransactions } from '../utils/dfx/history/cap';
+import { LEDGER_CANISTER_ID } from '../utils/dfx/constants';
 
 export interface TokenBalance {
   name: string;
@@ -296,7 +297,7 @@ class PlugWallet {
     return burnResult;
   };
 
-  public getBalance = async (token: StandardToken): Promise<TokenBalance> => {
+  public getTokenBalance = async (token: StandardToken): Promise<TokenBalance> => {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey, fetch: this.fetch });
     const tokenActor = await createTokenActor(
@@ -336,7 +337,8 @@ class PlugWallet {
         name: 'ICP',
         symbol: 'ICP',
         amount: parseBalance(icpBalance),
-        canisterId: null,
+        canisterId: LEDGER_CANISTER_ID,
+        token: TOKENS.ICP,
       };
     } catch(e) {
       console.log('Error getting ICP balance', e);
@@ -344,7 +346,8 @@ class PlugWallet {
         name: 'ICP',
         symbol: 'ICP',
         amount: 'Error',
-        canisterId: null,
+        canisterId: LEDGER_CANISTER_ID,
+        token: TOKENS.ICP,
         error: e.message,
       };
     }
@@ -359,7 +362,7 @@ class PlugWallet {
     const agent = await createAgent({ secretKey, fetch: this.fetch });
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
-      Object.values(this.registeredTokens).map(this.getBalance)
+      Object.values(this.registeredTokens).map(this.getTokenBalance)
     );
     const icpBalance = await this.getICPBalance();
     const assets = [icpBalance, ...tokenBalances];
