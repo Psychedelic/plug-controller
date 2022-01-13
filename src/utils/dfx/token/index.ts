@@ -68,9 +68,8 @@ export const formatStorageTokens = (
     {}
   );
 
-export const parseBalance = (balance: Balance): string => {
-  return (parseInt(balance.value, 10) / 10 ** balance.decimals).toString();
-};
+export const parseBalance = (balance: Balance): string => 
+ (parseInt(balance.value, 10) / 10 ** balance.decimals).toString();
 
 export default {};
 

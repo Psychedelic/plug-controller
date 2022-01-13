@@ -17,6 +17,7 @@ import { StandardToken } from '../interfaces/ext';
 import { BurnResult } from '../interfaces/xtc';
 import { ConnectedApp } from '../interfaces/account';
 import { recursiveParseBigint } from '../utils/object';
+import { TOKENS } from '../constants/tokens';
 
 interface StorageData {
   vault: PlugState;
@@ -323,14 +324,25 @@ class PlugKeyRing {
     return registeredTokens;
   };
 
-
   public getBalance = async (
-    subAccount?: number
+    token: StandardToken,
+    subAccount?: number,
+  ): Promise<TokenBalance> => {
+    this.checkUnlocked();
+    const index = (subAccount ?? this.currentWalletId) || 0;
+    this.validateSubaccount(index);
+    const wallet = this.state.wallets[index];
+    if (token.symbol === TOKENS.ICP.symbol) return wallet.getICPBalance();
+    return wallet.getTokenBalance(token);
+  };
+
+  public getBalances = async (
+    subAccount?: number,
   ): Promise<Array<TokenBalance>> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
-    return this.state.wallets[index].getBalance();
+    return this.state.wallets[index].getBalances();
   };
 
   public getTokenInfo = async (

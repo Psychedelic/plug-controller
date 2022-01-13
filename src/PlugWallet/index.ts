@@ -23,6 +23,7 @@ import {
 } from '../utils/dfx/token';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import {
+  getICPBalance,
   getICPTransactions,
   GetTransactionsResponse,
 } from '../utils/dfx/history/rosetta';
@@ -35,12 +36,15 @@ import {
 
 import { ConnectedApp } from '../interfaces/account';
 import { getCapTransactions } from '../utils/dfx/history/cap';
+import { LEDGER_CANISTER_ID } from '../utils/dfx/constants';
 
 export interface TokenBalance {
   name: string;
   symbol: string;
   amount: string;
   canisterId: string | null;
+  token?: StandardToken;
+  error?: string;
 }
 interface PlugWalletArgs {
   name?: string;
@@ -293,50 +297,75 @@ class PlugWallet {
     return burnResult;
   };
 
-  public getBalance = async (): Promise<Array<TokenBalance>> => {
+  public getTokenBalance = async (token: StandardToken): Promise<TokenBalance> => {
     const { secretKey } = this.identity.getKeyPair();
-    // Get ICP Balance
     const agent = await createAgent({ secretKey, fetch: this.fetch });
-    const ledger = await createLedgerActor(agent);
-    const icpBalance = await ledger.getBalance(this.accountId);
-    // Get Custom Token Balances
-    const tokenBalances = await Promise.all(
-      Object.values(this.registeredTokens).map(async token => {
-        const tokenActor = await createTokenActor(
-          token.canisterId,
-          agent,
-          token.standard
-        );
-        try {
-          const balance = await tokenActor.getBalance(
-            this.identity.getPrincipal()
-          );
-          return {
-            name: token.name,
-            symbol: token.symbol,
-            amount: parseBalance(balance),
-            canisterId: token.canisterId,
-          };
-        } catch (e) {
-          console.warn("Get Balance error:", e);
-          return {
-            name: token.name,
-            symbol: token.symbol,
-            amount: 'Error',
-            canisterId: token.canisterId,
-          };
-        }
-      })
+    const tokenActor = await createTokenActor(
+      token.canisterId,
+      agent,
+      token.standard
     );
-    const assets = [
-      {
+    try {
+      const balance = await tokenActor.getBalance(
+        this.identity.getPrincipal()
+      );
+      return {
+        name: token.name,
+        symbol: token.symbol,
+        amount: parseBalance(balance),
+        canisterId: token.canisterId,
+        token,
+      };
+    } catch (e) {
+      console.warn("Get Balance error:", e);
+      return {
+        name: token.name,
+        symbol: token.symbol,
+        amount: 'Error',
+        canisterId: token.canisterId,
+        token,
+        error: e.message,
+      };
+    };
+  };
+
+  public getICPBalance = async (): Promise<TokenBalance> => {
+    // Get ICP Balance
+    try {
+      const icpBalance = await getICPBalance(this.accountId);
+      return {
         name: 'ICP',
         symbol: 'ICP',
         amount: parseBalance(icpBalance),
-        canisterId: null,
-      },
-      ...tokenBalances,
-    ];
+        canisterId: LEDGER_CANISTER_ID,
+        token: TOKENS.ICP,
+      };
+    } catch(e) {
+      console.log('Error getting ICP balance', e);
+      return {
+        name: 'ICP',
+        symbol: 'ICP',
+        amount: 'Error',
+        canisterId: LEDGER_CANISTER_ID,
+        token: TOKENS.ICP,
+        error: e.message,
+      };
+    }
+  }
+
+  /*
+  ** Returns XTC, ICP and WICP balances and all associated registered token balances
+  ** If any token balance fails to be fetched, it will be flagged with an error
+  */
+  public getBalances = async (): Promise<Array<TokenBalance>> => {
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = await createAgent({ secretKey, fetch: this.fetch });
+    // Get Custom Token Balances
+    const tokenBalances = await Promise.all(
+      Object.values(this.registeredTokens).map(this.getTokenBalance)
+    );
+    const icpBalance = await this.getICPBalance();
+    const assets = [icpBalance, ...tokenBalances];
     this.assets = assets;
     return assets;
   };
