@@ -596,11 +596,6 @@
     "@types/yargs" "^15.0.0"
     chalk "^3.0.0"
 
-"@jsbits/get-package-version@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@jsbits/get-package-version/-/get-package-version-1.0.3.tgz#a47dfd077420beee435580c3bc197931fe3c694c"
-  integrity sha512-IJy1jRL01x7p6UEpgKa1lVLstMUx8EiIR8pPoS5sBfsHEoeLkzYiNpAfxPx8zLDUJyS1yBbChJjcWdPqyH285w==
-
 "@juanelas/base64@^1.0.1":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@juanelas/base64/-/base64-1.0.4.tgz#e457b9e8e10170f3d2ad685b7a82655bc4397c8b"

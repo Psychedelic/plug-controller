@@ -4,7 +4,6 @@ import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import { NFTDetails, NFTCollection } from '@psychedelic/dab-js';
 import JsonBigInt from 'json-bigint';
-import getVersion from '@jsbits/get-package-version';
 
 import { KeyringStorage, StorageData } from '../interfaces/storage';
 import { PlugState } from '../interfaces/plug_keyring';
@@ -25,6 +24,8 @@ import { ConnectedApp } from '../interfaces/account';
 import { recursiveParseBigint } from '../utils/object';
 import { TOKENS } from '../constants/tokens';
 import { handleStorageUpdate } from '../utils/storage/utils';
+import { getVersion } from '../utils/version';
+
 
 interface CreatePrincipalOptions {
   name?: string;
@@ -256,6 +257,7 @@ class PlugKeyRing {
       await this.storage.set({ isUnlocked: this.isUnlocked });
       return this.isUnlocked;
     } catch (e) {
+      console.error('UNLOCK ERROR:', e)
       this.isUnlocked = false;
       return false;
     }
@@ -471,6 +473,7 @@ class PlugKeyRing {
       isInitialized: true,
       isUnlocked: false,
       currentWalletId: 0,
+      version: getVersion(),
     });
     await this.saveEncryptedState(data, password);
     return wallet;
