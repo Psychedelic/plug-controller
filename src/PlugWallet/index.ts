@@ -10,7 +10,6 @@ import {
 import randomColor from 'random-color';
 
 import { ERRORS } from '../errors';
-import { StandardToken } from '../interfaces/ext';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
@@ -25,7 +24,6 @@ import { SendOpts } from '../utils/dfx/ledger/methods';
 import {
   getICPBalance,
   getICPTransactions,
-  GetTransactionsResponse,
 } from '../utils/dfx/history/rosetta';
 import { TOKENS, DEFAULT_ASSETS, DEFAULT_CUSTOM_TOKENS } from '../constants/tokens';
 import { uniqueByObjKey } from '../utils/array';
@@ -33,19 +31,17 @@ import {
   getXTCTransactions,
   requestCacheUpdate,
 } from '../utils/dfx/history/xtcHistory';
-
-import { ConnectedApp } from '../interfaces/account';
 import { getCapTransactions } from '../utils/dfx/history/cap';
 import { LEDGER_CANISTER_ID } from '../utils/dfx/constants';
 
-export interface TokenBalance {
-  name: string;
-  symbol: string;
-  amount: string;
-  canisterId: string | null;
-  token?: StandardToken;
-  error?: string;
-}
+
+import { ConnectedApp } from '../interfaces/account';
+import { TokenBalance, JSONWallet } from '../interfaces/plug_wallet';
+import { StandardToken } from '../interfaces/token';
+import { GetTransactionsResponse } from '../interfaces/transactions';
+
+
+
 interface PlugWalletArgs {
   name?: string;
   walletNumber: number;
@@ -58,35 +54,6 @@ interface PlugWalletArgs {
   fetch: any;
 }
 
-interface JSONWallet {
-  name: string;
-  walletNumber: number;
-  principal: string;
-  accountId: string;
-  icon?: string;
-  registeredTokens: { [canisterId: string]: StandardToken };
-  connectedApps: Array<ConnectedApp>;
-  assets?: Array<{
-    name: string;
-    symbol: string;
-    amount: string;
-    canisterId: string | null;
-  }>;
-  nftCollections?: Array<{
-    name: string;
-    canisterId: string;
-    standard: string;
-    tokens: Array<{
-      index: number;
-      canister: string;
-      id?: string;
-      name?: string;
-      url: string;
-      metadata: any;
-      collection?: string;
-    }>;
-  }>;
-}
 
 class PlugWallet {
   name: string;

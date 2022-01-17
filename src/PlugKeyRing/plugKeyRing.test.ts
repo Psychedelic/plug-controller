@@ -7,12 +7,13 @@ import fetch from 'cross-fetch';
 
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
-import { GetTransactionsResponse } from '../utils/dfx/history/rosetta';
 import PlugWallet from '../PlugWallet';
 import { createAgent } from '../utils/dfx';
 import store from '../utils/storage/mock';
 import { getAccountId } from '../utils/account';
 import { TOKENS } from '../constants/tokens';
+import { GetTransactionsResponse } from '../interfaces/transactions';
+
 
 const mockSendICP = jest.fn();
 

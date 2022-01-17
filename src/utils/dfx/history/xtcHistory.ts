@@ -4,7 +4,7 @@ import { EventDetail } from '../../../interfaces/xtc';
 import axios from 'axios';
 import { parseBalance } from '../token';
 
-import { GetTransactionsResponse, InferredTransaction } from './rosetta';
+import { InferredTransaction, GetTransactionsResponse } from '../../../interfaces/transactions';
 
 const KYASHU_URL = 'https://kyasshu.fleek.co';
 const XTC_DECIMALS = 12;

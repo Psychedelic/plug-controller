@@ -6,6 +6,8 @@ import { ERRORS } from '../../../errors';
 import { NET_ID, ROSETTA_URL } from '../constants';
 import { parseBalance } from '../token';
 
+import { InferredTransaction, GetTransactionsResponse } from '../../../interfaces/transactions';
+
 export const MILI_PER_SECOND = 1000000;
 
 interface Operation {
@@ -38,19 +40,6 @@ interface RosettaTransaction {
   };
   operations: Operation[];
   transaction_identifier: { hash: string };
-}
-
-export interface InferredTransaction {
-  hash: string;
-  timestamp: bigint;
-  type: string;
-  details?: { [key: string]: any };
-  caller: string;
-}
-
-export interface GetTransactionsResponse {
-  total: number;
-  transactions: InferredTransaction[];
 }
 
 const getTransactionInfo = (

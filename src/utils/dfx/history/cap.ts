@@ -9,10 +9,11 @@ import {
 } from '@psychedelic/dab-js';
 
 import { getCanisterInfo } from '../../dab';
-import { InferredTransaction } from './rosetta';
 import { parseBalance } from '../token';
 import { recursiveParseBigint } from '../../object';
 import { lebDecode } from '../../crypto/binary';
+
+import { InferredTransaction } from '../../../interfaces/transactions';
 
 const KYASHU_URL = 'https://kyasshu.fleek.co';
 
