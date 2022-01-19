@@ -5,9 +5,14 @@ import { Principal } from '@dfinity/principal';
 import { NFTDetails, NFTCollection } from '@psychedelic/dab-js';
 import JsonBigInt from 'json-bigint';
 
+import { KeyringStorage, StorageData } from '../interfaces/storage';
+import { PlugState } from '../interfaces/plug_keyring';
+import { TokenBalance } from '../interfaces/plug_wallet';
+import { GetTransactionsResponse } from '../interfaces/transactions';
+
+
 import { ERRORS } from '../errors';
-import { GetTransactionsResponse } from '../utils/dfx/history/rosetta';
-import PlugWallet, { TokenBalance } from '../PlugWallet';
+import PlugWallet from '../PlugWallet';
 import { createAccount, getAccountId } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import { SendResponse } from '../utils/dfx/token';
@@ -19,24 +24,6 @@ import { ConnectedApp } from '../interfaces/account';
 import { recursiveParseBigint } from '../utils/object';
 import { TOKENS } from '../constants/tokens';
 
-interface StorageData {
-  vault: PlugState;
-  isInitialized: boolean;
-  isUnlocked: boolean;
-  currentWalletId: number;
-}
-interface KeyringStorage {
-  isSupported: boolean;
-  get: () => Promise<unknown>;
-  set: (state: unknown) => Promise<void>;
-  clear: () => Promise<void>;
-}
-interface PlugState {
-  wallets: Array<PlugWallet>;
-  password?: string;
-  mnemonic?: string;
-  currentWalletId?: number;
-}
 interface CreatePrincipalOptions {
   name?: string;
   icon?: string;
