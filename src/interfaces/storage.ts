@@ -5,6 +5,7 @@ export interface StorageData {
     isInitialized: boolean;
     isUnlocked: boolean;
     currentWalletId: number;
+    version: string;
 }
 
 export interface KeyringStorage {

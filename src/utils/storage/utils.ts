@@ -1,7 +1,7 @@
 import extension from 'extensionizer';
 import JsonBigInt from 'json-bigint';
 
-import { PlugState } from '../../PlugKeyRing'
+import { PlugState } from '../../interfaces/plug_keyring'
 
 export const isEmpty = (obj): boolean => Object.keys(obj).length === 0;
 
@@ -27,7 +27,7 @@ const VERSION_PATH: Array<string> = ['0.14.1']
 
 const VERSION_HANDLER: { [version: string]: (storage: any) => PlugState } = {
   '0.14.1': (storage: any) => {
-    console.log('This is storage of version 0.4.5:', JsonBigInt.stringify(storage));
+    console.log('This is storage of version 0.14.1:', JsonBigInt.stringify(storage));
     return storage;
   }
 };
@@ -52,12 +52,12 @@ const getVersionIndex = (version: string | undefined): number => {
   if (!version)
     return 0;
 
-  for (let index = 0; index++ < VERSION_PATH.length; index++) {
-    const comparison = compareVersion(version, VERSION_PATH[index])
+  for (let index = 0; index < VERSION_PATH.length; index++) {
+    const comparison = compareVersion(version, VERSION_PATH[index]);
     if (comparison === 1)
       return index;
     if (comparison === 0)
-      return index++;
+      return index+1;
   }
 
   return VERSION_PATH.length;
@@ -66,14 +66,11 @@ const getVersionIndex = (version: string | undefined): number => {
 
 export const handleStorageUpdate = (storageVersion: string | undefined, storage: any): PlugState => {
   const index = getVersionIndex(storageVersion);
-  console.log('handleStorageUpdate ', storageVersion, index)
   if (index === VERSION_PATH.length)
     return storage;
 
   let newStorage = storage;
-  console.log('VERSION_PATH', VERSION_PATH.slice(index));
   VERSION_PATH.slice(index).forEach((version) => {
-    console.log('handleStorageUpdate APPLY', version)
     newStorage = VERSION_HANDLER[version](storage);
   });
 
