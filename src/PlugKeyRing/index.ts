@@ -23,6 +23,9 @@ import { BurnResult } from '../interfaces/xtc';
 import { ConnectedApp } from '../interfaces/account';
 import { recursiveParseBigint } from '../utils/object';
 import { TOKENS } from '../constants/tokens';
+import { handleStorageUpdate } from '../utils/storage/utils';
+import { getVersion } from '../utils/version';
+
 
 interface CreatePrincipalOptions {
   name?: string;
@@ -130,9 +133,11 @@ class PlugKeyRing {
       vault,
       isInitialized,
       currentWalletId,
+      version,
     } = ((await this.storage.get()) || {}) as StorageData;
     if (isInitialized && vault) {
-      const decrypted = this.decryptState(vault, password);
+      const newVersion = getVersion();
+      const decrypted = newVersion === version ? this.decryptState(vault, password) : handleStorageUpdate(version, this.decryptState(vault, password));
       const wallets = decrypted.wallets.map(
         wallet =>
           new PlugWallet({
@@ -144,6 +149,10 @@ class PlugKeyRing {
       this.state = { ...decrypted, wallets };
       this.isInitialized = isInitialized;
       this.currentWalletId = currentWalletId;
+      if (newVersion !== version) {
+        this.saveEncryptedState({ wallets }, password);
+        this.storage.set({ version: newVersion });
+      }
     }
   };
 
@@ -248,6 +257,7 @@ class PlugKeyRing {
       await this.storage.set({ isUnlocked: this.isUnlocked });
       return this.isUnlocked;
     } catch (e) {
+      console.error('UNLOCK ERROR:', e)
       this.isUnlocked = false;
       return false;
     }
@@ -463,6 +473,7 @@ class PlugKeyRing {
       isInitialized: true,
       isUnlocked: false,
       currentWalletId: 0,
+      version: getVersion(),
     });
     await this.saveEncryptedState(data, password);
     return wallet;

@@ -57,17 +57,19 @@
     "typescript": "^4.5"
   },
   "name": "@psychedelic/plug-controller",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "description": "Internet Computer Plug wallet's controller",
   "main": "dist/index.js",
   "scripts": {
+    "prebuild": "npm run export_version",
     "build": "npm run clean && npm run compile",
     "clean": "rm -rf ./dist && rm -rf tsconfig.tsbuildinfo",
     "compile": "tsc -b tsconfig.json",
     "test": "export NODE_ENV='test' && jest",
     "lint": "eslint --ext ts,js ./src",
     "watch": "tsc --watch",
-    "publish": "npm run build && npm publish"
+    "publish": "npm run build && npm publish",
+    "export_version": "node -p \"'export const PLUG_CONTROLLER_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/constants/version.ts"
   },
   "repository": {
     "type": "git",
