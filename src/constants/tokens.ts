@@ -47,9 +47,4 @@ export const TOKENS = {
 
 export const DEFAULT_TOKENS = [TOKENS.ICP, TOKENS.XTC, TOKENS.WICP];
 
-export const DEFAULT_CUSTOM_TOKENS = [TOKENS.XTC, TOKENS.WICP];
-
-export const DEFAULT_ASSETS = Object.values(DEFAULT_TOKENS).map(token => ({
-  ...token,
-  amount: '0',
-}));
+export const DEFAULT_ASSETS = DEFAULT_TOKENS.reduce((acum, token) => ({...acum, [token.canisterId]: {...token, amount: '0'}}), {})

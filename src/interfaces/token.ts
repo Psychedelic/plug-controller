@@ -1,10 +1,14 @@
-export interface TokenMetaData {
+export interface StandardToken {
     name: string;
-    decimals: number;
     symbol: string;
-}
-export interface StandardToken extends TokenMetaData {
     canisterId: string;
     standard: string;
+    decimals: number;
     color?: string;
+}
+
+export interface TokenBalance {
+    amount: string;
+    token: StandardToken;
+    error?: string;
 }
