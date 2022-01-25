@@ -13,11 +13,10 @@ import { GetTransactionsResponse } from '../interfaces/transactions';
 
 import { ERRORS } from '../errors';
 import PlugWallet from '../PlugWallet';
-import { createAccount, getAccountId } from '../utils/account';
+import { createAccount } from '../utils/account';
 import { SendOpts } from '../utils/dfx/ledger/methods';
 import { SendResponse } from '../utils/dfx/token';
 import Storage from '../utils/storage';
-import { validatePrincipalId } from './utils';
 import { StandardToken } from '../interfaces/ext';
 import { BurnResult } from '../interfaces/xtc';
 import { ConnectedApp } from '../interfaces/account';
@@ -386,9 +385,6 @@ class PlugKeyRing {
     this.checkUnlocked();
     const currentWalletNumber = this.currentWalletId;
     let account = to;
-    if (!canisterId && validatePrincipalId(to)) {
-      account = getAccountId(Principal.fromText(to));
-    }
     return this.state.wallets[currentWalletNumber || 0].send(
       account,
       amount,

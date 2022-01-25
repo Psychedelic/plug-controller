@@ -11,7 +11,7 @@ import randomColor from 'random-color';
 
 import { ERRORS } from '../errors';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
-import { createAccountFromMnemonic } from '../utils/account';
+import { createAccountFromMnemonic, getAccountId } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent, createLedgerActor } from '../utils/dfx';
 import {
@@ -391,9 +391,9 @@ class PlugWallet {
     canisterId?: string,
     opts?: SendOpts
   ): Promise<SendResponse> => {
-    return canisterId
-      ? this.sendCustomToken(to, amount, canisterId)
-      : { height: await this.sendICP(to, amount, opts) };
+    return !canisterId || canisterId === LEDGER_CANISTER_ID
+      ? { height: await this.sendICP(to, amount, opts) }
+      : this.sendCustomToken(to, amount, canisterId);
   };
 
   public addConnectedApp = (app: ConnectedApp): Array<ConnectedApp> => {
@@ -436,7 +436,11 @@ class PlugWallet {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey, fetch: this.fetch });
     const ledger = await createLedgerActor(agent);
-    return ledger.sendICP({ to, amount, opts });
+    return ledger.sendICP({
+        to: validatePrincipalId(to) ? getAccountId(Principal.from(to)) : to,
+        amount,
+        opts
+      });
   }
 
   private addDefaultTokens() {
