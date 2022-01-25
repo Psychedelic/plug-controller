@@ -27,7 +27,6 @@ const VERSION_PATH: Array<string> = ['0.14.1']
 
 const VERSION_HANDLER: { [version: string]: (storage: any) => PlugState } = {
   '0.14.1': (storage: any) => {
-    console.log('This is storage of version 0.14.1:', JsonBigInt.stringify(storage));
     return storage;
   }
 };
