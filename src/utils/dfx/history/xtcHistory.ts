@@ -220,10 +220,8 @@ export const requestCacheUpdate = async (
 ): Promise<boolean> => {
   try {
     const response = await axios.post(`${KYASHU_URL}/txn/${principalId}`, {
-      body: {
-        pid: principalId,
-        txnIds: txnIds?.map(tx => tx.toString()),
-      },
+      pid: principalId,
+      txnIds: txnIds?.map(tx => tx.toString()),
     });
     return !!response.data;
   } catch (e) {
