@@ -11,7 +11,7 @@ import PlugWallet from '../PlugWallet';
 import { createAgent } from '../utils/dfx';
 import store from '../utils/storage/mock';
 import { getAccountId } from '../utils/account';
-import { TOKENS } from '../constants/tokens';
+import { DEFAULT_ASSETS, TOKENS } from '../constants/tokens';
 import { GetTransactionsResponse } from '../interfaces/transactions';
 
 
@@ -189,7 +189,7 @@ describe('Plug KeyRing', () => {
       expect(stateWallet.toJSON()).toEqual(wallet.toJSON());
       expect(state.password).toEqual(TEST_PASSWORD);
       expect(bip39.validateMnemonic(state.mnemonic as string)).toEqual(true);
-      expect(stateWallet.registeredTokens).toEqual([TOKENS.XTC]);
+      expect(stateWallet.assets).toEqual(DEFAULT_ASSETS);
     });
     it('should fail if not password was provided', async () => {
       await expect(() => keyRing.create({ password: '' })).rejects.toEqual(
@@ -217,7 +217,7 @@ describe('Plug KeyRing', () => {
       expect(state.mnemonic).toEqual(TEST_MNEMONIC);
       expect(state.password).toEqual(TEST_PASSWORD);
       expect(bip39.validateMnemonic(state.mnemonic!)).toEqual(true);
-      expect(stateWallet.registeredTokens).toEqual([TOKENS.XTC]);
+      expect(stateWallet.assets).toEqual(DEFAULT_ASSETS);
       expect(stateWallet.connectedApps).toEqual([]);
     });
     it('should fail if not password or mnemonic were provided', async () => {
@@ -533,15 +533,9 @@ describe('Plug KeyRing', () => {
       await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 'xtc', 2); // register WTC twice
 
       const { wallets } = await keyRing.getState();
-      expect(wallets[0].registeredTokens).toMatchObject([TOKENS.XTC]);
-      expect(wallets[1].registeredTokens).toMatchObject([
-        TOKENS.XTC,
-        TOKENS.WTC,
-      ]);
-      expect(wallets[2].registeredTokens).toMatchObject([
-        TOKENS.XTC,
-        TOKENS.WTC,
-      ]);
+      expect(wallets[0].assets).toMatchObject(DEFAULT_ASSETS);
+      expect(wallets[1].assets).toMatchObject(DEFAULT_ASSETS);
+      expect(wallets[2].assets).toMatchObject(DEFAULT_ASSETS);
     });
     test('should fail to register an invalid canister id', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
@@ -718,7 +712,7 @@ describe('Plug KeyRing', () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = wallets[ind].principal;
 
-      await keyRing.send(to.toString(), amount.toString());
+      await keyRing.send(to.toString(), TOKENS.ICP.canisterId, amount.toString());
       expect(createAgent).toHaveBeenCalled();
     });
     it('call sendICP with to account', async () => {
@@ -727,7 +721,7 @@ describe('Plug KeyRing', () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = getAccountId(Principal.fromText(wallets[ind].principal));
 
-      await keyRing.send(to, amount.toString());
+      await keyRing.send(to, TOKENS.ICP.canisterId, amount.toString());
       expect(createAgent).toHaveBeenCalled();
       expect(mockSendICP.mock.calls[0][0].amount.toString()).toEqual(
         amount.toString()
@@ -741,7 +735,7 @@ describe('Plug KeyRing', () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = wallets[ind].principal;
 
-      await keyRing.send(to.toString(), amount.toString());
+      await keyRing.send(to.toString(), TOKENS.ICP.canisterId, amount.toString());
       expect(createAgent).toHaveBeenCalled();
       expect(mockSendICP.mock.calls[0][0].amount.toString()).toEqual(
         amount.toString()
