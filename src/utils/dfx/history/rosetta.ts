@@ -4,7 +4,6 @@ import fetch from 'cross-fetch';
 import { TOKENS } from '../../../constants/tokens';
 import { ERRORS } from '../../../errors';
 import { NET_ID, ROSETTA_URL } from '../constants';
-import { parseBalance } from '../token';
 
 import { InferredTransaction, GetTransactionsResponse } from '../../../interfaces/transactions';
 
@@ -54,8 +53,7 @@ const getTransactionInfo = (
   const transaction: any = { details: { status: 'COMPLETED', fee: {} } };
   operations.forEach(operation => {
     const value = BigInt(operation.amount.value);
-    const { decimals } = operation.amount.currency;
-    const amount = parseBalance({ value: value.toString(), decimals });
+    const amount = value.toString();
     if (operation.type === 'FEE') {
       transaction.details.fee.amount = amount;
       transaction.details.fee.currency = operation.amount.currency;

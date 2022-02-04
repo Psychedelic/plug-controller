@@ -15,12 +15,8 @@ import { ERRORS } from '../errors';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAccountFromMnemonic, getAccountId } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
-import { createAgent, createLedgerActor } from '../utils/dfx';
-import { SendOpts } from '../utils/dfx/ledger/methods';
-import {
-  getICPBalance,
-  getICPTransactions,
-} from '../utils/dfx/history/rosetta';
+import { createAgent } from '../utils/dfx';
+import { getICPTransactions } from '../utils/dfx/history/rosetta';
 import { TOKENS, DEFAULT_ASSETS } from '../constants/tokens';
 import { uniqueByObjKey } from '../utils/array';
 import {
@@ -28,7 +24,6 @@ import {
   requestCacheUpdate,
 } from '../utils/dfx/history/xtcHistory';
 import { getCapTransactions } from '../utils/dfx/history/cap';
-import { LEDGER_CANISTER_ID } from '../utils/dfx/constants';
 
 import { ConnectedApp } from '../interfaces/account';
 import { JSONWallet, Assets } from '../interfaces/plug_wallet';
@@ -41,7 +36,7 @@ interface PlugWalletArgs {
   mnemonic: string;
   icon?: string;
   connectedApps?: Array<ConnectedApp>;
-  assets: Assets;
+  assets?: Assets;
   collections?: Array<NFTCollection>;
   fetch: any;
 }
@@ -345,7 +340,7 @@ class PlugWallet {
     to: string,
     amount: string,
     canisterId: string,
-    opts?: SendOpts
+    opts?: TokenInterfaces.SendOpts
   ): Promise<TokenInterfaces.SendResponse> => {
     const { secretKey } = this.identity.getKeyPair();
     const agent = await createAgent({ secretKey, fetch: this.fetch });

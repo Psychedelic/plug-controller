@@ -39,5 +39,4 @@ export const createAgent = async ({
   return agent;
 };
 
-export { createLedgerActor } from './ledger';
 export { createNNSActor } from './nns_uid';

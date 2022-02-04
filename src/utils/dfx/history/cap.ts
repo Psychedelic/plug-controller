@@ -9,7 +9,6 @@ import {
 } from '@psychedelic/dab-js';
 
 import { getCanisterInfo } from '../../dab';
-import { parseBalance } from '../token';
 import { recursiveParseBigint } from '../../object';
 import { lebDecode } from '../../crypto/binary';
 
@@ -59,7 +58,7 @@ const getTransactionCanister = (contract: string): string | undefined =>
 const parseBySymbol = (amount: bigint, symbol: string): string => {
   switch(symbol) {
     case 'WICP':
-      return parseBalance({value: amount.toString(), decimals: 8});
+      return amount.toString();
     default:
       return amount.toString();
   }
