@@ -8,7 +8,7 @@ export default (storage: any) : StorageData => ({
         wallets: storage.value.wallets.map((wallet) => ({
             ...wallet,
             assets: wallet.assets.reduce((acum, asset) => ({...acum, [asset.canisterId]: {
-                balance: '0',
+                amount: '0',
                 token: {
                     name: asset.name,
                     symbol: asset.symbol,
