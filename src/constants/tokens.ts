@@ -6,7 +6,7 @@ export const TOKENS = {
     canisterId: LEDGER_CANISTER_ID,
     name: 'ICP',
     decimals: 8,
-    standard: 'ICP', 
+    standard: 'ICP',
   },
   XTC: {
     symbol: 'XTC',
@@ -47,4 +47,4 @@ export const TOKENS = {
 
 export const DEFAULT_TOKENS = [TOKENS.ICP, TOKENS.XTC, TOKENS.WICP];
 
-export const DEFAULT_ASSETS = DEFAULT_TOKENS.reduce((acum, token) => ({...acum, [token.canisterId]: {...token, amount: '0'}}), {})
+export const DEFAULT_ASSETS = DEFAULT_TOKENS.reduce((acum, token) => ({ ...acum, [token.canisterId]: { token, amount: '0' } }), {})
