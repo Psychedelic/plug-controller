@@ -276,8 +276,6 @@ class PlugWallet {
    ** If any token balance fails to be fetched, it will be flagged with an error
    */
   public getBalances = async (): Promise<Array<TokenBalance>> => {
-    const { secretKey } = this.identity.getKeyPair();
-    const agent = await createAgent({ secretKey, fetch: this.fetch });
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
       Object.values(this.assets).map(asset => this.getTokenBalance(asset.token))

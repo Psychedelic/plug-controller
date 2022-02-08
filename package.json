@@ -69,7 +69,8 @@
     "lint": "eslint --ext ts,js ./src",
     "watch": "tsc --watch",
     "publish": "npm run build && npm publish",
-    "export_version": "node -p \"'export const PLUG_CONTROLLER_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/constants/version.ts"
+    "export_version": "node -p \"'export const PLUG_CONTROLLER_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/constants/version.ts",
+    "add:local": "echo @psychedelic:registry=${LOCAL_REGISTRY:=http://localhost:4873/} > .npmrc && yarn add ${PKG} && echo @psychedelic:registry=https://npm.pkg.github.com > .npmrc"
   },
   "repository": {
     "type": "git",
