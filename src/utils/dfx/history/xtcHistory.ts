@@ -2,6 +2,7 @@
 /* eslint-disable no-underscore-dangle */
 import { TokenInterfaces } from '@psychedelic/dab-js';
 import axios from 'axios';
+import { TOKENS } from '../../../constants/tokens';
 
 import { InferredTransaction, GetTransactionsResponse } from '../../../interfaces/transactions';
 
@@ -134,6 +135,7 @@ const formatXTCTransaction = (
   transaction.hash = xtcTransaction.txnId;
   transaction.timestamp = xtcTransaction.event.timestamp;
   const details = {
+    canisterId: TOKENS.XTC.canisterId,
     amount: transactionEvent.cycles.toString(),
     currency: { symbol: 'XTC', decimals: XTC_DECIMALS },
     fee: {

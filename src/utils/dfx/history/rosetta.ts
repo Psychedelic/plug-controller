@@ -73,6 +73,7 @@ const getTransactionInfo = (
       transaction.details.to === accountId ? 'RECEIVE' : 'SEND';
     transaction.details.amount = amount;
     transaction.details.currency = operation.amount.currency;
+    transaction.details.canisterId = TOKENS.ICP.canisterId;
   });
   return {
     ...transaction,
