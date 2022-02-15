@@ -49,6 +49,8 @@ export const getMultipleCanisterInfo = async (
     agent: finalAgent,
   });
 
+  if (!result) return [];
+
   return result.map(canisterMetadata => ({
     ...canisterMetadata,
     icon: canisterMetadata.logo_url,

@@ -325,12 +325,21 @@ class PlugWallet {
       ...capTransactions.transactions,
       ...icpTrxs.transactions,
       ...xtcTransactions.transactions,
-    ].map(tx => ({ ...tx, details: { ...tx.details, token: tx.details?.canisterId && this.assets[tx.details?.canisterId]?.token }}))
+    ].map(tx => ({
+      ...tx,
+      details: {
+        ...tx.details,
+        token:
+          tx.details?.canisterId && this.assets[tx.details?.canisterId]?.token,
+      },
+    }));
     // merge and format all trx. sort by timestamp
     // TODO: any custom token impelmenting archive should be queried. (0.4.0)
     const transactions = {
       total: icpTrxs.total + xtcTransactions.total + capTransactions.total,
-      transactions: transactionsGroup.sort((a, b) => (b.timestamp - a.timestamp < 0 ? -1 : 1)),
+      transactions: transactionsGroup.sort((a, b) =>
+        b.timestamp - a.timestamp < 0 ? -1 : 1
+      ),
     };
     return transactions;
   };
