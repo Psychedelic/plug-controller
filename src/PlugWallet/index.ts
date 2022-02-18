@@ -228,7 +228,7 @@ class PlugWallet {
     const xtcActor = await getTokenActor({
       canisterId: TOKENS.XTC.canisterId,
       agent,
-      standard: 'xtc',
+      standard: TOKENS.XTC.standard,
     });
     const burnResult = await xtcActor.burnXTC({
       to: Principal.fromText(to),
