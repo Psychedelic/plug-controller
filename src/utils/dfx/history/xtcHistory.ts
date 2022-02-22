@@ -1,8 +1,8 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-underscore-dangle */
-import { EventDetail } from '../../../interfaces/xtc';
+import { TokenInterfaces } from '@psychedelic/dab-js';
 import axios from 'axios';
-import { parseBalance } from '../token';
+import { TOKENS } from '../../../constants/tokens';
 
 import { InferredTransaction, GetTransactionsResponse } from '../../../interfaces/transactions';
 
@@ -13,7 +13,7 @@ interface XtcTransactions {
   txnId: string;
   event: {
     cycles: number;
-    kind: EventDetail;
+    kind: TokenInterfaces.EventDetail;
     fee: number;
     timestamp: number;
   };
@@ -135,16 +135,11 @@ const formatXTCTransaction = (
   transaction.hash = xtcTransaction.txnId;
   transaction.timestamp = xtcTransaction.event.timestamp;
   const details = {
-    amount: parseBalance({
-      value: transactionEvent.cycles.toString(),
-      decimals: XTC_DECIMALS,
-    }),
+    canisterId: TOKENS.XTC.canisterId,
+    amount: transactionEvent.cycles.toString(),
     currency: { symbol: 'XTC', decimals: XTC_DECIMALS },
     fee: {
-      amount: parseBalance({
-        value: transactionEvent.fee.toString(),
-        decimals: XTC_DECIMALS,
-      }),
+      amount: transactionEvent.fee.toString(),
       currency: { symbol: 'XTC', decimals: XTC_DECIMALS },
     },
     status: 'COMPLETED',

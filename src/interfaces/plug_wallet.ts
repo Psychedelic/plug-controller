@@ -1,14 +1,9 @@
 import { ConnectedApp } from './account';
-import { StandardToken } from './token';
+import { TokenBalance } from './token';
 
 
-export interface TokenBalance {
-    name: string;
-    symbol: string;
-    amount: string;
-    canisterId: string | null;
-    token?: StandardToken;
-    error?: string;
+export interface Assets {
+    [canisterId: string]: TokenBalance
 }
 
 export interface JSONWallet {
@@ -17,14 +12,8 @@ export interface JSONWallet {
     principal: string;
     accountId: string;
     icon?: string;
-    registeredTokens: { [canisterId: string]: StandardToken };
     connectedApps: Array<ConnectedApp>;
-    assets?: Array<{
-        name: string;
-        symbol: string;
-        amount: string;
-        canisterId: string | null;
-    }>;
+    assets: Assets;
     nftCollections?: Array<{
         name: string;
         canisterId: string;
