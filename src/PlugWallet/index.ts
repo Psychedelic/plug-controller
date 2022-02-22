@@ -280,6 +280,16 @@ class PlugWallet {
     const tokenBalances = await Promise.all(
       Object.values(this.assets).map(asset => this.getTokenBalance(asset.token))
     );
+
+    Object.values(tokenBalances).forEach((asset) => {
+      const { canisterId } = asset.token;
+      const { amount } = asset;
+      this.assets[canisterId] = {
+        ...this.assets[canisterId],
+        amount
+      };
+    });
+
     return tokenBalances;
   };
 
