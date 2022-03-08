@@ -86,7 +86,7 @@ const formatTransaction = async (
     const isSwap = prettifyEvent?.operation?.toLowerCase?.()?.includes?.('swap');
     let data: any = { token: await getHandledTokenInfo(tokenId), amount: prettifyEvent?.details?.amount };
     if (isSwap) {
-      const [from, to] = (prettifyEvent?.details?.pairId as string)?.split(':');
+      const [to, from] = (prettifyEvent?.details?.pairId as string)?.split(':');
       data.swap = {
         from: await getHandledTokenInfo(from),
         to: await getHandledTokenInfo(to),
