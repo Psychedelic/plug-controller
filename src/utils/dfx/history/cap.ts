@@ -83,7 +83,6 @@ const formatTransaction = async (
   }
   const tokenId = prettifyEvent?.details?.tokenId || prettifyEvent?.details?.token || '';
   const buildSonicData = async () => {
-    console.log(prettifyEvent?.details?.balance?.toString(), parsedAmount, amount)
     const isSwap = prettifyEvent?.operation?.toLowerCase?.()?.includes?.('swap');
     let data: any = { token: await getHandledTokenInfo(tokenId), amount: prettifyEvent?.details?.amount };
     if (isSwap) {
