@@ -66,7 +66,8 @@ const formatTransaction = async (
       canisterInfo: canistersInfo[canisterId],
     };
   }
-  const amount = prettifyEvent?.details?.amount;
+  const { details, operation, time, caller } = prettifyEvent || {};
+  const { amount, token, token_id, pairId, amountIn, amountOut } = details || {};
   const parsedAmount =
     amount instanceof Array && !amount.some(value => typeof value !== 'number')
       ? lebDecode(Uint8Array.from(amount as Array<number>))
@@ -81,37 +82,37 @@ const formatTransaction = async (
       return data;
     }
   }
-  const tokenId = prettifyEvent?.details?.tokenId || prettifyEvent?.details?.token || '';
+  const tokenId = details?.tokenId || token || token_id || '';
   const buildSonicData = async () => {
-    const isSwap = prettifyEvent?.operation?.toLowerCase?.()?.includes?.('swap');
-    let data: any = { token: await getHandledTokenInfo(tokenId), amount: prettifyEvent?.details?.amount };
+    const isSwap = operation?.toLowerCase?.()?.includes?.('swap');
+    let data: any = { token: await getHandledTokenInfo(tokenId), amount: amount };
     if (isSwap) {
-      const [to, from] = (prettifyEvent?.details?.pairId as string)?.split(':');
+      const [to, from] = (pairId as string)?.split(':');
       data.swap = {
         from: await getHandledTokenInfo(from),
         to: await getHandledTokenInfo(to),
-        amountIn: prettifyEvent?.details?.amountIn,
-        amountOut: prettifyEvent?.details?.amountOut
+        amountIn: amountIn,
+        amountOut: amountOut
       };
     }
     return data;
   }
   return recursiveParseBigint({
     hash: transaction.sk,
-    timestamp: prettifyEvent?.time,
-    type: prettifyEvent?.operation,
+    timestamp: time,
+    type: operation,
     details: {
-      ...prettifyEvent?.details,
+      ...details,
       amount: parsedAmount,
       canisterId,
       tokenId,
-      to: parsePrincipal(prettifyEvent?.details?.to),
-      from: parsePrincipal(prettifyEvent?.details?.from),
+      to: parsePrincipal(details?.to),
+      from: parsePrincipal(details?.from),
       ...(canisterId === "3xwpq-ziaaa-aaaah-qcn4a-cai" ? {
         sonicData: await buildSonicData()
       } : {}),
     },
-    caller: parsePrincipal(prettifyEvent?.caller) || '',
+    caller: parsePrincipal(caller) || '',
   });
 };
 
