@@ -1,9 +1,16 @@
 /* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable camelcase */
+jest.mock('@psychedelic/dab-js');
+
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import { Principal } from '@dfinity/principal';
 import fetch from 'cross-fetch';
+import {
+  getTokenActor,
+  getCachedUserNFTs,
+  getNFTActor,
+} from '@psychedelic/dab-js';
 
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';
@@ -13,7 +20,6 @@ import store from '../utils/storage/mock';
 import { getAccountId } from '../utils/account';
 import { DEFAULT_ASSETS, TOKENS } from '../constants/tokens';
 import { GetTransactionsResponse } from '../interfaces/transactions';
-
 
 const mockSendICP = jest.fn();
 
@@ -26,14 +32,53 @@ jest.mock('../utils/dfx', () => {
   };
 });
 
-jest.mock('../utils/dfx/token', () => {
-  return {
-    createTokenActor: (): { getMetadata: jest.Mock<any, any> } => ({
-      getMetadata: jest.fn(() => ({
-        fungible: { symbol: 'WTC', decimals: 5, name: 'Wrapped Cycles' },
-      })),
-    }),
-  };
+const mockedSendToken = jest.fn(({ amount }: any) => ({
+  amount,
+}));
+
+const mockedTransferNFT = jest.fn();
+
+const mockedICPunk = {
+  index: BigInt(10),
+  canister: 'qcg3w-tyaaa-aaaah-qakea-cai',
+  name: 'IC Punk# 10',
+  url: 'https://qcg3w-tyaaa-aaaah-qakea-cai.raw.ic0.app/Token/10',
+  metadata: {
+    index: BigInt(10),
+    name: 'IC Punk# 10',
+    url: 'https://qcg3w-tyaaa-aaaah-qakea-cai.raw.ic0.app/Token/10',
+    owner: Principal.from(
+      'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe'
+    ),
+    desc: 'string',
+    properties: [],
+  },
+};
+
+const mockdeNFTCollection = {
+  name: 'IC Punks',
+  canisterId: 'qcg3w-tyaaa-aaaah-qakea-cai',
+  standard: 'ICPunk',
+  tokens: [mockedICPunk],
+};
+
+(getTokenActor as jest.Mock).mockReturnValue({
+  getMetadata: jest.fn(() => ({
+    fungible: { symbol: 'WTC', decimals: 5, name: 'Wrapped Cycles' },
+  })),
+  getBalance: jest.fn(() => ({
+    value: '1000',
+    decimals: 8,
+  })),
+  send: mockedSendToken,
+});
+
+(getCachedUserNFTs as jest.Mock).mockReturnValue(
+  Promise.resolve([mockdeNFTCollection])
+);
+
+(getNFTActor as jest.Mock).mockReturnValue({
+  transfer: mockedTransferNFT,
 });
 
 // jest.mock('../utils/dfx/nft', () => {
@@ -70,9 +115,9 @@ jest.mock('../utils/dfx/token', () => {
 //   };
 // });
 
-jest.mock('../utils/dfx/token/methods', () => {
-  return {};
-});
+// jest.mock('../utils/dfx/token/methods', () => {
+//   return {};
+// });
 
 const TEST_PASSWORD = 'Somepassword1234';
 const TEST_MNEMONIC = bip39.generateMnemonic();
@@ -84,13 +129,13 @@ const createManyWallets = async (
   const many = Math.round(Math.random() * 20) + 2;
   for (let i = 0; i < many; i += 1) {
     const wallet = await keyRing.createPrincipal(); // eslint-disable-line
-    if (mockingMethod) mockingMethod(wallet);
+    if (mockingMethod) await mockingMethod(wallet);
   }
   return many;
 };
 
 const createManyTransactions = (): GetTransactionsResponse => {
-  const many = Math.round(Math.random() * 20) + 2;
+  const many = 1; // Math.round(Math.random() * 20) + 2;
   const transactions: GetTransactionsResponse = { total: 0, transactions: [] };
   for (let i = 0; i < many; i += 1) {
     transactions.transactions.push({
@@ -186,7 +231,7 @@ describe('Plug KeyRing', () => {
       expect(state.wallets.length).toEqual(1);
 
       const stateWallet = state.wallets[0];
-      expect(stateWallet.toJSON()).toEqual(wallet.toJSON());
+      expect(stateWallet).toEqual(wallet.toJSON());
       expect(state.password).toEqual(TEST_PASSWORD);
       expect(bip39.validateMnemonic(state.mnemonic as string)).toEqual(true);
       expect(stateWallet.assets).toEqual(DEFAULT_ASSETS);
@@ -213,7 +258,7 @@ describe('Plug KeyRing', () => {
       const state = await keyRing.getState();
       expect(state.wallets.length).toEqual(1);
       const stateWallet = state.wallets[0];
-      expect(stateWallet.toJSON()).toEqual(wallet.toJSON());
+      expect(stateWallet).toEqual(wallet.toJSON());
       expect(state.mnemonic).toEqual(TEST_MNEMONIC);
       expect(state.password).toEqual(TEST_PASSWORD);
       expect(bip39.validateMnemonic(state.mnemonic!)).toEqual(true);
@@ -615,17 +660,48 @@ describe('Plug KeyRing', () => {
   });
 
   describe('get balance', () => {
-    const balances = {};
+    const balances = {
+      0: [
+        {
+          amount: '1000',
+          token: {
+            canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai',
+            decimals: 8,
+            name: 'ICP',
+            standard: 'ICP',
+            symbol: 'ICP',
+          },
+        },
+        {
+          amount: '1000',
+          token: {
+            canisterId: 'aanaa-xaaaa-aaaah-aaeiq-cai',
+            decimals: 12,
+            name: 'Cycles',
+            standard: 'XTC',
+            symbol: 'XTC',
+          },
+        },
+        {
+          amount: '1000',
+          token: {
+            canisterId: 'utozz-siaaa-aaaam-qaaxq-cai',
+            decimals: 8,
+            name: 'Wrapped ICP',
+            standard: 'WICP',
+            symbol: 'WICP',
+          },
+        },
+      ],
+    };
     let walletsCreated = 0;
 
-    const mockgetBalances = wallet => {
+    const mockgetBalances = async wallet => {
       const randomBalance = BigInt(0);
       balances[wallet.walletNumber] = randomBalance;
-      jest.spyOn(wallet, 'getBalances').mockImplementation(
-        jest.fn(() => {
-          return Promise.resolve(randomBalance);
-        })
-      );
+      await jest
+        .spyOn(wallet, 'getBalances')
+        .mockReturnValue(Promise.resolve(randomBalance));
     };
 
     beforeEach(async () => {
@@ -636,11 +712,12 @@ describe('Plug KeyRing', () => {
     });
 
     test('get default balance', async () => {
-      expect(await keyRing.getBalances()).toBe(balances[0]);
+      expect(await keyRing.getBalances()).toMatchObject(balances[0]);
     });
 
     test('get specific balance', async () => {
-      const ind = Math.round(Math.random() * (walletsCreated - 1));
+      let ind = Math.round(Math.random() * (walletsCreated - 1));
+      if (ind === 0) ind++;
 
       expect(await keyRing.getBalances(ind)).toBe(balances[ind]);
     });
@@ -677,10 +754,6 @@ describe('Plug KeyRing', () => {
       walletsCreated = await createManyWallets(keyRing, mockGetTransaction);
     });
 
-    // test.only('get default trasnactions', async () => {
-    //   expect(await keyRing.getTransactions()).toBe(transactions[0]);
-    // });
-
     test('get specific transactions', async () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
 
@@ -712,7 +785,11 @@ describe('Plug KeyRing', () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = wallets[ind].principal;
 
-      await keyRing.send(to.toString(), TOKENS.ICP.canisterId, amount.toString());
+      await keyRing.send(
+        to.toString(),
+        amount.toString(),
+        TOKENS.ICP.canisterId
+      );
       expect(createAgent).toHaveBeenCalled();
     });
     it('call sendICP with to account', async () => {
@@ -721,132 +798,51 @@ describe('Plug KeyRing', () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = getAccountId(Principal.fromText(wallets[ind].principal));
 
-      await keyRing.send(to, TOKENS.ICP.canisterId, amount.toString());
-      expect(createAgent).toHaveBeenCalled();
-      expect(mockSendICP.mock.calls[0][0].amount.toString()).toEqual(
-        amount.toString()
+      await keyRing.send(
+        to.toString(),
+        amount.toString(),
+        TOKENS.ICP.canisterId
       );
-      expect(mockSendICP.mock.calls[0][0].to).toEqual(to);
+      expect(createAgent).toHaveBeenCalled();
+      expect(mockedSendToken.mock.calls[0][0].amount).toEqual(amount);
+      expect(mockedSendToken.mock.calls[0][0].to).toEqual(to);
     });
 
-    it('call sendICP with to principal', async () => {
-      const { wallets } = await keyRing.getState();
-      const amount = BigInt(0);
-      const ind = Math.round(Math.random() * (walletsCreated - 1));
-      const to = wallets[ind].principal;
-
-      await keyRing.send(to.toString(), TOKENS.ICP.canisterId, amount.toString());
-      expect(createAgent).toHaveBeenCalled();
-      expect(mockSendICP.mock.calls[0][0].amount.toString()).toEqual(
-        amount.toString()
-      );
-      expect(mockSendICP.mock.calls[0][0].to).toEqual(
-        getAccountId(Principal.fromText(to))
-      );
+    describe('nfts', () => {
+      beforeEach(async () => {
+        keyRing = new PlugKeyRing(store);
+        await keyRing.create({
+          password: TEST_PASSWORD,
+        });
+        await keyRing.unlock(TEST_PASSWORD);
+      });
+      it('should fetch NFTs correctly', async () => {
+        const nfts = await keyRing.getNFTs();
+        expect(nfts).toEqual([mockdeNFTCollection]);
+      });
+      it('should fail to fetch NFTs on inexistant account', async () => {
+        await expect(keyRing.getNFTs(1)).rejects.toThrow(
+          ERRORS.INVALID_WALLET_NUMBER
+        );
+      });
+      it('should transfer an NFT correctly', async () => {
+        const nfts = (await keyRing.getNFTs()) || [];
+        const { tokens } = nfts[0];
+        const to =
+          'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe';
+        const transferred = await keyRing.transferNFT({
+          token: tokens[0],
+          to,
+          standard: tokens[0].standard,
+        });
+        expect(transferred).toMatchObject([]);
+        expect(mockedTransferNFT).toHaveBeenCalled();
+        expect(mockedTransferNFT.mock.calls[0][0].toString()).toEqual(to);
+        expect(mockedTransferNFT.mock.calls[0][1].toString()).toEqual(
+          tokens[0].index.toString()
+        );
+      });
     });
-    // describe('nfts', () => {
-    //   beforeEach(async () => {
-    //     keyRing = new PlugKeyRing(store);
-    //     await keyRing.importMnemonic({
-    //       password: TEST_PASSWORD,
-    //       mnemonic: TEST_MNEMONIC,
-    //     });
-    //     await keyRing.unlock(TEST_PASSWORD);
-    //   });
-    //   it('should fetch NFTs correctly', async () => {
-    //     const nfts = await keyRing.getNFTs();
-    //     expect(nfts).toEqual([
-    //       {
-    //         index: BigInt(10),
-    //         canister: 'qcg3w-tyaaa-aaaah-qakea-cai',
-    //         name: 'IC Punk# 10',
-    //         url: 'https://qcg3w-tyaaa-aaaah-qakea-cai.raw.ic0.app/Token/10',
-    //         metadata: {
-    //           index: BigInt(10),
-    //           name: 'IC Punk# 10',
-    //           url: 'https://qcg3w-tyaaa-aaaah-qakea-cai.raw.ic0.app/Token/10',
-    //           owner: Principal.from('ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe'),
-    //           desc: 'string',
-    //           properties: [],
-    //         }
-    //       },
-    //     ]);
-    //   });
-    //   it('should fail to fetch NFTs on inexistant account', async () => {
-    //     await expect(keyRing.getNFTs(1)).rejects.toThrow(
-    //       ERRORS.INVALID_WALLET_NUMBER
-    //     );
-    //   });
-    //   it('should transfer an ICPunk NFT correctly', async () => {
-    //     const nfts = await keyRing.getNFTs();
-    //     const { tokens } = nfts.icpunks[0];
-    //     const transferred = await keyRing.transferNFT({
-    //       id: tokens[0].index,
-    //       to: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
-    //     });
-    //     expect(transferred).toEqual(true);
-    //   });
-    //   it('should transfer an EXT NFT correctly', async () => {
-    //     const nfts = await keyRing.getNFTs();
-    //     const { tokens } = nfts.ext[0];
-    //     const transferred = await keyRing.transferNFT({
-    //       id: tokens[0].id!,
-    //       to: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
-    //     });
-    //     expect(transferred).toEqual(true);
-    //   });
-    //   it('should fail to transfer NFTs on inexistant account', async () => {
-    //     const nfts = await keyRing.getNFTs();
-    //     const { tokens } = nfts.icpunks[0];
-    //     await expect(
-    //       keyRing.transferNFT({
-    //         subAccount: 1,
-    //         id: tokens[0].index!,
-    //         to:
-    //           'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
-    //       })
-    //     ).rejects.toThrow(ERRORS.INVALID_WALLET_NUMBER);
-    //   });
-    //   // TODO: Not sure how to make it fail.
-    //   it('should fail to transfer NFTs that is not owned', async () => {
-    //     await expect(
-    //       keyRing.transferNFT({
-    //         id: BigInt(130),
-    //         to:
-    //           'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
-    //       })
-    //     ).rejects.toThrow(ERRORS.TRANSFER_NFT_ERROR);
-    //   });
-    //   it('should fail to transfer NFTs to invalid principal', async () => {
-    //     const nfts = await keyRing.getNFTs();
-    //     const { tokens } = nfts.icpunks[0];
-    //     // Malformed pid
-    //     await expect(
-    //       keyRing.transferNFT({
-    //         id: tokens[0].index!,
-    //         to: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6lbzwp-7qe',
-    //       })
-    //     ).rejects.toThrow(ERRORS.INVALID_PRINCIPAL_ID);
-
-    //     // Account ID
-    //     await expect(
-    //       keyRing.transferNFT({
-    //         id: tokens[0].index!,
-    //         to:
-    //           '9627c5abbae5b63b3a1b2ad8b6ee85e99e45317c4276c8addb39211ce05d2a59',
-    //       })
-    //     ).rejects.toThrow(ERRORS.INVALID_PRINCIPAL_ID);
-
-    //     // CONNFIRM WITH IC PUNKS
-    //     // Canister ID
-    //     await expect(
-    //       keyRing.transferNFT({
-    //         id: tokens[0].index!,
-    //         to: '6xisx-7yaaa-aaaah-aagga-cai',
-    //       })
-    //     ).rejects.toThrow(ERRORS.INVALID_PRINCIPAL_ID);
-    //   });
-    // });
 
     afterEach(() => {
       jest.clearAllMocks();
