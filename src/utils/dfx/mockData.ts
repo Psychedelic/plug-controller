@@ -535,27 +535,40 @@ export const mockTransactionResult = {
   total: 2,
   transactions: [
     {
-      status: 'COMPLETED',
-      fee: {
-        amount: BigInt(-10000),
+      details: {
+        amount: '20000000',
         currency: { symbol: 'ICP', decimals: 8 },
+        to: '3cbd622655d0496c6e28398f5d6889c45fab26d22dcc735da6832f867fd290a3',
+        from:
+          '4dfa940def17f1427ae47378c440f10185867677109a02bc8374fc25b9dee8af',
+        fee: {
+          amount: '-10000',
+          currency: { symbol: 'ICP', decimals: 8 },
+        },
+        status: 'COMPLETED',
       },
-      from: '4dfa940def17f1427ae47378c440f10185867677109a02bc8374fc25b9dee8af',
       type: 'RECEIVE',
-      amount: BigInt(20000000),
-      currency: { symbol: 'ICP', decimals: 8 },
-      to: '3cbd622655d0496c6e28398f5d6889c45fab26d22dcc735da6832f867fd290a3',
+      caller:
+        '4dfa940def17f1427ae47378c440f10185867677109a02bc8374fc25b9dee8af',
       hash: '77d3b28f4e6b7aea6c012ff7707b21b8b398f5146053a6038b2ff02b983bba2e',
       timestamp: 1623432025640.7742,
     },
     {
-      status: 'COMPLETED',
-      fee: { amount: BigInt(-10000), currency: { symbol: 'ICP', decimals: 8 } },
-      from: '3cbd622655d0496c6e28398f5d6889c45fab26d22dcc735da6832f867fd290a3',
+      details: {
+        status: 'COMPLETED',
+        fee: {
+          amount: '-10000',
+          currency: { symbol: 'ICP', decimals: 8 },
+        },
+        from:
+          '3cbd622655d0496c6e28398f5d6889c45fab26d22dcc735da6832f867fd290a3',
+        amount: '10000',
+        currency: { symbol: 'ICP', decimals: 8 },
+        to: '4dfa940def17f1427ae47378c440f10185867677109a02bc8374fc25b9dee8af',
+      },
       type: 'SEND',
-      amount: BigInt(10000),
-      currency: { symbol: 'ICP', decimals: 8 },
-      to: '4dfa940def17f1427ae47378c440f10185867677109a02bc8374fc25b9dee8af',
+      caller:
+        '3cbd622655d0496c6e28398f5d6889c45fab26d22dcc735da6832f867fd290a3',
       hash: 'b288ebc8facbacbb3fb3b0e2864c99feaf3898bea8c33d6a1ecc793d2177ded3',
       timestamp: 1623531693580.1147,
     },

@@ -281,12 +281,12 @@ class PlugWallet {
       Object.values(this.assets).map(asset => this.getTokenBalance(asset.token))
     );
 
-    Object.values(tokenBalances).forEach((asset) => {
+    Object.values(tokenBalances).forEach(asset => {
       const { canisterId } = asset.token;
       const { amount } = asset;
       this.assets[canisterId] = {
         ...this.assets[canisterId],
-        amount
+        amount,
       };
     });
 
