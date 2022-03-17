@@ -81,44 +81,6 @@ const mockdeNFTCollection = {
   transfer: mockedTransferNFT,
 });
 
-// jest.mock('../utils/dfx/nft', () => {
-//   return {
-//     createNFTActor: (): {
-//       user_tokens: jest.Mock<any, any>;
-//       data_of: jest.Mock<any, any>;
-//       transfer_to: jest.Mock<boolean, any>;
-//     } => ({
-//       user_tokens: jest.fn(() => [BigInt(10)]),
-//       data_of: jest.fn(() => ({
-//         index: BigInt(10),
-//         canister: 'qcg3w-tyaaa-aaaah-qakea-cai',
-//         name: 'IC Punk# 10',
-//         url: 'https://qcg3w-tyaaa-aaaah-qakea-cai.raw.ic0.app/Token/10',
-//         metadata: {
-//           index: BigInt(10),
-//           name: 'IC Punk# 10',
-//           url: 'https://qcg3w-tyaaa-aaaah-qakea-cai.raw.ic0.app/Token/10',
-//           owner: Principal.from(
-//             'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe'
-//           ),
-//           desc: 'string',
-//           properties: [],
-//         },
-//       })),
-//       transfer_to: jest.fn((_, id) => {
-//         if (id === BigInt(130)) {
-//           throw new Error(ERRORS.TRANSFER_NFT_ERROR);
-//         }
-//         return true;
-//       }),
-//     }),
-//   };
-// });
-
-// jest.mock('../utils/dfx/token/methods', () => {
-//   return {};
-// });
-
 const TEST_PASSWORD = 'Somepassword1234';
 const TEST_MNEMONIC = bip39.generateMnemonic();
 
@@ -135,7 +97,7 @@ const createManyWallets = async (
 };
 
 const createManyTransactions = (): GetTransactionsResponse => {
-  const many = 1; // Math.round(Math.random() * 20) + 2;
+  const many = Math.round(Math.random() * 20) + 2;
   const transactions: GetTransactionsResponse = { total: 0, transactions: [] };
   for (let i = 0; i < many; i += 1) {
     transactions.transactions.push({
