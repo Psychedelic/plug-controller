@@ -21,7 +21,7 @@ export const getCanisterInfo = async (
   const finalAgent =
     agent ||
     new HttpAgent({
-      host: process.env.DFX_HOST || PLUG_PROXY_HOST,
+      host: PLUG_PROXY_HOST,
       fetch: wrappedFetch(),
     });
 
@@ -40,7 +40,7 @@ export const getMultipleCanisterInfo = async (
   const finalAgent =
     agent ||
     new HttpAgent({
-      host: process.env.DFX_HOST || PLUG_PROXY_HOST,
+      host: PLUG_PROXY_HOST,
       fetch: wrappedFetch(),
     });
 

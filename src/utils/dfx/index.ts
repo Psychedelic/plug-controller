@@ -19,23 +19,19 @@ export interface CreateAgentArgs {
 export const createIdentity = (secretKey: BinaryBlob): Secp256k1KeyIdentity =>
   Secp256k1KeyIdentity.fromSecretKey(secretKey);
 
-export const createAgent = async ({
+export const createAgent = ({
   secretKey,
   defaultIdentity,
   fetch = crossFetch,
-}: CreateAgentArgs): Promise<HttpAgent> => {
+}: CreateAgentArgs): HttpAgent => {
   const identity =
     defaultIdentity || createIdentity(blobFromUint8Array(secretKey));
-  const agent = await Promise.resolve(
+  const agent = 
     new HttpAgent({
-      host: process.env.DFX_HOST || PLUG_PROXY_HOST,
+      host: PLUG_PROXY_HOST,
       fetch: wrappedFetch(fetch),
       identity,
     })
-  ).then(async ag => {
-    await ag.fetchRootKey();
-    return ag;
-  });
   return agent;
 };
 
