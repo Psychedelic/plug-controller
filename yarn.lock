@@ -782,10 +782,10 @@
   dependencies:
     fancy-test "^1.4.10"
 
-"@psychedelic/cap-js@0.0.5":
-  version "0.0.5"
-  resolved "https://npm.pkg.github.com/download/@psychedelic/cap-js/0.0.5/5623abd851cdf8c36d6a2c2dc961f0ba9b1b9ca4e5db4c0f25e56d5afbc85de4#2eb444e86b24098a8162f67d3f1c4734cc2a3fa0"
-  integrity sha512-2zaD6DKUMGk3veZvEEheVv5rPie7rh5q0BXY5qzthi56rd6Qo4xWQlyLNlGuyVzVRPWNbWGoF2zEBS2aBZci0Q==
+"@psychedelic/cap-js@0.0.7":
+  version "0.0.7"
+  resolved "https://npm.pkg.github.com/download/@psychedelic/cap-js/0.0.7/fdd88b53949ab9077b5aef84e137ffedcf367b451b1ba90f279c742c979921fb#8184d6ab5732f9a69380dfba5aed4d62e5e71051"
+  integrity sha512-SdvL0DhDPKAUyY8/BXf39WuLFRIzqWeuHwLEqXYH8kO1k2jHR7mbT3pwNNIScuOEbbL2myxHy141QTfkpoHZaA==
   dependencies:
     "@dfinity/agent" "^0.10.1"
     "@dfinity/candid" "^0.10.1"
