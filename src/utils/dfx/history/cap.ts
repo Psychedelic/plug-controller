@@ -87,12 +87,12 @@ const formatTransaction = async (
     const isSwap = operation?.toLowerCase?.()?.includes?.('swap');
     let data: any = { token: await getHandledTokenInfo(tokenId), amount: amount };
     if (isSwap) {
-      const [to, from] = (pairId as string)?.split(':');
+      const [from, to] = (pairId as string)?.split(':');
       data.swap = {
         from: await getHandledTokenInfo(from),
         to: await getHandledTokenInfo(to),
-        amountIn: amountIn,
-        amountOut: amountOut
+        amountIn,
+        amountOut
       };
     }
     return data;
