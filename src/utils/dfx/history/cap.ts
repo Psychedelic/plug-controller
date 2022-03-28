@@ -87,10 +87,9 @@ const formatTransaction = async (
     const isSwap = operation?.toLowerCase?.()?.includes?.('swap');
     let data: any = { token: await getHandledTokenInfo(tokenId), amount: amount };
     if (isSwap) {
-      const [from, to] = (pairId as string)?.split(':');
       data.swap = {
-        from: await getHandledTokenInfo(from),
-        to: await getHandledTokenInfo(to),
+        from: await getHandledTokenInfo(details?.from),
+        to: await getHandledTokenInfo(details?.to),
         amountIn,
         amountOut
       };
@@ -149,23 +148,37 @@ const getCanistersInfo = async (canisterIds: string[]): Promise<any> => {
   return canistersInfo;
 };
 
+
+const queryParams = (lastEvaluatedKey: LastEvaluatedKey) => {
+  if (!lastEvaluatedKey) return '';
+  return `?${Object.keys(lastEvaluatedKey)
+    .map(key => `${key}=${lastEvaluatedKey[key]}`)
+    .join('&')}`;
+};
 export const getCapTransactions = async (
   principalId: string,
-  lastEvaluatedKey?: string
+  lastEvaluatedKey?: LastEvaluatedKey
 ): Promise<GetUserTransactionResponse> => {
-  const url = `${KYASHU_URL}/cap/user/txns/${principalId}${
-    lastEvaluatedKey ? `?LastEvaluatedKey=${lastEvaluatedKey}` : ''
-  }`;
+  let total: number = 0;
+  let transactions: InferredTransaction[] = [];
+  let lastKey: LastEvaluatedKey | undefined = lastEvaluatedKey;
   try {
-    const response = await axios.get<any, AxiosResponse<KyashuResponse>>(url);
-    const canisterIds = uniqueMap<KyashuItem, string>(response.data.Items, item => getTransactionCanister(item.contractId));
-    const canistersInfo = await getCanistersInfo(canisterIds);
-    const transactions = await Promise.all(response.data.Items.map(async item => formatTransaction(item,canistersInfo)));
-    return {
-      total: response.data.Count,
-      lastEvaluatedKey: response.data.LastEvaluatedKey,
-      transactions,
-    };
+    do {
+      let url = `${KYASHU_URL}/cap/user/txns/${principalId}`;
+      if (lastKey) {
+        url += queryParams(lastKey);
+      }
+
+      const response = await axios.get<any, AxiosResponse<KyashuResponse>>(url);
+      const canisterIds = uniqueMap<KyashuItem, string>(response.data.Items, item => getTransactionCanister(item.contractId));
+      const canistersInfo = await getCanistersInfo(canisterIds);
+      const lastTransactions = await Promise.all(response.data.Items.map(async item => formatTransaction(item,canistersInfo)));
+
+      const isSameKey = (oldObj, newObj) => Object.entries(oldObj || {}).every(([key, value]) => newObj[key] === value);
+      lastKey = isSameKey(lastKey, response.data.LastEvaluatedKey) ? undefined : response.data.LastEvaluatedKey;
+      total += response.data.Count;
+      transactions = [...transactions, ...lastTransactions];
+    } while (lastKey)
   } catch (e) {
     console.error('CAP transactions error:', e);
     return {
@@ -173,6 +186,10 @@ export const getCapTransactions = async (
       transactions: [],
     };
   }
+  return {
+    total,
+    transactions,
+  };
 };
 
 export default {};
