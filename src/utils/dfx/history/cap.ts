@@ -148,13 +148,6 @@ const getCanistersInfo = async (canisterIds: string[]): Promise<any> => {
   return canistersInfo;
 };
 
-
-const queryParams = (lastEvaluatedKey: LastEvaluatedKey) => {
-  if (!lastEvaluatedKey) return '';
-  return `?${Object.keys(lastEvaluatedKey)
-    .map(key => `${key}=${lastEvaluatedKey[key]}`)
-    .join('&')}`;
-};
 export const getCapTransactions = async (
   principalId: string,
   lastEvaluatedKey?: LastEvaluatedKey
@@ -164,12 +157,11 @@ export const getCapTransactions = async (
   let lastKey: LastEvaluatedKey | undefined = lastEvaluatedKey;
   try {
     do {
-      let url = `${KYASHU_URL}/cap/user/txns/${principalId}`;
-      if (lastKey) {
-        url += queryParams(lastKey);
-      }
-
-      const response = await axios.get<any, AxiosResponse<KyashuResponse>>(url);
+      const url = `${KYASHU_URL}/cap/user/txns/${principalId}`;
+      const params = {
+          LastEvaluatedKey: lastKey,
+      };
+      const response = await axios.get(url, { params });
       const canisterIds = uniqueMap<KyashuItem, string>(response.data.Items, item => getTransactionCanister(item.contractId));
       const canistersInfo = await getCanistersInfo(canisterIds);
       const lastTransactions = await Promise.all(response.data.Items.map(async item => formatTransaction(item,canistersInfo)));
