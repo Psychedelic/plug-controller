@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-underscore-dangle */
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, Method } from 'axios';
 import { Principal } from '@dfinity/principal';
 import { prettifyCapTransactions } from '@psychedelic/cap-js';
 import { getTokens, getAllNFTS, TokenRegistry } from '@psychedelic/dab-js';
@@ -154,23 +154,26 @@ export const getCapTransactions = async (
 ): Promise<GetUserTransactionResponse> => {
   let total: number = 0;
   let transactions: InferredTransaction[] = [];
-  let lastKey: LastEvaluatedKey | undefined = lastEvaluatedKey;
+  let LastEvaluatedKey: LastEvaluatedKey | undefined = lastEvaluatedKey;
   try {
     do {
-      const url = `${KYASHU_URL}/cap/user/txns/${principalId}`;
-      const params = {
-          LastEvaluatedKey: lastKey,
+      const options = {
+        method: "get" as Method,
+        url: `https://kyasshu.fleek.co/cap/user/txns/${principalId}`,
+        ...(LastEvaluatedKey ? {
+          params: {
+            LastEvaluatedKey,
+          },
+        } : {}),
       };
-      const response = await axios.get(url, { params });
+      const response = await axios(options);
       const canisterIds = uniqueMap<KyashuItem, string>(response.data.Items, item => getTransactionCanister(item.contractId));
       const canistersInfo = await getCanistersInfo(canisterIds);
       const lastTransactions = await Promise.all(response.data.Items.map(async item => formatTransaction(item,canistersInfo)));
-
-      const isSameKey = (oldObj, newObj) => Object.entries(oldObj || {}).every(([key, value]) => newObj[key] === value);
-      lastKey = isSameKey(lastKey, response.data.LastEvaluatedKey) ? undefined : response.data.LastEvaluatedKey;
+      LastEvaluatedKey = response.data.LastEvaluatedKey;
       total += response.data.Count;
       transactions = [...transactions, ...lastTransactions];
-    } while (lastKey)
+    } while (LastEvaluatedKey)
   } catch (e) {
     console.error('CAP transactions error:', e);
     return {
