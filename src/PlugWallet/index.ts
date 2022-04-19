@@ -8,6 +8,7 @@ import {
   NFTDetails,
   getTokenActor,
   TokenInterfaces,
+  standards,
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
@@ -29,6 +30,8 @@ import { ConnectedApp } from '../interfaces/account';
 import { JSONWallet, Assets } from '../interfaces/plug_wallet';
 import { StandardToken, TokenBalance } from '../interfaces/token';
 import { GetTransactionsResponse } from '../interfaces/transactions';
+import ICNSAdapter from '../utils/dfx/icns';
+import { recursiveParseBigint } from '../utils/object';
 
 interface PlugWalletArgs {
   name?: string;
@@ -39,6 +42,14 @@ interface PlugWalletArgs {
   assets?: Assets;
   collections?: Array<NFTCollection>;
   fetch: any;
+  icnsNames?: NFTCollection;
+}
+
+const EMPTY_ICNS_COLLECTION = {
+  name: 'ICNS',
+  tokens: [],
+  canisterId: 'icns',
+  standard: standards.NFT.dip721
 }
 
 class PlugWallet {
@@ -58,6 +69,8 @@ class PlugWallet {
 
   assets: Assets;
 
+  icnsNames: NFTCollection;
+
   collections: Array<NFTCollection>;
 
   private identity: Secp256k1KeyIdentity;
@@ -73,11 +86,13 @@ class PlugWallet {
     assets = DEFAULT_ASSETS,
     collections = [],
     fetch,
+    icnsNames = EMPTY_ICNS_COLLECTION
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
     this.walletNumber = walletNumber;
     this.assets = assets;
+    this.icnsNames = icnsNames;
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -107,11 +122,15 @@ class PlugWallet {
     refresh?: boolean
   ): Promise<NFTCollection[] | null> => {
     try {
+      const { secretKey } = this.identity.getKeyPair();
+      const agent = createAgent({ secretKey, fetch: this.fetch });
+      const icnsAdapter = new ICNSAdapter(agent)
       this.collections = await getCachedUserNFTs({
         userPID: this.principal,
         refresh,
       });
-      return this.collections;
+      this.icnsNames = await icnsAdapter.getNamesForPrincipal(this.principal);
+      return [...this.collections, this.icnsNames];
     } catch (e) {
       return null;
     }
@@ -210,13 +229,8 @@ class PlugWallet {
     icon: this.icon,
     connectedApps: this.connectedApps,
     assets: this.assets,
-    nftCollections: this.collections.map(collection => ({
-      ...collection,
-      tokens: collection.tokens.map(token => ({
-        ...token,
-        index: parseInt(token.index.toString(), 10),
-      })),
-    })),
+    nftCollections: recursiveParseBigint(this.collections),
+    icnsNames: recursiveParseBigint(this.icnsNames),
   });
 
   public burnXTC = async (to: string, amount: string) => {
