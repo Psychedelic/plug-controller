@@ -1,3 +1,4 @@
+import { NFTCollection } from '@psychedelic/dab-js';
 import { ConnectedApp } from './account';
 import { TokenBalance } from './token';
 
@@ -28,4 +29,5 @@ export interface JSONWallet {
             collection?: string;
         }>;
     }>;
+    icnsNames: NFTCollection;
 }
