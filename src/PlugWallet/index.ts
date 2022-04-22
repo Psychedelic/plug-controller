@@ -1,4 +1,4 @@
-import { PublicKey } from '@dfinity/agent';
+import { HttpAgent, PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import {
@@ -26,12 +26,20 @@ import {
 import { getCapTransactions } from '../utils/dfx/history/cap';
 
 import { ConnectedApp } from '../interfaces/account';
-import { JSONWallet, Assets, ICNSData, PlugWalletArgs } from '../interfaces/plug_wallet';
+import {
+  JSONWallet,
+  Assets,
+  ICNSData,
+  PlugWalletArgs,
+} from '../interfaces/plug_wallet';
 import { StandardToken, TokenBalance } from '../interfaces/token';
 import { GetTransactionsResponse } from '../interfaces/transactions';
 import ICNSAdapter from '../utils/dfx/icns';
 import { recursiveParseBigint } from '../utils/object';
-import { recursiveFindPrincipals, replacePrincipalsForICNS } from '../utils/dfx/icns/utils';
+import {
+  recursiveFindPrincipals,
+  replacePrincipalsForICNS,
+} from '../utils/dfx/icns/utils';
 
 class PlugWallet {
   name: string;
@@ -56,6 +64,8 @@ class PlugWallet {
 
   private identity: Secp256k1KeyIdentity;
 
+  private agent: HttpAgent;
+
   constructor({
     name,
     icon,
@@ -65,7 +75,7 @@ class PlugWallet {
     assets = DEFAULT_ASSETS,
     collections = [],
     fetch,
-    icnsData = {}
+    icnsData = {},
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
@@ -82,6 +92,10 @@ class PlugWallet {
     this.connectedApps = [...connectedApps];
     this.collections = [...collections];
     this.fetch = fetch;
+    this.agent = createAgent({
+      secretKey: this.identity.getKeyPair().secretKey,
+      fetch: this.fetch,
+    });
   }
 
   public setName(val: string): void {
@@ -103,7 +117,7 @@ class PlugWallet {
     try {
       const { secretKey } = this.identity.getKeyPair();
       const agent = createAgent({ secretKey, fetch: this.fetch });
-      const icnsAdapter = new ICNSAdapter(agent)
+      const icnsAdapter = new ICNSAdapter(agent);
       this.collections = await getCachedUserNFTs({
         userPID: this.principal,
         refresh,
@@ -320,7 +334,6 @@ class PlugWallet {
     return { token, amount: tokenBalance.value };
   };
 
-
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
     const { secretKey } = this.identity.getKeyPair();
     const agent = createAgent({ secretKey, fetch: this.fetch });
@@ -335,7 +348,9 @@ class PlugWallet {
     ];
     const principals = recursiveFindPrincipals(transactionsGroup);
     const icnsMapping = await icnsAdapter.getICNSMappings(principals);
-    transactionsGroup = transactionsGroup.map(tx => replacePrincipalsForICNS(tx, icnsMapping));
+    transactionsGroup = transactionsGroup.map(tx =>
+      replacePrincipalsForICNS(tx, icnsMapping)
+    );
     transactionsGroup = transactionsGroup.map(tx => ({
       ...tx,
       details: {
@@ -415,6 +430,10 @@ class PlugWallet {
     return this.connectedApps;
   };
 
+  public getAgent(): HttpAgent {
+    return this.agent;
+  }
+
   public get publicKey(): PublicKey {
     return this.identity.getKeyPair().publicKey;
   }
@@ -423,7 +442,10 @@ class PlugWallet {
     return this.identity.getPem();
   }
 
-  public getICNSData = async (): Promise<{ names: string[], reverseResolvedName: string | undefined}> => {
+  public getICNSData = async (): Promise<{
+    names: string[];
+    reverseResolvedName: string | undefined;
+  }> => {
     const { secretKey } = this.identity.getKeyPair();
     const agent = createAgent({ secretKey, fetch: this.fetch });
     const icnsAdapter = new ICNSAdapter(agent);
@@ -431,21 +453,21 @@ class PlugWallet {
     const reverseResolvedName = await icnsAdapter.getICNSReverseResolvedName();
     this.icnsData = { names, reverseResolvedName };
     return { names, reverseResolvedName };
-  }
+  };
 
   public getReverseResolvedName = async (): Promise<string | undefined> => {
     const { secretKey } = this.identity.getKeyPair();
     const agent = createAgent({ secretKey, fetch: this.fetch });
     const icnsAdapter = new ICNSAdapter(agent);
     return icnsAdapter.getICNSReverseResolvedName();
-  }
+  };
 
   public setReverseResolvedName = async (name: string): Promise<string> => {
     const { secretKey } = this.identity.getKeyPair();
     const agent = createAgent({ secretKey, fetch: this.fetch });
     const icnsAdapter = new ICNSAdapter(agent);
     return icnsAdapter.setICNSReverseResolvedName(name);
-  }
+  };
 }
 
 export default PlugWallet;
