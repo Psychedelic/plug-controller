@@ -353,7 +353,6 @@ class PlugWallet {
       transactions: transactionsGroup.sort((a, b) =>
         b.timestamp - a.timestamp < 0 ? -1 : 1
       ),
-      icnsTranslations: {}
     };
     return transactions;
   };
