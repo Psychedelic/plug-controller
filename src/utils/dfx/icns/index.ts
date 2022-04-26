@@ -98,4 +98,20 @@ export default class ICNSAdapter {
       }
       throw(ERRORS.ICNS_REVERSE_RESOLVER_ERROR);
   }
-}
+
+  public getICNSMappings = async (principalIds: string[]): Promise<{ [key: string]: string | undefined }> => {
+    const mappings = {};
+    await Promise.all(principalIds.map(async pid => {
+      try {
+        const name = await this.getICNSReverseResolvedName(pid);
+        if (name) {
+          mappings[name] = pid
+          mappings[pid] = name;
+        }
+      } catch (e) {
+        console.log('error getting ICNS mapping', pid, e);
+      }
+    }));
+    return mappings;
+  }
+};

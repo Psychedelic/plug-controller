@@ -8,13 +8,12 @@ import {
   NFTDetails,
   getTokenActor,
   TokenInterfaces,
-  standards,
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
 import { ERRORS } from '../errors';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
-import { createAccountFromMnemonic, getAccountId } from '../utils/account';
+import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent } from '../utils/dfx';
 import { getICPTransactions } from '../utils/dfx/history/rosetta';
@@ -29,9 +28,35 @@ import { getCapTransactions } from '../utils/dfx/history/cap';
 import { ConnectedApp } from '../interfaces/account';
 import { JSONWallet, Assets, ICNSData, PlugWalletArgs } from '../interfaces/plug_wallet';
 import { StandardToken, TokenBalance } from '../interfaces/token';
-import { GetTransactionsResponse } from '../interfaces/transactions';
+import { GetTransactionsResponse, InferredTransaction } from '../interfaces/transactions';
 import ICNSAdapter from '../utils/dfx/icns';
 import { recursiveParseBigint } from '../utils/object';
+import { PRINCIPAL_REGEX } from '../utils/dfx/constants';
+
+interface ICNSMapping { [key: string]: string | undefined }
+
+const getMappingValue = (pid: string, mappings: ICNSMapping) => ({ principal: pid, icns: mappings[pid] });
+
+const replacePrincipalsForICNS = (tx: InferredTransaction, mappings: ICNSMapping): InferredTransaction => {
+  const parsedTx = { ...tx };
+  const { from, to } = parsedTx?.details || {};
+  parsedTx.details = {
+    ...parsedTx.details,
+    from: getMappingValue(from, mappings),
+    to: getMappingValue(to, mappings),
+  };
+  return parsedTx;
+}
+
+const recursiveFindPrincipals = (transactions: InferredTransaction[]): string[] => {
+  return transactions.reduce((acc, tx) => {
+    const copy: string[] = [...acc];
+    const { from, to } = tx.details || {};
+    if (PRINCIPAL_REGEX.test(from)) copy.push(from);
+    if (PRINCIPAL_REGEX.test(to)) copy.push(to);
+    return [...new Set(copy)];
+  }, []);
+}
 
 class PlugWallet {
   name: string;
@@ -320,15 +345,24 @@ class PlugWallet {
     return { token, amount: tokenBalance.value };
   };
 
+
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = createAgent({ secretKey, fetch: this.fetch });
+    const icnsAdapter = new ICNSAdapter(agent);
     const icpTrxs = await getICPTransactions(this.accountId);
     const xtcTransactions = await getXTCTransactions(this.principal);
     const capTransactions = await getCapTransactions(this.principal);
-    const transactionsGroup = [
+    let transactionsGroup = [
       ...capTransactions.transactions,
       ...icpTrxs.transactions,
       ...xtcTransactions.transactions,
-    ].map(tx => ({
+    ];
+    const principals = recursiveFindPrincipals(transactionsGroup); // TX[] ==> string[]  O(k) --> K: cantidad de txs
+    const icnsMapping = await icnsAdapter.getICNSMappings(principals); // pid[] => { [pid]: icns } O(N) N: #unique pids
+    console.log('icnsMappings', icnsMapping);
+    transactionsGroup = transactionsGroup.map(tx => replacePrincipalsForICNS(tx, icnsMapping));
+    transactionsGroup = transactionsGroup.map(tx => ({
       ...tx,
       details: {
         ...tx.details,
@@ -336,6 +370,7 @@ class PlugWallet {
           tx.details?.canisterId && this.assets[tx.details?.canisterId]?.token,
       },
     }));
+
     // merge and format all trx. sort by timestamp
     // TODO: any custom token impelmenting archive should be queried. (0.4.0)
     const transactions = {
@@ -343,6 +378,7 @@ class PlugWallet {
       transactions: transactionsGroup.sort((a, b) =>
         b.timestamp - a.timestamp < 0 ? -1 : 1
       ),
+      icnsTranslations: {}
     };
     return transactions;
   };

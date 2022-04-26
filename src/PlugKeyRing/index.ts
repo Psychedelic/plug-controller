@@ -354,7 +354,7 @@ class PlugKeyRing {
   };
 
   public getTransactions = async (
-    subAccount?: number
+    subAccount?: number,
   ): Promise<GetTransactionsResponse> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
