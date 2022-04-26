@@ -3,20 +3,27 @@ import { HttpAgent, Actor, ActorSubclass } from "@dfinity/agent";
 
 import resolverIDL from '../../../idls/icns_resolver.did';
 import registryIDL from '../../../idls/icns_registry.did';
+import reverseRegistrarIDL from '../../../idls/icns_reverse_registrar.did';
 import Resolver, { DefaultInfoExt } from '../../../interfaces/icns_resolver';
 import Registry, { RecordExt } from '../../../interfaces/icns_registry';
+import ReverseRegistrar from '../../../interfaces/icns_reverse_registrar';
 import { Principal } from "@dfinity/principal";
 import { NFTCollection, standards } from "@psychedelic/dab-js";
+import { ERRORS } from "../../../errors";
 
 const ICNS_REGISTRY_ID = 'e5kvl-zyaaa-aaaan-qabaq-cai';
 const ICNS_RESOLVER_ID = 'euj6x-pqaaa-aaaan-qabba-cai';
+const ICNS_REVERSE_REGISTRAR_ID = 'etiyd-ciaaa-aaaan-qabbq-cai';
 const ICNS_IMG = 'https://icns.id/Rectangle.jpg';
 const ICNS_LOGO = 'https://icns.id/ICNS-logo.png';
 
 export default class ICNSAdapter {
   #resolver: ActorSubclass<Resolver>;
   #registry: ActorSubclass<Registry>;
+  #reverseRegistrar: ActorSubclass<ReverseRegistrar>;
+  #agent: HttpAgent;
   constructor(agent: HttpAgent) {
+    this.#agent = agent;
     this.#resolver = Actor.createActor(resolverIDL, {
       canisterId: ICNS_RESOLVER_ID,
       agent,
@@ -26,7 +33,11 @@ export default class ICNSAdapter {
       canisterId: ICNS_REGISTRY_ID,
       agent,
     });
-    
+
+    this.#reverseRegistrar = Actor.createActor(reverseRegistrarIDL, {
+      canisterId: ICNS_REVERSE_REGISTRAR_ID,
+      agent,
+    });
   }
 
   public resolveName = async (name: string, isICP: boolean): Promise<string | undefined> => {
@@ -44,11 +55,16 @@ export default class ICNSAdapter {
     return principal?.toString?.();
   };
 
-  public getNamesForPrincipal = async (principalId: string): Promise<NFTCollection> => {
-    let icnsNames = await this.#registry.getUserDomains(Principal.from(principalId));
-    const formattedNames = icnsNames?.[0]?.map(
-      (icns, index) => ({
-        name: icns?.name,
+  public getICNSNames = async (): Promise<string[]> => {
+    const names = await this.#registry.getUserDomains(await this.#agent.getPrincipal());
+    return names[0]?.map(({ name }) => name) || [];
+  };
+
+  public getICNSCollection = async (): Promise<NFTCollection> => {
+    let icnsNames = await this.getICNSNames();
+    const formattedNames = icnsNames?.map(
+      (name, index) => ({
+        name: name,
         url: ICNS_IMG,
         collection: 'ICNS',
         desc: 'ICNS Name Record',
@@ -67,4 +83,35 @@ export default class ICNSAdapter {
       tokens: formattedNames || [],
     };
   };
-}
+
+  public getICNSReverseResolvedName = async (principalId?: string): Promise<string | undefined> => {
+    const ownPrincipal = await this.#agent.getPrincipal();
+    const principal = principalId ? Principal.from(principalId) : ownPrincipal;
+    const name = await this.#reverseRegistrar.getName(principal);
+    return name;
+  }
+
+  public setICNSReverseResolvedName = async (name: string): Promise<string> => {
+      const result = await this.#reverseRegistrar.setName(name);
+      if ('ok' in result) {
+        return result.ok;
+      }
+      throw(ERRORS.ICNS_REVERSE_RESOLVER_ERROR);
+  }
+
+  public getICNSMappings = async (principalIds: string[]): Promise<{ [key: string]: string | undefined }> => {
+    const mappings = {};
+    await Promise.all(principalIds.map(async pid => {
+      try {
+        const name = await this.getICNSReverseResolvedName(pid);
+        if (name) {
+          mappings[name] = pid
+          mappings[pid] = name;
+        }
+      } catch (e) {
+        console.log('error getting ICNS mapping', pid, e);
+      }
+    }));
+    return mappings;
+  }
+};

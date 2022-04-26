@@ -15,13 +15,14 @@ import { TokenBalance, StandardToken } from '../interfaces/token';
 import { GetTransactionsResponse } from '../interfaces/transactions';
 import { ERRORS } from '../errors';
 import PlugWallet from '../PlugWallet';
-import { createAccount, getAccountId } from '../utils/account';
+import { createAccount } from '../utils/account';
 import Storage from '../utils/storage';
 import { validatePrincipalId } from './utils';
 import { ConnectedApp } from '../interfaces/account';
 import { recursiveParseBigint } from '../utils/object';
 import { handleStorageUpdate } from '../utils/storage/utils';
 import { getVersion } from '../utils/version';
+import { RecordExt } from '../interfaces/icns_registry';
 
 interface CreatePrincipalOptions {
   name?: string;
@@ -353,7 +354,7 @@ class PlugKeyRing {
   };
 
   public getTransactions = async (
-    subAccount?: number
+    subAccount?: number,
   ): Promise<GetTransactionsResponse> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
@@ -433,6 +434,20 @@ class PlugKeyRing {
     const currentWalletNumber = (walletNumber ?? this.currentWalletId) || 0;
     this.validateSubaccount(currentWalletNumber);
     return this.state.wallets[currentWalletNumber].pemFile;
+  };
+
+  public getICNSData = (walletNumber?: number): Promise<{ names: string[], reverseResolvedName: string | undefined}> => {
+    this.checkUnlocked();
+    const currentWalletNumber = (walletNumber ?? this.currentWalletId) || 0;
+    this.validateSubaccount(currentWalletNumber);
+    return this.state.wallets[currentWalletNumber].getICNSData();
+  };
+
+  public setICNSResolvedName = (name: string, walletNumber?: number): Promise<string> => {
+    this.checkUnlocked();
+    const currentWalletNumber = (walletNumber ?? this.currentWalletId) || 0;
+    this.validateSubaccount(currentWalletNumber);
+    return this.state.wallets[currentWalletNumber].setReverseResolvedName(name);
   };
 
   private checkUnlocked = (): void => {

@@ -8,13 +8,12 @@ import {
   NFTDetails,
   getTokenActor,
   TokenInterfaces,
-  standards,
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
 import { ERRORS } from '../errors';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
-import { createAccountFromMnemonic, getAccountId } from '../utils/account';
+import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent } from '../utils/dfx';
 import { getICPTransactions } from '../utils/dfx/history/rosetta';
@@ -27,30 +26,12 @@ import {
 import { getCapTransactions } from '../utils/dfx/history/cap';
 
 import { ConnectedApp } from '../interfaces/account';
-import { JSONWallet, Assets } from '../interfaces/plug_wallet';
+import { JSONWallet, Assets, ICNSData, PlugWalletArgs } from '../interfaces/plug_wallet';
 import { StandardToken, TokenBalance } from '../interfaces/token';
 import { GetTransactionsResponse } from '../interfaces/transactions';
 import ICNSAdapter from '../utils/dfx/icns';
 import { recursiveParseBigint } from '../utils/object';
-
-interface PlugWalletArgs {
-  name?: string;
-  walletNumber: number;
-  mnemonic: string;
-  icon?: string;
-  connectedApps?: Array<ConnectedApp>;
-  assets?: Assets;
-  collections?: Array<NFTCollection>;
-  fetch: any;
-  icnsNames?: NFTCollection;
-}
-
-const EMPTY_ICNS_COLLECTION = {
-  name: 'ICNS',
-  tokens: [],
-  canisterId: 'icns',
-  standard: standards.NFT.dip721
-}
+import { recursiveFindPrincipals, replacePrincipalsForICNS } from '../utils/dfx/icns/utils';
 
 class PlugWallet {
   name: string;
@@ -69,13 +50,11 @@ class PlugWallet {
 
   assets: Assets;
 
-  icnsNames: NFTCollection;
+  icnsData: ICNSData;
 
   collections: Array<NFTCollection>;
 
   private identity: Secp256k1KeyIdentity;
-
-  private lock: boolean;
 
   constructor({
     name,
@@ -86,13 +65,13 @@ class PlugWallet {
     assets = DEFAULT_ASSETS,
     collections = [],
     fetch,
-    icnsNames = EMPTY_ICNS_COLLECTION
+    icnsData = {}
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
     this.walletNumber = walletNumber;
     this.assets = assets;
-    this.icnsNames = icnsNames;
+    this.icnsData = icnsData;
     const { identity, accountId } = createAccountFromMnemonic(
       mnemonic,
       walletNumber
@@ -129,8 +108,8 @@ class PlugWallet {
         userPID: this.principal,
         refresh,
       });
-      this.icnsNames = await icnsAdapter.getNamesForPrincipal(this.principal);
-      return [...this.collections, this.icnsNames];
+      const icnsCollection = await icnsAdapter.getICNSCollection();
+      return [...this.collections, icnsCollection];
     } catch (e) {
       return null;
     }
@@ -230,7 +209,7 @@ class PlugWallet {
     connectedApps: this.connectedApps,
     assets: this.assets,
     nftCollections: recursiveParseBigint(this.collections),
-    icnsNames: recursiveParseBigint(this.icnsNames),
+    icnsData: this.icnsData,
   });
 
   public burnXTC = async (to: string, amount: string) => {
@@ -341,15 +320,23 @@ class PlugWallet {
     return { token, amount: tokenBalance.value };
   };
 
+
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = createAgent({ secretKey, fetch: this.fetch });
+    const icnsAdapter = new ICNSAdapter(agent);
     const icpTrxs = await getICPTransactions(this.accountId);
     const xtcTransactions = await getXTCTransactions(this.principal);
     const capTransactions = await getCapTransactions(this.principal);
-    const transactionsGroup = [
+    let transactionsGroup = [
       ...capTransactions.transactions,
       ...icpTrxs.transactions,
       ...xtcTransactions.transactions,
-    ].map(tx => ({
+    ];
+    const principals = recursiveFindPrincipals(transactionsGroup);
+    const icnsMapping = await icnsAdapter.getICNSMappings(principals);
+    transactionsGroup = transactionsGroup.map(tx => replacePrincipalsForICNS(tx, icnsMapping));
+    transactionsGroup = transactionsGroup.map(tx => ({
       ...tx,
       details: {
         ...tx.details,
@@ -357,6 +344,7 @@ class PlugWallet {
           tx.details?.canisterId && this.assets[tx.details?.canisterId]?.token,
       },
     }));
+
     // merge and format all trx. sort by timestamp
     // TODO: any custom token impelmenting archive should be queried. (0.4.0)
     const transactions = {
@@ -433,6 +421,30 @@ class PlugWallet {
 
   public get pemFile(): string {
     return this.identity.getPem();
+  }
+
+  public getICNSData = async (): Promise<{ names: string[], reverseResolvedName: string | undefined}> => {
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = createAgent({ secretKey, fetch: this.fetch });
+    const icnsAdapter = new ICNSAdapter(agent);
+    const names = await icnsAdapter.getICNSNames();
+    const reverseResolvedName = await icnsAdapter.getICNSReverseResolvedName();
+    this.icnsData = { names, reverseResolvedName };
+    return { names, reverseResolvedName };
+  }
+
+  public getReverseResolvedName = async (): Promise<string | undefined> => {
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = createAgent({ secretKey, fetch: this.fetch });
+    const icnsAdapter = new ICNSAdapter(agent);
+    return icnsAdapter.getICNSReverseResolvedName();
+  }
+
+  public setReverseResolvedName = async (name: string): Promise<string> => {
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = createAgent({ secretKey, fetch: this.fetch });
+    const icnsAdapter = new ICNSAdapter(agent);
+    return icnsAdapter.setICNSReverseResolvedName(name);
   }
 }
 
