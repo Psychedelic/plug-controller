@@ -335,7 +335,6 @@ class PlugWallet {
     ];
     const principals = recursiveFindPrincipals(transactionsGroup);
     const icnsMapping = await icnsAdapter.getICNSMappings(principals);
-    console.log('icnsMappings', icnsMapping);
     transactionsGroup = transactionsGroup.map(tx => replacePrincipalsForICNS(tx, icnsMapping));
     transactionsGroup = transactionsGroup.map(tx => ({
       ...tx,
