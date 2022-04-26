@@ -28,35 +28,10 @@ import { getCapTransactions } from '../utils/dfx/history/cap';
 import { ConnectedApp } from '../interfaces/account';
 import { JSONWallet, Assets, ICNSData, PlugWalletArgs } from '../interfaces/plug_wallet';
 import { StandardToken, TokenBalance } from '../interfaces/token';
-import { GetTransactionsResponse, InferredTransaction } from '../interfaces/transactions';
+import { GetTransactionsResponse } from '../interfaces/transactions';
 import ICNSAdapter from '../utils/dfx/icns';
 import { recursiveParseBigint } from '../utils/object';
-import { PRINCIPAL_REGEX } from '../utils/dfx/constants';
-
-interface ICNSMapping { [key: string]: string | undefined }
-
-const getMappingValue = (pid: string, mappings: ICNSMapping) => ({ principal: pid, icns: mappings[pid] });
-
-const replacePrincipalsForICNS = (tx: InferredTransaction, mappings: ICNSMapping): InferredTransaction => {
-  const parsedTx = { ...tx };
-  const { from, to } = parsedTx?.details || {};
-  parsedTx.details = {
-    ...parsedTx.details,
-    from: getMappingValue(from, mappings),
-    to: getMappingValue(to, mappings),
-  };
-  return parsedTx;
-}
-
-const recursiveFindPrincipals = (transactions: InferredTransaction[]): string[] => {
-  return transactions.reduce((acc, tx) => {
-    const copy: string[] = [...acc];
-    const { from, to } = tx.details || {};
-    if (PRINCIPAL_REGEX.test(from)) copy.push(from);
-    if (PRINCIPAL_REGEX.test(to)) copy.push(to);
-    return [...new Set(copy)];
-  }, []);
-}
+import { recursiveFindPrincipals, replacePrincipalsForICNS } from '../utils/dfx/icns/utils';
 
 class PlugWallet {
   name: string;
@@ -358,8 +333,8 @@ class PlugWallet {
       ...icpTrxs.transactions,
       ...xtcTransactions.transactions,
     ];
-    const principals = recursiveFindPrincipals(transactionsGroup); // TX[] ==> string[]  O(k) --> K: cantidad de txs
-    const icnsMapping = await icnsAdapter.getICNSMappings(principals); // pid[] => { [pid]: icns } O(N) N: #unique pids
+    const principals = recursiveFindPrincipals(transactionsGroup);
+    const icnsMapping = await icnsAdapter.getICNSMappings(principals);
     console.log('icnsMappings', icnsMapping);
     transactionsGroup = transactionsGroup.map(tx => replacePrincipalsForICNS(tx, icnsMapping));
     transactionsGroup = transactionsGroup.map(tx => ({
