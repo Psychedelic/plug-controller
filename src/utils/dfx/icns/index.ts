@@ -9,6 +9,7 @@ import Registry, { RecordExt } from '../../../interfaces/icns_registry';
 import ReverseRegistrar from '../../../interfaces/icns_reverse_registrar';
 import { Principal } from "@dfinity/principal";
 import { NFTCollection, standards } from "@psychedelic/dab-js";
+import { ERRORS } from "../../../errors";
 
 const ICNS_REGISTRY_ID = 'e5kvl-zyaaa-aaaan-qabaq-cai';
 const ICNS_RESOLVER_ID = 'euj6x-pqaaa-aaaan-qabba-cai';
@@ -88,5 +89,13 @@ export default class ICNSAdapter {
     const principal = principalId ? Principal.from(principalId) : ownPrincipal;
     const name = await this.#reverseRegistrar.getName(principal);
     return name;
+  }
+
+  public setICNSReverseResolvedName = async (name: string): Promise<string> => {
+      const result = await this.#reverseRegistrar.setName(name);
+      if ('ok' in result) {
+        return result.ok;
+      }
+      throw(ERRORS.ICNS_REVERSE_RESOLVER_ERROR);
   }
 }

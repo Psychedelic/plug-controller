@@ -443,6 +443,13 @@ class PlugKeyRing {
     return this.state.wallets[currentWalletNumber].getICNSData();
   };
 
+  public setICNSResolvedName = (name: string, walletNumber?: number): Promise<string> => {
+    this.checkUnlocked();
+    const currentWalletNumber = (walletNumber ?? this.currentWalletId) || 0;
+    this.validateSubaccount(currentWalletNumber);
+    return this.state.wallets[currentWalletNumber].setReverseResolvedName(name);
+  };
+
   private checkUnlocked = (): void => {
     if (!this.isUnlocked) {
       throw new Error(ERRORS.STATE_LOCKED);

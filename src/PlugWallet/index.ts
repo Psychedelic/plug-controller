@@ -430,6 +430,13 @@ class PlugWallet {
     const icnsAdapter = new ICNSAdapter(agent);
     return icnsAdapter.getICNSReverseResolvedName();
   }
+
+  public setReverseResolvedName = async (name: string): Promise<string> => {
+    const { secretKey } = this.identity.getKeyPair();
+    const agent = createAgent({ secretKey, fetch: this.fetch });
+    const icnsAdapter = new ICNSAdapter(agent);
+    return icnsAdapter.setICNSReverseResolvedName(name);
+  }
 }
 
 export default PlugWallet;
