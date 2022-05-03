@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js';
-import { PublicKey } from '@dfinity/agent';
+import { HttpAgent, PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import {
@@ -89,7 +89,7 @@ class PlugKeyRing {
 
   public getNFTs = async (
     subAccount?: number,
-    refresh?: boolean,
+    refresh?: boolean
   ): Promise<NFTCollection[] | null> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
@@ -354,7 +354,7 @@ class PlugKeyRing {
   };
 
   public getTransactions = async (
-    subAccount?: number,
+    subAccount?: number
   ): Promise<GetTransactionsResponse> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
@@ -436,18 +436,30 @@ class PlugKeyRing {
     return this.state.wallets[currentWalletNumber].pemFile;
   };
 
-  public getICNSData = (walletNumber?: number): Promise<{ names: string[], reverseResolvedName: string | undefined}> => {
+  public getICNSData = (
+    walletNumber?: number
+  ): Promise<{ names: string[]; reverseResolvedName: string | undefined }> => {
     this.checkUnlocked();
     const currentWalletNumber = (walletNumber ?? this.currentWalletId) || 0;
     this.validateSubaccount(currentWalletNumber);
     return this.state.wallets[currentWalletNumber].getICNSData();
   };
 
-  public setICNSResolvedName = (name: string, walletNumber?: number): Promise<string> => {
+  public setICNSResolvedName = (
+    name: string,
+    walletNumber?: number
+  ): Promise<string> => {
     this.checkUnlocked();
     const currentWalletNumber = (walletNumber ?? this.currentWalletId) || 0;
     this.validateSubaccount(currentWalletNumber);
     return this.state.wallets[currentWalletNumber].setReverseResolvedName(name);
+  };
+
+  public getAgent = (walletNumber?: number): HttpAgent => {
+    this.checkUnlocked();
+    const currentWalletNumber = (walletNumber ?? this.currentWalletId) || 0;
+    this.validateSubaccount(currentWalletNumber);
+    return this.state.wallets[currentWalletNumber].getAgent();
   };
 
   private checkUnlocked = (): void => {
