@@ -115,7 +115,6 @@ class PlugWallet {
     refresh?: boolean
   ): Promise<NFTCollection[] | null> => {
     try {
-      const { secretKey } = this.identity.getKeyPair();
       const icnsAdapter = new ICNSAdapter(this.agent);
       this.collections = await getCachedUserNFTs({
         userPID: this.principal,
@@ -169,7 +168,6 @@ class PlugWallet {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const { secretKey } = this.identity.getKeyPair();
     const tokenActor = await getTokenActor({
       canisterId,
       agent: this.agent,
@@ -230,7 +228,6 @@ class PlugWallet {
     if (!validateCanisterId(to)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const { secretKey } = this.identity.getKeyPair();
     const xtcActor = await getTokenActor({
       canisterId: TOKENS.XTC.canisterId,
       agent: this.agent,
@@ -254,7 +251,6 @@ class PlugWallet {
   public getTokenBalance = async (
     token: StandardToken
   ): Promise<TokenBalance> => {
-    const { secretKey } = this.identity.getKeyPair();
     const tokenActor = await getTokenActor({
       canisterId: token.canisterId,
       agent: this.agent,
@@ -302,7 +298,6 @@ class PlugWallet {
     canisterId: string,
     standard = 'ext'
   ): Promise<{ token: StandardToken; amount: string }> => {
-    const { secretKey } = this.identity.getKeyPair();
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
@@ -332,7 +327,6 @@ class PlugWallet {
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
-    const { secretKey } = this.identity.getKeyPair();
     const icnsAdapter = new ICNSAdapter(this.agent);
     const icpTrxs = await getICPTransactions(this.accountId);
     const xtcTransactions = await getXTCTransactions(this.principal);
@@ -373,7 +367,6 @@ class PlugWallet {
     canisterId: string,
     opts?: TokenInterfaces.SendOpts
   ): Promise<TokenInterfaces.SendResponse> => {
-    const { secretKey } = this.identity.getKeyPair();
     const savedToken = this.assets[canisterId].token;
     const tokenActor = await getTokenActor({
       canisterId,
