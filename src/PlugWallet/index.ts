@@ -116,8 +116,7 @@ class PlugWallet {
   ): Promise<NFTCollection[] | null> => {
     try {
       const { secretKey } = this.identity.getKeyPair();
-      const agent = createAgent({ secretKey, fetch: this.fetch });
-      const icnsAdapter = new ICNSAdapter(agent);
+      const icnsAdapter = new ICNSAdapter(this.agent);
       this.collections = await getCachedUserNFTs({
         userPID: this.principal,
         refresh,
@@ -137,12 +136,10 @@ class PlugWallet {
     if (!validatePrincipalId(to)) {
       throw new Error(ERRORS.INVALID_PRINCIPAL_ID);
     }
-    const { secretKey } = this.identity.getKeyPair();
-    const agent = createAgent({ secretKey, fetch: this.fetch });
     try {
       const NFT = getNFTActor({
         canisterId: token.canister,
-        agent,
+        agent: this.agent,
         standard: token.standard,
       });
 
@@ -173,8 +170,11 @@ class PlugWallet {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
     const { secretKey } = this.identity.getKeyPair();
-    const agent = createAgent({ secretKey, fetch: this.fetch });
-    const tokenActor = await getTokenActor({ canisterId, agent, standard });
+    const tokenActor = await getTokenActor({
+      canisterId,
+      agent: this.agent,
+      standard,
+    });
 
     const metadata = await tokenActor.getMetadata();
 
@@ -231,10 +231,9 @@ class PlugWallet {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
     const { secretKey } = this.identity.getKeyPair();
-    const agent = createAgent({ secretKey, fetch: this.fetch });
     const xtcActor = await getTokenActor({
       canisterId: TOKENS.XTC.canisterId,
-      agent,
+      agent: this.agent,
       standard: TOKENS.XTC.standard,
     });
     const burnResult = await xtcActor.burnXTC({
@@ -256,10 +255,9 @@ class PlugWallet {
     token: StandardToken
   ): Promise<TokenBalance> => {
     const { secretKey } = this.identity.getKeyPair();
-    const agent = createAgent({ secretKey, fetch: this.fetch });
     const tokenActor = await getTokenActor({
       canisterId: token.canisterId,
-      agent,
+      agent: this.agent,
       standard: token.standard,
     });
     try {
@@ -308,11 +306,10 @@ class PlugWallet {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const agent = createAgent({ secretKey, fetch: this.fetch });
     const savedStandard = this.assets[canisterId]?.token.standard || standard;
     const tokenActor = await getTokenActor({
       canisterId,
-      agent,
+      agent: this.agent,
       standard: savedStandard,
     });
 
@@ -336,8 +333,7 @@ class PlugWallet {
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
     const { secretKey } = this.identity.getKeyPair();
-    const agent = createAgent({ secretKey, fetch: this.fetch });
-    const icnsAdapter = new ICNSAdapter(agent);
+    const icnsAdapter = new ICNSAdapter(this.agent);
     const icpTrxs = await getICPTransactions(this.accountId);
     const xtcTransactions = await getXTCTransactions(this.principal);
     const capTransactions = await getCapTransactions(this.principal);
@@ -378,11 +374,10 @@ class PlugWallet {
     opts?: TokenInterfaces.SendOpts
   ): Promise<TokenInterfaces.SendResponse> => {
     const { secretKey } = this.identity.getKeyPair();
-    const agent = createAgent({ secretKey, fetch: this.fetch });
     const savedToken = this.assets[canisterId].token;
     const tokenActor = await getTokenActor({
       canisterId,
-      agent,
+      agent: this.agent,
       standard: savedToken.standard,
     });
 
@@ -446,9 +441,7 @@ class PlugWallet {
     names: string[];
     reverseResolvedName: string | undefined;
   }> => {
-    const { secretKey } = this.identity.getKeyPair();
-    const agent = createAgent({ secretKey, fetch: this.fetch });
-    const icnsAdapter = new ICNSAdapter(agent);
+    const icnsAdapter = new ICNSAdapter(this.agent);
     const names = await icnsAdapter.getICNSNames();
     const reverseResolvedName = await icnsAdapter.getICNSReverseResolvedName();
     this.icnsData = { names, reverseResolvedName };
@@ -456,16 +449,12 @@ class PlugWallet {
   };
 
   public getReverseResolvedName = async (): Promise<string | undefined> => {
-    const { secretKey } = this.identity.getKeyPair();
-    const agent = createAgent({ secretKey, fetch: this.fetch });
-    const icnsAdapter = new ICNSAdapter(agent);
+    const icnsAdapter = new ICNSAdapter(this.agent);
     return icnsAdapter.getICNSReverseResolvedName();
   };
 
   public setReverseResolvedName = async (name: string): Promise<string> => {
-    const { secretKey } = this.identity.getKeyPair();
-    const agent = createAgent({ secretKey, fetch: this.fetch });
-    const icnsAdapter = new ICNSAdapter(agent);
+    const icnsAdapter = new ICNSAdapter(this.agent);
     return icnsAdapter.setICNSReverseResolvedName(name);
   };
 }
