@@ -290,7 +290,8 @@ class PlugKeyRing {
   public registerToken = async (
     canisterId: string,
     standard = 'ext',
-    subAccount?: number
+    subAccount?: number,
+    image?: string,
   ): Promise<Array<TokenBalance>> => {
     this.checkUnlocked();
     const index = (subAccount ?? this.currentWalletId) || 0;
@@ -298,7 +299,7 @@ class PlugKeyRing {
 
     this.validateSubaccount(index);
     const wallet = wallets[index];
-    const registeredTokens = await wallet.registerToken(canisterId, standard);
+    const registeredTokens = await wallet.registerToken(canisterId, standard, image);
     wallets.splice(index, 1, wallet);
     this.state.wallets = wallets;
     await this.saveEncryptedState({ wallets }, this.state.password);
