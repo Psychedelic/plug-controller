@@ -5,6 +5,7 @@ export interface StandardToken {
     standard: string;
     decimals: number;
     color?: string;
+    image?: string;
 }
 
 export interface TokenBalance {

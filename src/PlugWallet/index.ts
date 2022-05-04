@@ -163,7 +163,8 @@ class PlugWallet {
 
   public registerToken = async (
     canisterId: string,
-    standard = 'ext'
+    standard = 'ext',
+    image?: string,
   ): Promise<TokenBalance[]> => {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
@@ -189,9 +190,11 @@ class PlugWallet {
       amount: balance.value,
       token: {
         ...metadata.fungible,
+        decimals: parseInt(metadata.fungible?.decimals.toString(), 10),
         canisterId,
         color,
         standard,
+        image,
       },
     };
     const newTokens = {
