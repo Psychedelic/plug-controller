@@ -157,6 +157,7 @@ class PlugWallet {
       );
       return this.collections;
     } catch (e) {
+      console.warn('NFT transfer error: ', e);
       throw new Error(ERRORS.TRANSFER_NFT_ERROR);
     }
   };
