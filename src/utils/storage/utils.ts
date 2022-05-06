@@ -1,10 +1,9 @@
 import extension from 'extensionizer';
-import JsonBigInt from 'json-bigint';
+
 import handler14_5 from './update_handlers/v0.14.5';
+import handler16_8 from './update_handlers/v0.16.8';
 
 import { PlugState } from '../../interfaces/plug_keyring';
-import { LEDGER_CANISTER_ID } from '../dfx/constants';
-import { TOKENS } from '../../constants/tokens';
 
 export const isEmpty = (obj): boolean => Object.keys(obj).length === 0;
 
@@ -33,18 +32,7 @@ const VERSION_HANDLER: { [version: string]: (storage: any) => PlugState } = {
     return storage;
   },
   '0.14.5': handler14_5,
-  '0.16.8': (storage: any) => {
-    return { 
-      ...storage, wallets: storage.wallets.map(
-      (wallet) => {
-        delete wallet.assets.null;
-        return ({
-          ...wallet,
-          assets: { [LEDGER_CANISTER_ID]: { amount: '0', token: TOKENS.ICP }, ...wallet.assets },
-        })
-      })
-    }
-  },
+  '0.16.8': handler16_8,
 };
 
 const compareVersion = (a: string, b: string): number => {
