@@ -3,6 +3,8 @@ import JsonBigInt from 'json-bigint';
 import handler14_5 from './update_handlers/v0.14.5';
 
 import { PlugState } from '../../interfaces/plug_keyring';
+import { LEDGER_CANISTER_ID } from '../dfx/constants';
+import { TOKENS } from '../../constants/tokens';
 
 export const isEmpty = (obj): boolean => Object.keys(obj).length === 0;
 
@@ -24,13 +26,25 @@ export const checkForError = (): Error | undefined => {
   return new Error(lastError.message);
 };
 
-const VERSION_PATH: Array<string> = ['0.14.1', '0.14.5'];
+const VERSION_PATH: Array<string> = ['0.14.1', '0.14.5', '0.16.8'];
 
 const VERSION_HANDLER: { [version: string]: (storage: any) => PlugState } = {
   '0.14.1': (storage: any) => {
     return storage;
   },
   '0.14.5': handler14_5,
+  '0.16.8': (storage: any) => {
+    return { 
+      ...storage, wallets: storage.wallets.map(
+      (wallet) => {
+        delete wallet.assets.null;
+        return ({
+          ...wallet,
+          assets: { [LEDGER_CANISTER_ID]: { amount: '0', token: TOKENS.ICP }, ...wallet.assets },
+        })
+      })
+    }
+  },
 };
 
 const compareVersion = (a: string, b: string): number => {
