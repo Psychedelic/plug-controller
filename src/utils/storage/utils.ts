@@ -1,6 +1,7 @@
 import extension from 'extensionizer';
-import JsonBigInt from 'json-bigint';
+
 import handler14_5 from './update_handlers/v0.14.5';
+import handler16_8 from './update_handlers/v0.16.8';
 
 import { PlugState } from '../../interfaces/plug_keyring';
 
@@ -24,13 +25,14 @@ export const checkForError = (): Error | undefined => {
   return new Error(lastError.message);
 };
 
-const VERSION_PATH: Array<string> = ['0.14.1', '0.14.5'];
+const VERSION_PATH: Array<string> = ['0.14.1', '0.14.5', '0.16.8'];
 
 const VERSION_HANDLER: { [version: string]: (storage: any) => PlugState } = {
   '0.14.1': (storage: any) => {
     return storage;
   },
   '0.14.5': handler14_5,
+  '0.16.8': handler16_8,
 };
 
 const compareVersion = (a: string, b: string): number => {
