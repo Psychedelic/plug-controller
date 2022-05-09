@@ -10,6 +10,7 @@ import ReverseRegistrar from '../../../interfaces/icns_reverse_registrar';
 import { Principal } from "@dfinity/principal";
 import { NFTCollection, standards } from "@psychedelic/dab-js";
 import { ERRORS } from "../../../errors";
+import { getAccountId } from "../../account";
 
 const ICNS_REGISTRY_ID = 'e5kvl-zyaaa-aaaan-qabaq-cai';
 const ICNS_RESOLVER_ID = 'euj6x-pqaaa-aaaan-qabba-cai';
@@ -94,6 +95,7 @@ export default class ICNSAdapter {
   public setICNSReverseResolvedName = async (name: string): Promise<string> => {
       const result = await this.#reverseRegistrar.setName(name);
       if ('ok' in result) {
+        await this.resetNameRecordData(name);
         return result.ok;
       }
       throw(ERRORS.ICNS_REVERSE_RESOLVER_ERROR);
@@ -113,5 +115,16 @@ export default class ICNSAdapter {
       }
     }));
     return mappings;
+  }
+
+  public resetNameRecordData = async (name: string): Promise<void> => {
+    try {
+      const principal = await this.#agent.getPrincipal();
+      await this.#resolver.setAddr(name, 'icp.principal', [principal.toString()]);
+      const accountId = await getAccountId(principal);
+      await this.#resolver.setAddr(name, 'icp.account', [accountId]);
+    } catch (e) {
+      console.log('Error when reseting your name data', e);
+    }
   }
 };
