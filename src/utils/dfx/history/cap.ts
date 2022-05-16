@@ -67,7 +67,7 @@ const formatTransaction = async (
     };
   }
   const { details, operation, time, caller } = prettifyEvent || {};
-  const { amount, token, token_id, pairId, amountIn, amountOut } = details || {};
+  const { amount, token, token_id, amountIn, amountOut } = details || {};
   const parsedAmount =
     amount instanceof Array && !amount.some(value => typeof value !== 'number')
       ? lebDecode(Uint8Array.from(amount as Array<number>))
@@ -85,6 +85,7 @@ const formatTransaction = async (
   const tokenId = details?.tokenId || token || token_id || '';
   const buildSonicData = async () => {
     const isSwap = operation?.toLowerCase?.()?.includes?.('swap');
+    const isLiquidity = operation?.toLowerCase?.()?.includes?.('liquidity');
     let data: any = { token: await getHandledTokenInfo(tokenId), amount: amount };
     if (isSwap) {
       data.swap = {
@@ -93,6 +94,16 @@ const formatTransaction = async (
         amountIn,
         amountOut
       };
+    }
+    if (isLiquidity) {
+      const token0 = await getHandledTokenInfo(details?.token0);
+      const token1 = await getHandledTokenInfo(details?.token1);
+      const pair = `${token0?.details?.symbol}/${token1?.details?.symbol}`;
+      data.liquidity = {
+        pair,
+        token0: { token: token0, amount: details?.amount0 },
+        token1: { token: token1, amount: details?.amount1 }
+      }
     }
     return data;
   }
