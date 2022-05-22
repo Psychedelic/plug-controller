@@ -15,9 +15,9 @@ declare type PublicKeyHex = string;
 declare type SecretKeyHex = string;
 export declare type JsonableSecp256k1Identity = [PublicKeyHex, SecretKeyHex];
 
-const PEM_BEGIN = '-----BEGIN PRIVATE KEY-----';
+const PEM_BEGIN = '-----BEGIN EC PRIVATE KEY-----';
 
-const PEM_END = '-----END PRIVATE KEY-----';
+const PEM_END = '-----END EC PRIVATE KEY-----';
 
 const PRIV_KEY_INIT =
   '308184020100301006072a8648ce3d020106052b8104000a046d306b0201010420';
