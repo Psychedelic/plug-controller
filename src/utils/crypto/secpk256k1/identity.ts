@@ -19,10 +19,9 @@ const PEM_BEGIN = '-----BEGIN EC PRIVATE KEY-----';
 
 const PEM_END = '-----END EC PRIVATE KEY-----';
 
-const PRIV_KEY_INIT =
-  '308184020100301006072a8648ce3d020106052b8104000a046d306b0201010420';
+const PRIV_KEY_INIT = '30740201010420';
 
-const KEY_SEPARATOR = 'a144034200';
+const KEY_SEPARATOR = 'a00706052b8104000aa144034200';
 
 class Secp256k1KeyIdentity extends SignIdentity {
   public static fromParsedJson(obj: [string, string]): Secp256k1KeyIdentity {
