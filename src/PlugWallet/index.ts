@@ -8,6 +8,10 @@ import {
   NFTDetails,
   getTokenActor,
   TokenInterfaces,
+
+  getAddresses,
+  addAddress,
+  removeAddress,
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
@@ -40,6 +44,7 @@ import {
   recursiveFindPrincipals,
   replacePrincipalsForICNS,
 } from '../utils/dfx/icns/utils';
+import { ValueType, Address, Error, Response } from '../interfaces/contact_registry';
 
 class PlugWallet {
   name: string;
@@ -61,6 +66,8 @@ class PlugWallet {
   icnsData: ICNSData;
 
   collections: Array<NFTCollection>;
+
+  contacts: Array<Address>;
 
   private identity: Secp256k1KeyIdentity;
 
@@ -453,6 +460,34 @@ class PlugWallet {
   public setReverseResolvedName = async (name: string): Promise<string> => {
     const icnsAdapter = new ICNSAdapter(this.agent);
     return icnsAdapter.setICNSReverseResolvedName(name);
+  };
+
+  public getContacts = async (): Promise<Array<Address>> => {
+    try {
+      return await getAddresses(this.agent);
+    } catch (e) {
+      return [];
+    }
+  };
+
+  public addContact = async (newContact: Address): Promise<boolean> => {
+    try {
+      const contactResponse = await addAddress(this.agent, newContact);
+
+      return contactResponse.hasOwnProperty('Ok') ? true : false; 
+    } catch (e) {
+      return false
+    }
+  };
+
+  public deleteContact = async (addressName: string): Promise<boolean> => {
+    try {
+      const contactResponse = await removeAddress(this.agent, addressName);
+
+      return contactResponse.hasOwnProperty('Ok') ? true : false; 
+    } catch (e) {
+      return false
+    }
   };
 }
 

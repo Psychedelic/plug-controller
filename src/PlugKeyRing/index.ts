@@ -23,6 +23,7 @@ import { recursiveParseBigint } from '../utils/object';
 import { handleStorageUpdate } from '../utils/storage/utils';
 import { getVersion } from '../utils/version';
 import { RecordExt } from '../interfaces/icns_registry';
+import { ValueType, Address, Error, Response } from '../interfaces/contact_registry';
 
 interface CreatePrincipalOptions {
   name?: string;
@@ -512,7 +513,69 @@ class PlugKeyRing {
   private decryptState = (state, password): PlugState =>
     JSON.parse(
       this.crypto.AES.decrypt(state, password).toString(this.crypto.enc.Utf8)
-    );
+  );
+
+  public getContacts = async (walletNumber?: number): Promise<Array<Address>> => {
+    this.checkUnlocked();
+    const index = (walletNumber ?? this.currentWalletId) || 0;
+    this.validateSubaccount(index);
+
+    const { wallets } = this.state;
+    const wallet = wallets[index];
+    const contacts = await wallet.getContacts();
+
+    return contacts.map((c) => {
+      const value = c.value;
+      if (value.hasOwnProperty('PrincipalId')) {
+        value['PrincipalId'] = value['PrincipalId'].toText();
+      }
+
+      return {
+        ...c,
+        value
+      }
+    });
+  };
+
+  public addContact = async (
+    newContact: Address,
+    walletNumber?: number,
+  ): Promise<boolean> => {
+    this.checkUnlocked();
+    const index = (walletNumber ?? this.currentWalletId) || 0;
+    this.validateSubaccount(index);
+
+    const { wallets } = this.state;
+    const wallet = wallets[index];
+
+    const value = newContact.value;
+    if (value.hasOwnProperty('PrincipalId')) {
+      value['PrincipalId'] = Principal.fromText(value['PrincipalId']);
+    }
+
+    const response = await wallet.addContact({
+      ...newContact,
+      value,
+    });
+
+    return response;
+  };
+
+  public deleteContact = async (
+    addressName: string,
+    walletNumber?: number,
+  ): Promise<boolean> => {
+    this.checkUnlocked();
+    const index = (walletNumber ?? this.currentWalletId) || 0;
+    this.validateSubaccount(index);
+
+    const { wallets } = this.state;
+    const wallet = wallets[index];
+
+    const response = await wallet.deleteContact(addressName);
+
+    return response;
+  };
 }
 
 export default PlugKeyRing;
