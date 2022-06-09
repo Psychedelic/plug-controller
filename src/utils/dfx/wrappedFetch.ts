@@ -1,9 +1,8 @@
 /* eslint-disable camelcase */
 import crossFetch from 'cross-fetch';
 
-import { IC_URL_HOST, PLUG_PROXY_HOST } from './constants';
+import { IC_URL_HOST } from './constants';
 
-let useICUrl = false;
 
 /* eslint-disable no-param-reassign */
 const wrappedFetchInternal = (
@@ -13,28 +12,19 @@ const wrappedFetchInternal = (
   resource,
   ...initArgs
 ): void => {
-  if (!resource.includes(PLUG_PROXY_HOST)) {
-    fetch(resource, ...initArgs)
-      .then(resolve)
-      .catch(reject);
-    return;
-  }
-  if (useICUrl) {
-    resource = new URL(resource);
-    resource.host = IC_URL_HOST;
-  }
   fetch(resource, ...initArgs)
-    .then(r => {
-      if (!useICUrl && r.status === 502) {
-        useICUrl = true;
-        wrappedFetchInternal(resolve, reject, resource, initArgs);
-        return;
+    .then((response) => {
+      if(!response.success) {
+        const fallbackResource = new URL(resource);
+        fallbackResource.host = IC_URL_HOST;
+        fetch(fallbackResource, ...initArgs)
+          .then(resolve)
+          .catch(reject);
+      } else {
+        resolve(response);
       }
-      resolve(r);
     })
-    .catch(e => {
-      reject(e);
-    });
+    .catch(reject);
 };
 
 export const wrappedFetch = (fetch = crossFetch) => (
@@ -47,7 +37,6 @@ export const wrappedFetch = (fetch = crossFetch) => (
     resolve = _resolve;
     reject = _reject;
   });
-
   wrappedFetchInternal(fetch, resolve, reject, ...args);
 
   return promise as Promise<Response>;
