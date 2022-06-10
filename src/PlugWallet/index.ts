@@ -12,6 +12,7 @@ import {
   getAddresses,
   addAddress,
   removeAddress,
+  getAllUserNFTs,
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
@@ -117,6 +118,21 @@ class PlugWallet {
     this.icon = val;
   }
 
+  private nativeGetNFTs = async () => {
+    const icnsAdapter = new ICNSAdapter(this.agent); 
+    try {
+      this.collections = await getAllUserNFTs({
+        user: this.principal,
+        agent: this.agent,
+      });
+      const icnsCollection = await icnsAdapter.getICNSCollection();
+      return [...this.collections, icnsCollection];
+    } catch (e) {
+      console.warn('Error when trying to fetch NFTs natively from the IC', e);
+      return null;
+    }
+  }
+
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
   public getNFTs = async (
     refresh?: boolean
@@ -130,7 +146,9 @@ class PlugWallet {
       const icnsCollection = await icnsAdapter.getICNSCollection();
       return [...this.collections, icnsCollection];
     } catch (e) {
-      return null;
+      console.warn('Error when trying to fetch NFTs from Kyasshu. Fetching natively...', e);
+      // If kya fails, try native integration
+      return await this.nativeGetNFTs();
     }
   };
 
