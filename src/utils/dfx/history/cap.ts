@@ -67,7 +67,7 @@ const formatTransaction = async (
     };
   }
   const { details, operation, time, caller } = prettifyEvent || {};
-  const { amount, token, token_id, amountIn, amountOut } = details || {};
+  const { amount, token, token_id, amountIn, amountOut, token_identifier } = details || {};
   const parsedAmount =
     amount instanceof Array && !amount.some(value => typeof value !== 'number')
       ? lebDecode(Uint8Array.from(amount as Array<number>))
@@ -82,7 +82,7 @@ const formatTransaction = async (
       return data;
     }
   }
-  const tokenId = details?.tokenId || token || token_id || '';
+  const tokenId = details?.tokenId || token || token_id || token_identifier || '';
   const buildSonicData = async () => {
     const isSwap = operation?.toLowerCase?.()?.includes?.('swap');
     const isLiquidity = operation?.toLowerCase?.()?.includes?.('liquidity');
