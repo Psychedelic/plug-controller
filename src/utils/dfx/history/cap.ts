@@ -11,9 +11,9 @@ import { lebDecode } from '../../crypto/binary';
 
 import { InferredTransaction } from '../../../interfaces/transactions';
 import { uniqueMap } from '../../array';
-import { XTC_ID } from '../constants';
 
-const KYASHU_URL = 'https://kyasshu.fleek.co';
+
+const parseUnderscoreNumber = (value) => value ? Number(value.replace('_', '')) : null;
 
 interface KyashuItem {
   contractId: string;
@@ -82,7 +82,7 @@ const formatTransaction = async (
       return data;
     }
   }
-  const tokenId = details?.tokenId || token || token_id || token_identifier || '';
+  const tokenId = details?.tokenId || token || token_id || parseUnderscoreNumber(token_identifier) || '';
   const buildSonicData = async () => {
     const isSwap = operation?.toLowerCase?.()?.includes?.('swap');
     const isLiquidity = operation?.toLowerCase?.()?.includes?.('liquidity');
