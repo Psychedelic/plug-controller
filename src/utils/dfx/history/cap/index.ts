@@ -5,12 +5,13 @@ import { Principal } from '@dfinity/principal';
 import { prettifyCapTransactions } from '@psychedelic/cap-js';
 import { getTokens, getAllNFTS, TokenRegistry } from '@psychedelic/dab-js';
 
-import { getCanisterInfo } from '../../dab';
-import { recursiveParseBigint } from '../../object';
-import { lebDecode } from '../../crypto/binary';
+import { getCanisterInfo } from '../../../dab';
+import { parsePrincipal, recursiveParseBigint } from '../../../object';
+import { lebDecode } from '../../../crypto/binary';
 
-import { InferredTransaction } from '../../../interfaces/transactions';
-import { uniqueMap } from '../../array';
+import { InferredTransaction } from '../../../../interfaces/transactions';
+import { uniqueMap } from '../../../array';
+import { buildSonicData } from './sonic';
 
 
 const parseUnderscoreNumber = (value) => value ? Number(value.replace('_', '')) : null;
@@ -32,24 +33,11 @@ interface LastEvaluatedKey {
   userId: string;
 }
 
-interface KyashuResponse {
-  Count: number;
-  Items: KyashuItem[];
-  LastEvaluatedKey: LastEvaluatedKey;
-}
-
 export interface GetUserTransactionResponse {
   total: number;
   transactions: InferredTransaction[];
   lastEvaluatedKey?: LastEvaluatedKey;
 }
-
-const parsePrincipal = pidObj =>
-  pidObj?._isPrincipal
-    ? Principal.fromUint8Array(
-        new Uint8Array(Object.values((pidObj as any)._arr))
-      ).toString()
-    : pidObj;
 
 const getTransactionCanister = (contract: string): string | undefined =>
   contract?.split('#')?.[1];
@@ -67,47 +55,13 @@ const formatTransaction = async (
     };
   }
   const { details, operation, time, caller } = prettifyEvent || {};
-  const { amount, token, token_id, amountIn, amountOut, token_identifier } = details || {};
+  const { amount, token, token_id, token_identifier } = details || {};
   const parsedAmount =
     amount instanceof Array && !amount.some(value => typeof value !== 'number')
       ? lebDecode(Uint8Array.from(amount as Array<number>))
       : amount;
-  const getHandledTokenInfo = async (principal) => {
-    if (!principal) return;
-    const canisterId = parsePrincipal(principal);
-    if (canistersInfo[canisterId]?.tokenRegistryInfo) return canistersInfo[canisterId]?.tokenRegistryInfo;
-    else {
-      const registry = new TokenRegistry();
-      const data = await registry.get(canisterId);
-      return data;
-    }
-  }
   const tokenId = details?.tokenId || token || token_id || parseUnderscoreNumber(token_identifier) || '';
-  const buildSonicData = async () => {
-    const isSwap = operation?.toLowerCase?.()?.includes?.('swap');
-    const isLiquidity = operation?.toLowerCase?.()?.includes?.('liquidity');
-    let data: any = { token: await getHandledTokenInfo(tokenId), amount: amount };
-    if (isSwap) {
-      data.swap = {
-        from: await getHandledTokenInfo(details?.from),
-        to: await getHandledTokenInfo(details?.to),
-        amountIn,
-        amountOut
-      };
-    }
-    if (isLiquidity) {
-      const token0 = await getHandledTokenInfo(details?.token0);
-      const token1 = await getHandledTokenInfo(details?.token1);
-      const pair = `${token0?.details?.symbol}/${token1?.details?.symbol}`;
-      data.liquidity = {
-        pair,
-        token0: { token: token0, amount: details?.amount0 },
-        token1: { token: token1, amount: details?.amount1 }
-      }
-    }
-    return data;
-  }
-  return recursiveParseBigint({
+  const formattedTransaction = {
     hash: transaction.sk,
     timestamp: time,
     type: operation,
@@ -118,12 +72,13 @@ const formatTransaction = async (
       tokenId,
       to: parsePrincipal(details?.to),
       from: parsePrincipal(details?.from),
-      ...(canisterId === "3xwpq-ziaaa-aaaah-qcn4a-cai" ? {
-        sonicData: await buildSonicData()
-      } : {}),
+      sonicData: await buildSonicData({ canisterId, details, operation, canistersInfo, tokenId }),
+      // mkpData: await buildMKPData(),
     },
     caller: parsePrincipal(caller) || '',
-  });
+  };
+
+  return recursiveParseBigint(formattedTransaction);
 };
 
 const metadataArrayToObject = (metadata) => metadata.reduce((acum, item) =>

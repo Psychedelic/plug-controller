@@ -45,7 +45,7 @@ import {
   recursiveFindPrincipals,
   replacePrincipalsForICNS,
 } from '../utils/dfx/icns/utils';
-import { ValueType, Address, Error, Response } from '../interfaces/contact_registry';
+import { Address } from '../interfaces/contact_registry';
 
 class PlugWallet {
   name: string;
