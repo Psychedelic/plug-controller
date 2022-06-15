@@ -73,6 +73,22 @@ class PlugKeyRing {
     this.fetch = FetchAdapter;
   }
 
+  private getWallet = async (subAccount?: number): Promise<PlugWallet> => {
+    await this.checkInitialized();
+    this.checkUnlocked();
+    const index = (subAccount ?? this.currentWalletId) || 0;
+    this.validateSubaccount(index);
+    return this.state?.wallets?.[index]; 
+  }
+
+  private updateWallet = async (wallet: PlugWallet): Promise<void> => {
+    await this.checkUnlocked();
+    const wallets = this.state.wallets;
+    wallets.splice(wallet.walletNumber, 1, wallet);
+    this.state.wallets = wallets;
+    await this.saveEncryptedState({ wallets }, this.state.password);
+  }
+
   public init = async (): Promise<void> => {
     const state = (await this.storage.get()) as StorageData;
     this.isUnlocked = !!state?.isUnlocked;
@@ -80,31 +96,25 @@ class PlugKeyRing {
     this.currentWalletId = state?.currentWalletId || 0;
   };
 
-  public getPublicKey = async (subAccount): Promise<PublicKey> => {
-    await this.checkInitialized();
-    const index = (subAccount ?? this.currentWalletId) || 0;
-    this.validateSubaccount(index);
-    const wallet = this.state.wallets[index];
+  // Query
+  public getPublicKey = async (subAccount?: number): Promise<PublicKey> => {
+    const wallet = await this.getWallet(subAccount);
     return wallet.publicKey;
   };
 
+  // Update
   public getNFTs = async (
     subAccount?: number,
     refresh?: boolean
   ): Promise<NFTCollection[] | null> => {
     this.checkUnlocked();
-    const index = (subAccount ?? this.currentWalletId) || 0;
-    const { wallets } = this.state;
-    this.validateSubaccount(index);
-    const wallet = wallets[index];
+    const wallet = await this.getWallet(subAccount);
     const nfts = await wallet.getNFTs(refresh);
-
-    wallets.splice(index, 1, wallet);
-    this.state.wallets = wallets;
-    await this.saveEncryptedState({ wallets }, this.state.password);
+    await this.updateWallet(wallet);
     return nfts;
   };
 
+  // Update
   public transferNFT = async ({
     subAccount,
     token,
@@ -115,18 +125,13 @@ class PlugKeyRing {
     to: string;
     standard: string;
   }): Promise<NFTCollection[]> => {
-    this.checkUnlocked();
-    const index = (subAccount ?? this.currentWalletId) || 0;
-    const { wallets } = this.state;
-    this.validateSubaccount(index);
-    const wallet = wallets[index];
+    const wallet = await this.getWallet(subAccount);
     const collections = await wallet.transferNFT({ token, to });
-    wallets.splice(index, 1, wallet);
-    this.state.wallets = wallets;
-    await this.saveEncryptedState({ wallets }, this.state.password);
+    await this.updateWallet(wallet);
     return collections;
   };
 
+  // Storage get
   private loadFromPersistance = async (password: string): Promise<void> => {
     const {
       vault,
@@ -158,6 +163,7 @@ class PlugKeyRing {
     }
   };
 
+  // Update
   public burnXTC = async ({
     to,
     amount,
@@ -167,14 +173,11 @@ class PlugKeyRing {
     amount: string;
     subAccount: number;
   }): Promise<TokenInterfaces.BurnResult> => {
-    this.checkUnlocked();
-    const index = (subAccount ?? this.currentWalletId) || 0;
-    const { wallets } = this.state;
-    this.validateSubaccount(index);
-    const wallet = wallets[index];
+    const wallet = await this.getWallet(subAccount);
     return wallet.burnXTC(to, amount);
   };
 
+  // Key Management
   public create = async ({
     password = '',
     icon,
@@ -194,6 +197,8 @@ class PlugKeyRing {
     return { wallet, mnemonic };
   };
 
+
+  // Key Management
   public importMnemonic = async ({
     mnemonic,
     password,
@@ -205,6 +210,7 @@ class PlugKeyRing {
     return { wallet, mnemonic };
   };
 
+  // Key Management
   // Assumes the state is already initialized
   public createPrincipal = async (
     opts?: CreatePrincipalOptions
@@ -223,6 +229,8 @@ class PlugKeyRing {
     return wallet;
   };
 
+
+  // Key Management
   public setCurrentPrincipal = async (walletNumber: number): Promise<void> => {
     await this.checkInitialized();
     this.validateSubaccount(walletNumber);
@@ -230,6 +238,7 @@ class PlugKeyRing {
     await this.storage.set({ currentWalletId: walletNumber });
   };
 
+  // General
   public getState = async (): Promise<PlugState> => {
     await this.checkInitialized();
     this.checkUnlocked();
@@ -239,18 +248,17 @@ class PlugKeyRing {
     });
   };
 
+  // Queryish
   public sign = async (
     payload: BinaryBlob,
     subAccount?: number
   ): Promise<BinaryBlob> => {
-    this.checkUnlocked();
-    const index = (subAccount ?? this.currentWalletId) || 0;
-    this.validateSubaccount(index);
-    const wallet = this.state.wallets[index];
+    const wallet = await this.getWallet(subAccount);
     const signed = await wallet.sign(payload);
     return signed;
   };
 
+  // General
   public unlock = async (password: string): Promise<boolean> => {
     await this.checkInitialized();
     try {
@@ -265,27 +273,22 @@ class PlugKeyRing {
     }
   };
 
+  // General
   public lock = async (): Promise<void> => {
     this.isUnlocked = false;
     this.state = { wallets: [] };
     await this.storage.set({ isUnlocked: this.isUnlocked });
   };
 
+  // Key Management
   public editPrincipal = async (
     walletNumber: number,
     { name, emoji }: { name?: string; emoji?: string }
   ): Promise<void> => {
-    await this.checkInitialized();
-    this.checkUnlocked();
-    this.validateSubaccount(walletNumber);
-    const wallet = this.state.wallets[walletNumber];
+    const wallet = await this.getWallet(walletNumber);
     if (name) wallet.setName(name);
     if (emoji) wallet.setIcon(emoji);
-    const { wallets } = this.state;
-    wallets.splice(walletNumber, 1, wallet);
-
-    this.state.wallets = wallets;
-    this.saveEncryptedState({ wallets }, this.state.password);
+    await this.updateWallet(wallet);
   };
 
   public registerToken = async (
@@ -294,16 +297,9 @@ class PlugKeyRing {
     subAccount?: number,
     image?: string,
   ): Promise<Array<TokenBalance>> => {
-    this.checkUnlocked();
-    const index = (subAccount ?? this.currentWalletId) || 0;
-    const { wallets } = this.state;
-
-    this.validateSubaccount(index);
-    const wallet = wallets[index];
+    const wallet = await this.getWallet(subAccount);
     const registeredTokens = await wallet.registerToken(canisterId, standard, image);
-    wallets.splice(index, 1, wallet);
-    this.state.wallets = wallets;
-    await this.saveEncryptedState({ wallets }, this.state.password);
+    await this.updateWallet(wallet);
     return registeredTokens;
   };
 
@@ -312,15 +308,9 @@ class PlugKeyRing {
     subAccount?: number
   ): Promise<Array<TokenBalance>> => {
     this.checkUnlocked();
-    const index = (subAccount ?? this.currentWalletId) || 0;
-    const { wallets } = this.state;
-
-    this.validateSubaccount(index);
-    const wallet = wallets[index];
+    const wallet = await this.getWallet(subAccount);
     const registeredTokens = await wallet.removeToken(canisterId);
-    wallets.splice(index, 1, wallet);
-    this.state.wallets = wallets;
-    await this.saveEncryptedState({ wallets }, this.state.password);
+    await this.updateWallet(wallet);
     return registeredTokens;
   };
 
@@ -328,20 +318,15 @@ class PlugKeyRing {
     token: StandardToken,
     subAccount?: number
   ): Promise<TokenBalance> => {
-    this.checkUnlocked();
-    const index = (subAccount ?? this.currentWalletId) || 0;
-    this.validateSubaccount(index);
-    const wallet = this.state.wallets[index];
+    const wallet = await this.getWallet(subAccount);
     return wallet.getTokenBalance(token);
   };
 
   public getBalances = async (
     subAccount?: number
   ): Promise<Array<TokenBalance>> => {
-    this.checkUnlocked();
-    const index = (subAccount ?? this.currentWalletId) || 0;
-    this.validateSubaccount(index);
-    return this.state.wallets[index].getBalances();
+    const wallet = await this.getWallet(subAccount);
+    return wallet.getBalances();
   };
 
   public getTokenInfo = async (
@@ -349,19 +334,15 @@ class PlugKeyRing {
     standard = 'ext',
     subAccount?: number
   ): Promise<{ token: StandardToken; amount: string }> => {
-    this.checkUnlocked();
-    const index = (subAccount ?? this.currentWalletId) || 0;
-    this.validateSubaccount(index);
-    return this.state.wallets[index].getTokenInfo(canisterId, standard);
+    const wallet = await this.getWallet(subAccount)
+    return wallet.getTokenInfo(canisterId, standard);
   };
 
   public getTransactions = async (
     subAccount?: number
   ): Promise<GetTransactionsResponse> => {
-    this.checkUnlocked();
-    const index = (subAccount ?? this.currentWalletId) || 0;
-    this.validateSubaccount(index);
-    return this.state.wallets[index].getTransactions();
+    const wallet = await this.getWallet(subAccount)
+    return wallet.getTransactions();
   };
 
   private validateSubaccount(subaccount: number): void {
@@ -385,11 +366,9 @@ class PlugKeyRing {
     canisterId: string,
     opts?: TokenInterfaces.SendOpts
   ): Promise<TokenInterfaces.SendResponse> => {
-    this.checkUnlocked();
-    const currentWalletNumber = this.currentWalletId;
-    let account = to;
-    return this.state.wallets[currentWalletNumber || 0].send(
-      account,
+    const wallet = await this.getWallet(this.currentWalletId || 0);
+    return wallet.send(
+      to,
       amount,
       canisterId,
       opts
@@ -400,14 +379,9 @@ class PlugKeyRing {
     app: ConnectedApp,
     subAccount?: number
   ): Promise<Array<ConnectedApp>> => {
-    this.checkUnlocked();
-    const index = (subAccount ?? this.currentWalletId) || 0;
-    this.validateSubaccount(index);
-    const { wallets } = this.state;
-    const wallet = wallets[index];
+    const wallet = await this.getWallet(subAccount);
     const apps = wallet.addConnectedApp(app);
-    this.state.wallets = wallets;
-    await this.saveEncryptedState({ wallets }, this.state.password);
+    await this.updateWallet(wallet);
     return apps;
   };
 
@@ -415,14 +389,9 @@ class PlugKeyRing {
     id: string,
     subAccount?: number
   ): Promise<Array<ConnectedApp>> => {
-    this.checkUnlocked();
-    const index = (subAccount ?? this.currentWalletId) || 0;
-    this.validateSubaccount(index);
-    const { wallets } = this.state;
-    const wallet = wallets[index];
+    const wallet = await this.getWallet(subAccount);
     const apps = wallet.deleteConnectedApp(id);
-    this.state.wallets = wallets;
-    await this.saveEncryptedState({ wallets }, this.state.password);
+    await this.updateWallet(wallet);
     return apps;
   };
 
@@ -438,23 +407,19 @@ class PlugKeyRing {
     return this.state.wallets[currentWalletNumber].pemFile;
   };
 
-  public getICNSData = (
+  public getICNSData = async (
     walletNumber?: number
   ): Promise<{ names: string[]; reverseResolvedName: string | undefined }> => {
-    this.checkUnlocked();
-    const currentWalletNumber = (walletNumber ?? this.currentWalletId) || 0;
-    this.validateSubaccount(currentWalletNumber);
-    return this.state.wallets[currentWalletNumber].getICNSData();
+    const wallet = await this.getWallet(walletNumber);
+    return wallet.getICNSData();
   };
 
-  public setICNSResolvedName = (
+  public setICNSResolvedName = async (
     name: string,
     walletNumber?: number
   ): Promise<string> => {
-    this.checkUnlocked();
-    const currentWalletNumber = (walletNumber ?? this.currentWalletId) || 0;
-    this.validateSubaccount(currentWalletNumber);
-    return this.state.wallets[currentWalletNumber].setReverseResolvedName(name);
+    const wallet = await this.getWallet(walletNumber);
+    return wallet.setReverseResolvedName(name);
   };
 
   public getAgent = (walletNumber?: number): HttpAgent => {
@@ -470,6 +435,7 @@ class PlugKeyRing {
     }
   };
 
+  // General
   private createAndPersistKeyRing = async ({
     mnemonic,
     password,
@@ -504,32 +470,28 @@ class PlugKeyRing {
     return wallet;
   };
 
+  // Storage
   private saveEncryptedState = async (newState, password): Promise<void> => {
     const stringData = JsonBigInt.stringify({ ...this.state, ...newState });
     const encrypted = this.crypto.AES.encrypt(stringData, password);
     await this.storage.set({ vault: encrypted.toString() });
   };
 
+  // Storage
   private decryptState = (state, password): PlugState =>
     JSON.parse(
       this.crypto.AES.decrypt(state, password).toString(this.crypto.enc.Utf8)
   );
 
+  // Wallet
   public getContacts = async (walletNumber?: number): Promise<Array<Address>> => {
-    this.checkUnlocked();
-    const index = (walletNumber ?? this.currentWalletId) || 0;
-    this.validateSubaccount(index);
-
-    const { wallets } = this.state;
-    const wallet = wallets[index];
+    const wallet = await this.getWallet(walletNumber);
     const contacts = await wallet.getContacts();
-
     return contacts.map((c) => {
       const value = c.value;
       if (value.hasOwnProperty('PrincipalId')) {
         value['PrincipalId'] = value['PrincipalId'].toText();
       }
-
       return {
         ...c,
         value
@@ -541,18 +503,11 @@ class PlugKeyRing {
     newContact: Address,
     walletNumber?: number,
   ): Promise<boolean> => {
-    this.checkUnlocked();
-    const index = (walletNumber ?? this.currentWalletId) || 0;
-    this.validateSubaccount(index);
-
-    const { wallets } = this.state;
-    const wallet = wallets[index];
-
+    const wallet = await this.getWallet(walletNumber);
     const value = newContact.value;
     if (value.hasOwnProperty('PrincipalId')) {
       value['PrincipalId'] = Principal.fromText(value['PrincipalId']);
     }
-
     const response = await wallet.addContact({
       ...newContact,
       value,
@@ -565,16 +520,8 @@ class PlugKeyRing {
     addressName: string,
     walletNumber?: number,
   ): Promise<boolean> => {
-    this.checkUnlocked();
-    const index = (walletNumber ?? this.currentWalletId) || 0;
-    this.validateSubaccount(index);
-
-    const { wallets } = this.state;
-    const wallet = wallets[index];
-
-    const response = await wallet.deleteContact(addressName);
-
-    return response;
+    const wallet = await this.getWallet(walletNumber);
+    return wallet.deleteContact(addressName);
   };
 }
 
