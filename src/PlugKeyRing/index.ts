@@ -24,6 +24,7 @@ import { handleStorageUpdate } from '../utils/storage/utils';
 import { getVersion } from '../utils/version';
 import { RecordExt } from '../interfaces/icns_registry';
 import { ValueType, Address, Error, Response } from '../interfaces/contact_registry';
+import NetworkModule from './modules/Network';
 
 interface CreatePrincipalOptions {
   name?: string;
@@ -62,7 +63,7 @@ class PlugKeyRing {
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
     CryptoAdapter = CryptoJS,
-    FetchAdapter?: any
+    FetchAdapter?: any,
   ) {
     this.state = { wallets: [] };
     this.isUnlocked = false;
