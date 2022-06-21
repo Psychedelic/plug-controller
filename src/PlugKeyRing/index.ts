@@ -54,6 +54,8 @@ class PlugKeyRing {
 
   private crypto: any; // TODO: see what functions are needed and create an interface.
 
+  private networkModule: NetworkModule;
+
   public isUnlocked = false;
 
   public isInitialized = false;
@@ -72,7 +74,24 @@ class PlugKeyRing {
     this.storage = StorageAdapter;
     this.crypto = CryptoAdapter;
     this.fetch = FetchAdapter;
+    this.networkModule = new NetworkModule();
+    this.exposeWalletMethods();
   }
+
+  private exposeWalletMethods(): void {
+    const METHODS = ['getNFTs', 'transferNFT', 'getBalances'];
+    METHODS.forEach(method => {
+      console.log('exposing method', method);
+      this[method] = async (subAccount, ...params) => {
+        const wallet = await this.getWallet(subAccount);
+        const response = await wallet[method](...params);
+        await this.updateWallet(wallet);
+        return response;
+      }
+    });
+  }
+
+
 
   private getWallet = async (subAccount?: number): Promise<PlugWallet> => {
     await this.checkInitialized();
@@ -101,35 +120,6 @@ class PlugKeyRing {
   public getPublicKey = async (subAccount?: number): Promise<PublicKey> => {
     const wallet = await this.getWallet(subAccount);
     return wallet.publicKey;
-  };
-
-  // Update
-  public getNFTs = async (
-    subAccount?: number,
-    refresh?: boolean
-  ): Promise<NFTCollection[] | null> => {
-    this.checkUnlocked();
-    const wallet = await this.getWallet(subAccount);
-    const nfts = await wallet.getNFTs(refresh);
-    await this.updateWallet(wallet);
-    return nfts;
-  };
-
-  // Update
-  public transferNFT = async ({
-    subAccount,
-    token,
-    to,
-  }: {
-    subAccount?: number;
-    token: NFTDetails;
-    to: string;
-    standard: string;
-  }): Promise<NFTCollection[]> => {
-    const wallet = await this.getWallet(subAccount);
-    const collections = await wallet.transferNFT({ token, to });
-    await this.updateWallet(wallet);
-    return collections;
   };
 
   // Storage get
@@ -323,12 +313,6 @@ class PlugKeyRing {
     return wallet.getTokenBalance(token);
   };
 
-  public getBalances = async (
-    subAccount?: number
-  ): Promise<Array<TokenBalance>> => {
-    const wallet = await this.getWallet(subAccount);
-    return wallet.getBalances();
-  };
 
   public getTokenInfo = async (
     canisterId: string,

@@ -1,26 +1,35 @@
-import { PLUG_PROXY_HOST } from "../../../utils/dfx/constants";
+import uuid from "uuid/v4";
 
-const DEFAULT_NETWORK = {
-  name: "Mainnet",
-  host: PLUG_PROXY_HOST,
-  ledgerCanisterId: "",
+type Network = {
+  name: string;
+  host: string;
+  ledgerCanisterId: string;
+  id?: string;
 }
 
-type Network = typeof DEFAULT_NETWORK;
-
 class NetworkModule {
-  public network: Network;
-  public usingMainnet: boolean;
+  public network: Network | null;
   public registeredNetworks: Array<Network>;
+
+  constructor() {
+    this.registeredNetworks = [];
+    this.network = null;
+  }
+
+  public addNetwork(network: Network) {
+    this.registeredNetworks.push({ ...network, id: uuid() });
+  }
+
+  public removeNetwork(networkId: string) {
+    this.registeredNetworks = this.registeredNetworks.filter(network => network.id !== networkId);
+  }
 
   public setNetwork(network: Network) {
     this.network = network;
-    this.usingMainnet = false;
   }
 
   public resetNetwork() {
-    this.network = DEFAULT_NETWORK;
-    this.usingMainnet = true;
+    this.network = null;
   }
 }
 

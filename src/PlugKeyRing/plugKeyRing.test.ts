@@ -621,78 +621,78 @@ describe('Plug KeyRing', () => {
     });
   });
 
-  describe('get balance', () => {
-    const balances = {
-      0: [
-        {
-          amount: '1000',
-          token: {
-            canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai',
-            decimals: 8,
-            name: 'ICP',
-            standard: 'ICP',
-            symbol: 'ICP',
-          },
-        },
-        {
-          amount: '1000',
-          token: {
-            canisterId: 'aanaa-xaaaa-aaaah-aaeiq-cai',
-            decimals: 12,
-            name: 'Cycles',
-            standard: 'XTC',
-            symbol: 'XTC',
-          },
-        },
-        {
-          amount: '1000',
-          token: {
-            canisterId: 'utozz-siaaa-aaaam-qaaxq-cai',
-            decimals: 8,
-            name: 'Wrapped ICP',
-            standard: 'WICP',
-            symbol: 'WICP',
-          },
-        },
-      ],
-    };
-    let walletsCreated = 0;
+  // describe('get balance', () => {
+  //   const balances = {
+  //     0: [
+  //       {
+  //         amount: '1000',
+  //         token: {
+  //           canisterId: 'ryjl3-tyaaa-aaaaa-aaaba-cai',
+  //           decimals: 8,
+  //           name: 'ICP',
+  //           standard: 'ICP',
+  //           symbol: 'ICP',
+  //         },
+  //       },
+  //       {
+  //         amount: '1000',
+  //         token: {
+  //           canisterId: 'aanaa-xaaaa-aaaah-aaeiq-cai',
+  //           decimals: 12,
+  //           name: 'Cycles',
+  //           standard: 'XTC',
+  //           symbol: 'XTC',
+  //         },
+  //       },
+  //       {
+  //         amount: '1000',
+  //         token: {
+  //           canisterId: 'utozz-siaaa-aaaam-qaaxq-cai',
+  //           decimals: 8,
+  //           name: 'Wrapped ICP',
+  //           standard: 'WICP',
+  //           symbol: 'WICP',
+  //         },
+  //       },
+  //     ],
+  //   };
+  //   let walletsCreated = 0;
 
-    const mockgetBalances = async wallet => {
-      const randomBalance = BigInt(0);
-      balances[wallet.walletNumber] = randomBalance;
-      await jest
-        .spyOn(wallet, 'getBalances')
-        .mockReturnValue(Promise.resolve(randomBalance));
-    };
+  //   const mockgetBalances = async wallet => {
+  //     const randomBalance = BigInt(0);
+  //     balances[wallet.walletNumber] = randomBalance;
+  //     await jest
+  //       .spyOn(wallet, 'getBalances')
+  //       .mockReturnValue(Promise.resolve(randomBalance));
+  //   };
 
-    beforeEach(async () => {
-      keyRing = new PlugKeyRing(store);
-      await keyRing.create({ password: TEST_PASSWORD });
-      await keyRing.unlock(TEST_PASSWORD);
-      walletsCreated = await createManyWallets(keyRing, mockgetBalances);
-    });
+  //   beforeEach(async () => {
+  //     keyRing = new PlugKeyRing(store);
+  //     await keyRing.create({ password: TEST_PASSWORD });
+  //     await keyRing.unlock(TEST_PASSWORD);
+  //     walletsCreated = await createManyWallets(keyRing, mockgetBalances);
+  //   });
 
-    test('get default balance', async () => {
-      expect(await keyRing.getBalances()).toMatchObject(balances[0]);
-    });
+  //   test('get default balance', async () => {
+  //     expect(await keyRing.getBalances()).toMatchObject(balances[0]);
+  //   });
 
-    test('get specific balance', async () => {
-      let ind = Math.round(Math.random() * (walletsCreated - 1));
-      if (ind === 0) ind++;
+  //   test('get specific balance', async () => {
+  //     let ind = Math.round(Math.random() * (walletsCreated - 1));
+  //     if (ind === 0) ind++;
 
-      expect(await keyRing.getBalances(ind)).toBe(balances[ind]);
-    });
+  //     expect(await keyRing.getBalances(ind)).toBe(balances[ind]);
+  //   });
 
-    test('get error with invalid wallet numbers', async () => {
-      await expect(keyRing.getBalances(-2)).rejects.toThrow(
-        ERRORS.INVALID_WALLET_NUMBER
-      );
-      await expect(keyRing.getBalances(walletsCreated + 2)).rejects.toThrow(
-        ERRORS.INVALID_WALLET_NUMBER
-      );
-    });
-  });
+  //   test('get error with invalid wallet numbers', async () => {
+  //     await expect(keyRing.getBalances(-2)).rejects.toThrow(
+  //       ERRORS.INVALID_WALLET_NUMBER
+  //     );
+  //     await expect(keyRing.getBalances(walletsCreated + 2)).rejects.toThrow(
+  //       ERRORS.INVALID_WALLET_NUMBER
+  //     );
+  //   });
+  // });
 
   describe('get transactions', () => {
     const transactions = {};
@@ -770,41 +770,41 @@ describe('Plug KeyRing', () => {
       expect(mockedSendToken.mock.calls[0][0].to).toEqual(to);
     });
 
-    describe('nfts', () => {
-      beforeEach(async () => {
-        keyRing = new PlugKeyRing(store);
-        await keyRing.create({
-          password: TEST_PASSWORD,
-        });
-        await keyRing.unlock(TEST_PASSWORD);
-      });
-      it('should fetch NFTs correctly', async () => {
-        const nfts = await keyRing.getNFTs();
-        expect(nfts).toEqual([mockdeNFTCollection]);
-      });
-      it('should fail to fetch NFTs on inexistant account', async () => {
-        await expect(keyRing.getNFTs(1)).rejects.toThrow(
-          ERRORS.INVALID_WALLET_NUMBER
-        );
-      });
-      it('should transfer an NFT correctly', async () => {
-        const nfts = (await keyRing.getNFTs()) || [];
-        const { tokens } = nfts[0];
-        const to =
-          'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe';
-        const transferred = await keyRing.transferNFT({
-          token: tokens[0],
-          to,
-          standard: tokens[0].standard,
-        });
-        expect(transferred).toMatchObject([]);
-        expect(mockedTransferNFT).toHaveBeenCalled();
-        expect(mockedTransferNFT.mock.calls[0][0].toString()).toEqual(to);
-        expect(mockedTransferNFT.mock.calls[0][1].toString()).toEqual(
-          tokens[0].index.toString()
-        );
-      });
-    });
+    // describe('nfts', () => {
+    //   beforeEach(async () => {
+    //     keyRing = new PlugKeyRing(store);
+    //     await keyRing.create({
+    //       password: TEST_PASSWORD,
+    //     });
+    //     await keyRing.unlock(TEST_PASSWORD);
+    //   });
+    //   it('should fetch NFTs correctly', async () => {
+    //     const nfts = await keyRing.getNFTs();
+    //     expect(nfts).toEqual([mockdeNFTCollection]);
+    //   });
+    //   it('should fail to fetch NFTs on inexistant account', async () => {
+    //     await expect(keyRing.getNFTs(1)).rejects.toThrow(
+    //       ERRORS.INVALID_WALLET_NUMBER
+    //     );
+    //   });
+    //   it('should transfer an NFT correctly', async () => {
+    //     const nfts = (await keyRing.getNFTs()) || [];
+    //     const { tokens } = nfts[0];
+    //     const to =
+    //       'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe';
+    //     const transferred = await keyRing.transferNFT({
+    //       token: tokens[0],
+    //       to,
+    //       standard: tokens[0].standard,
+    //     });
+    //     expect(transferred).toMatchObject([]);
+    //     expect(mockedTransferNFT).toHaveBeenCalled();
+    //     expect(mockedTransferNFT.mock.calls[0][0].toString()).toEqual(to);
+    //     expect(mockedTransferNFT.mock.calls[0][1].toString()).toEqual(
+    //       tokens[0].index.toString()
+    //     );
+    //   });
+    // });
 
     afterEach(() => {
       jest.clearAllMocks();
