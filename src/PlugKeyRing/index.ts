@@ -45,6 +45,7 @@ interface ImportMnemonicOptions {
 }
 
 class PlugKeyRing {
+
   private state: PlugState;
 
   private storage: KeyringStorage;
@@ -136,15 +137,16 @@ class PlugKeyRing {
     } = ((await this.storage.get()) || {}) as StorageData;
     if (isInitialized && vault) {
       const newVersion = getVersion();
-      const decrypted =
+      const _decrypted =
         newVersion === version
           ? this.decryptState(vault, password)
           : handleStorageUpdate(version, this.decryptState(vault, password));
-      const wallets = decrypted.wallets.map(
+      const { mnemonic, ...decrypted } = _decrypted;
+      const wallets = _decrypted.wallets.map(
         wallet =>
           new PlugWallet({
             ...wallet,
-            mnemonic: decrypted.mnemonic as string,
+            mnemonic: mnemonic as string,
             fetch: this.fetch,
           })
       );
@@ -211,9 +213,10 @@ class PlugKeyRing {
   ): Promise<PlugWallet> => {
     await this.checkInitialized();
     this.checkUnlocked();
+    const mnemonic = await this.getMnemonic(this.state.password as string);
     const wallet = new PlugWallet({
       ...opts,
-      mnemonic: this.state.mnemonic as string,
+      mnemonic,
       walletNumber: this.state.wallets.length,
       fetch: this.fetch,
     });
@@ -496,21 +499,24 @@ class PlugKeyRing {
     await this.storage.clear();
     await this.storage.set({
       isInitialized: true,
-      isUnlocked: false,
+      isUnlocked: true,
       currentWalletId: 0,
       version: getVersion(),
+      vault: this.crypto.AES.encrypt(JSON.stringify({ mnemonic }), password).toString(), // Pre-save mnemonic in storage
     });
+    await this.unlock(password);
     await this.saveEncryptedState(data, password);
     return wallet;
   };
 
   private saveEncryptedState = async (newState, password): Promise<void> => {
-    const stringData = JsonBigInt.stringify({ ...this.state, ...newState });
+    const mnemonic = await this.getMnemonic(password);
+    const stringData = JsonBigInt.stringify({ ...this.state, ...newState, mnemonic });
     const encrypted = this.crypto.AES.encrypt(stringData, password);
     await this.storage.set({ vault: encrypted.toString() });
   };
 
-  private decryptState = (state, password): PlugState =>
+  private decryptState = (state, password): PlugState & { mnemonic: string } =>
     JSON.parse(
       this.crypto.AES.decrypt(state, password).toString(this.crypto.enc.Utf8)
   );
@@ -576,6 +582,13 @@ class PlugKeyRing {
 
     return response;
   };
+
+  public async getMnemonic(password: string): Promise<string> {
+    await this.unlock(password);
+    const storage = await this.storage.get() as StorageData;
+    const decrypted = await this.decryptState(storage?.vault, password);
+    return decrypted.mnemonic;
+  }
 }
 
 export default PlugKeyRing;
