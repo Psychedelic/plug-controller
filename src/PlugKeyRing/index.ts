@@ -302,7 +302,7 @@ class PlugKeyRing {
   };
 
   // Storage
-  private decryptState = (state, password): PlugState =>
+  private decryptState = (state, password): PlugState & { mnemonic: string } =>
     JSON.parse(
       this.crypto.AES.decrypt(state, password).toString(this.crypto.enc.Utf8)
   );
