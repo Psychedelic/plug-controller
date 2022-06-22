@@ -134,14 +134,14 @@ class PlugWallet {
   }
 
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
-  public getNFTs = async (
+  public getNFTs = async (args?: {
     refresh?: boolean
-  ): Promise<NFTCollection[] | null> => {
+  }): Promise<NFTCollection[] | null> => {
     try {
       const icnsAdapter = new ICNSAdapter(this.agent);
       this.collections = await getCachedUserNFTs({
         userPID: this.principal,
-        refresh,
+        refresh: args?.refresh,
       });
       const icnsCollection = await icnsAdapter.getICNSCollection();
       return [...this.collections, icnsCollection];
@@ -187,11 +187,12 @@ class PlugWallet {
     }
   };
 
-  public registerToken = async (
+  public registerToken = async (args: {
     canisterId: string,
-    standard = 'ext',
+    standard: string,
     image?: string,
-  ): Promise<TokenBalance[]> => {
+  }): Promise<TokenBalance[]> => {
+    const { canisterId, standard = 'ext', image } = args || {};
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
@@ -232,11 +233,11 @@ class PlugWallet {
     return Object.values(newTokens);
   };
 
-  public removeToken = async (tokenId: string): Promise<TokenBalance[]> => {
-    if (!Object.keys(this.assets).includes(tokenId)) {
+  public removeToken = async ({ canisterId }: { canisterId: string }): Promise<TokenBalance[]> => {
+    if (!Object.keys(this.assets).includes(canisterId)) {
       return Object.values(this.assets);
     }
-    const { [tokenId]: removedToken, ...newTokens } = this.assets;
+    const { [canisterId]: removedToken, ...newTokens } = this.assets;
     this.assets = newTokens;
     return Object.values(newTokens);
   };
@@ -253,8 +254,8 @@ class PlugWallet {
     icnsData: this.icnsData,
   });
 
-  public burnXTC = async (to: string, amount: string) => {
-    if (!validateCanisterId(to)) {
+  public burnXTC = async (args: { to: string, amount: string }) => {
+    if (!validateCanisterId(args.to)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
     const xtcActor = await getTokenActor({
@@ -263,8 +264,8 @@ class PlugWallet {
       standard: TOKENS.XTC.standard,
     });
     const burnResult = await xtcActor.burnXTC({
-      to: Principal.fromText(to),
-      amount,
+      to: Principal.fromText(args.to),
+      amount: args.amount,
     });
     try {
       if ('Ok' in burnResult) {
@@ -277,9 +278,9 @@ class PlugWallet {
     return burnResult;
   };
 
-  public getTokenBalance = async (
+  public getTokenBalance = async ({ token }: {
     token: StandardToken
-  ): Promise<TokenBalance> => {
+  }): Promise<TokenBalance> => {
     const tokenActor = await getTokenActor({
       canisterId: token.canisterId,
       agent: this.agent,
@@ -308,7 +309,7 @@ class PlugWallet {
   public getBalances = async (): Promise<Array<TokenBalance>> => {
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
-      Object.values(this.assets).map(asset => this.getTokenBalance(asset.token))
+      Object.values(this.assets).map(asset => this.getTokenBalance({ token: asset.token }))
     );
 
     Object.values(tokenBalances).forEach(asset => {
@@ -323,10 +324,11 @@ class PlugWallet {
     return tokenBalances;
   };
 
-  public getTokenInfo = async (
+  public getTokenInfo = async (args: {
     canisterId: string,
-    standard = 'ext'
-  ): Promise<{ token: StandardToken; amount: string }> => {
+    standard?: string,
+  }): Promise<{ token: StandardToken; amount: string }> => {
+    const { canisterId, standard = 'ext' }= args || {};
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
@@ -390,12 +392,13 @@ class PlugWallet {
     return transactions;
   };
 
-  public send = async (
+  public send = async (args: {
     to: string,
     amount: string,
     canisterId: string,
     opts?: TokenInterfaces.SendOpts
-  ): Promise<TokenInterfaces.SendResponse> => {
+  }): Promise<TokenInterfaces.SendResponse> => {
+    const { to, amount, canisterId, opts } = args || {};
     const savedToken = this.assets[canisterId].token;
     const tokenActor = await getTokenActor({
       canisterId,
@@ -421,30 +424,6 @@ class PlugWallet {
     }
 
     return result;
-  };
-
-  public addConnectedApp = (app: ConnectedApp): Array<ConnectedApp> => {
-    if (
-      !app.url ||
-      !app.name ||
-      !app.icon ||
-      !app.whitelist.every(item => validateCanisterId(item))
-    ) {
-      throw new Error(ERRORS.INVALID_APP);
-    }
-    this.connectedApps = uniqueByObjKey(
-      [...this.connectedApps, app],
-      'url'
-    ) as ConnectedApp[];
-    return this.connectedApps;
-  };
-
-  public deleteConnectedApp = (url: string): Array<ConnectedApp> => {
-    if (!this.connectedApps.some(app => app.url === url)) {
-      return this.connectedApps;
-    }
-    this.connectedApps = [...this.connectedApps.filter(app => app.url !== url)];
-    return this.connectedApps;
   };
 
   public getAgent(): HttpAgent {
@@ -475,7 +454,7 @@ class PlugWallet {
     return icnsAdapter.getICNSReverseResolvedName();
   };
 
-  public setReverseResolvedName = async (name: string): Promise<string> => {
+  public setReverseResolvedName = async ({ name }: { name: string }): Promise<string> => {
     const icnsAdapter = new ICNSAdapter(this.agent);
     return icnsAdapter.setICNSReverseResolvedName(name);
   };
@@ -488,9 +467,9 @@ class PlugWallet {
     }
   };
 
-  public addContact = async (newContact: Address): Promise<boolean> => {
+  public addContact = async ({ contact }: { contact: Address }): Promise<boolean> => {
     try {
-      const contactResponse = await addAddress(this.agent, newContact);
+      const contactResponse = await addAddress(this.agent, contact);
 
       return contactResponse.hasOwnProperty('Ok') ? true : false; 
     } catch (e) {
@@ -498,7 +477,7 @@ class PlugWallet {
     }
   };
 
-  public deleteContact = async (addressName: string): Promise<boolean> => {
+  public deleteContact = async ({ addressName }: { addressName: string }): Promise<boolean> => {
     try {
       const contactResponse = await removeAddress(this.agent, addressName);
 

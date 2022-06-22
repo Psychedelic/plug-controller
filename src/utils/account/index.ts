@@ -23,14 +23,14 @@ interface DerivedKey {
 */
 export const getAccountId = (
   principal: Principal,
-  subAccount?: number
+  subaccount?: number
 ): string => {
   const sha = CryptoJS.algo.SHA224.create();
   sha.update(ACCOUNT_DOMAIN_SEPERATOR); // Internally parsed with UTF-8, like go does
   sha.update(byteArrayToWordArray(principal.toUint8Array()));
   const subBuffer = Buffer.from(SUB_ACCOUNT_ZERO);
-  if (subAccount) {
-    subBuffer.writeUInt32BE(subAccount);
+  if (subaccount) {
+    subBuffer.writeUInt32BE(subaccount);
   }
   sha.update(byteArrayToWordArray(subBuffer));
   const hash = sha.finalize();
@@ -49,9 +49,9 @@ export const getAccountId = (
 
 const getAccountCredentials = (
   mnemonic: string,
-  subAccount?: number
+  subaccount?: number
 ): AccountCredentials => {
-  const keyPair = createSecp256K1KeyPair(mnemonic, subAccount || 0);
+  const keyPair = createSecp256K1KeyPair(mnemonic, subaccount || 0);
   // Identity has boths keys via getKeyPair and PID via getPrincipal
   const identity = Secp256k1KeyIdentity.fromKeyPair(
     keyPair.publicKey.toRaw(),
