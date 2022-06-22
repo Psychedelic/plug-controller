@@ -47,24 +47,26 @@ interface ImportMnemonicOptions {
 }
 
 class PlugKeyRing {
+  // state
   private state: PlugState;
-
-  private storage: KeyringStorage;
-
-  private fetch: any;
-
-  private crypto: any; // TODO: see what functions are needed and create an interface.
-
-  private networkModule: NetworkModule;
-
   public isUnlocked = false;
-
   public isInitialized = false;
-
   public currentWalletId?: number;
 
-  public getNFTs: (subaccount?: number) => Promise<NFTCollection[] | null>;
-  public getBalances: (subaccount?: number) => Promise<Array<TokenBalance>>;
+  // adapters
+  private storage: KeyringStorage;
+  private fetch: any;
+  private crypto: any; // TODO: see what functions are needed and create an interface.
+  private networkModule: NetworkModule;
+
+  // methods
+  public getBalances: (args?: { subaccount?: number }) => Promise<Array<TokenBalance>>;
+  public getNFTs: (args?: { subaccount?: number, refresh?: boolean }) => Promise<NFTCollection[] | null>;
+  public transferNFT: (args: { subaccount?: number; token: NFTDetails; to: string; standard: string; }) => Promise<NFTCollection[]>;
+  public burnXTC: (args?: { to: string; amount: string; subaccount: number; }) => Promise<TokenInterfaces.BurnResult>;
+  public registerToken: (args: { canisterId: string; standard?: string; subaccount?: number; image?: string; }) => Promise<Array<TokenBalance>>;
+  public removeToken: (args: { canisterId: string; subaccount?: number; }) => Promise<Array<TokenBalance>>;
+  public getTokenInfo: (args: { canisterId: string, standard?: string, subaccount?: number }) => Promise<{ token: StandardToken; amount: string }>
 
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
@@ -83,24 +85,22 @@ class PlugKeyRing {
   }
 
   private exposeWalletMethods(): void {
-    const METHODS = ['getNFTs', 'getBalances'];
+    const METHODS = ['getNFTs', 'getBalances', 'burnXTC', 'transferNFT', 'registerToken', 'removeToken', 'getTokenInfo'];
     METHODS.forEach(method => {
-      console.log('exposing method', method);
-      this[method] = async (subAccount, ...params) => {
-        const wallet = await this.getWallet(subAccount);
-        const response = await wallet[method](...params);
+      this[method] = async (args) => {
+        const { subaccount, ...params } = args || {};
+        const wallet = await this.getWallet(subaccount);
+        const response = await wallet[method](params);
         await this.updateWallet(wallet);
         return response;
       }
     });
   }
 
-
-
-  private getWallet = async (subAccount?: number): Promise<PlugWallet> => {
+  private getWallet = async (subaccount?: number): Promise<PlugWallet> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    const index = (subAccount ?? this.currentWalletId) || 0;
+    const index = (subaccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
     return this.state?.wallets?.[index]; 
   }
@@ -121,8 +121,8 @@ class PlugKeyRing {
   };
 
   // Query
-  public getPublicKey = async (subAccount?: number): Promise<PublicKey> => {
-    const wallet = await this.getWallet(subAccount);
+  public getPublicKey = async (subaccount?: number): Promise<PublicKey> => {
+    const wallet = await this.getWallet(subaccount);
     return wallet.publicKey;
   };
 
@@ -158,20 +158,6 @@ class PlugKeyRing {
     }
   };
 
-  // Update
-  public burnXTC = async ({
-    to,
-    amount,
-    subAccount,
-  }: {
-    to: string;
-    amount: string;
-    subAccount: number;
-  }): Promise<TokenInterfaces.BurnResult> => {
-    const wallet = await this.getWallet(subAccount);
-    return wallet.burnXTC(to, amount);
-  };
-
   // Key Management
   public create = async ({
     password = '',
@@ -190,22 +176,6 @@ class PlugKeyRing {
       name,
     });
     return { wallet, mnemonic };
-  };
-
-  public transferNFT = async ({
-    subAccount,
-    token,
-    to,
-  }: {
-    subAccount?: number;
-    token: NFTDetails;
-    to: string;
-    standard: string;
-  }): Promise<NFTCollection[]> => {
-    const wallet = await this.getWallet(subAccount);
-    const collections = await wallet.transferNFT({ token, to });
-    await this.updateWallet(wallet);
-    return collections;
   };
 
   // Key Management
@@ -261,9 +231,9 @@ class PlugKeyRing {
   // Queryish
   public sign = async (
     payload: BinaryBlob,
-    subAccount?: number
+    subaccount?: number
   ): Promise<BinaryBlob> => {
-    const wallet = await this.getWallet(subAccount);
+    const wallet = await this.getWallet(subaccount);
     const signed = await wallet.sign(payload);
     return signed;
   };
@@ -301,51 +271,18 @@ class PlugKeyRing {
     await this.updateWallet(wallet);
   };
 
-  public registerToken = async (
-    canisterId: string,
-    standard = 'ext',
-    subAccount?: number,
-    image?: string,
-  ): Promise<Array<TokenBalance>> => {
-    const wallet = await this.getWallet(subAccount);
-    const registeredTokens = await wallet.registerToken(canisterId, standard, image);
-    await this.updateWallet(wallet);
-    return registeredTokens;
-  };
-
-  public removeToken = async (
-    canisterId: string,
-    subAccount?: number
-  ): Promise<Array<TokenBalance>> => {
-    this.checkUnlocked();
-    const wallet = await this.getWallet(subAccount);
-    const registeredTokens = await wallet.removeToken(canisterId);
-    await this.updateWallet(wallet);
-    return registeredTokens;
-  };
-
   public getBalance = async (
     token: StandardToken,
-    subAccount?: number
+    subaccount?: number
   ): Promise<TokenBalance> => {
-    const wallet = await this.getWallet(subAccount);
+    const wallet = await this.getWallet(subaccount);
     return wallet.getTokenBalance(token);
   };
 
-
-  public getTokenInfo = async (
-    canisterId: string,
-    standard = 'ext',
-    subAccount?: number
-  ): Promise<{ token: StandardToken; amount: string }> => {
-    const wallet = await this.getWallet(subAccount)
-    return wallet.getTokenInfo(canisterId, standard);
-  };
-
   public getTransactions = async (
-    subAccount?: number
+    subaccount?: number
   ): Promise<GetTransactionsResponse> => {
-    const wallet = await this.getWallet(subAccount)
+    const wallet = await this.getWallet(subaccount)
     return wallet.getTransactions();
   };
 
@@ -379,25 +316,6 @@ class PlugKeyRing {
     );
   };
 
-  public addConnectedApp = async (
-    app: ConnectedApp,
-    subAccount?: number
-  ): Promise<Array<ConnectedApp>> => {
-    const wallet = await this.getWallet(subAccount);
-    const apps = wallet.addConnectedApp(app);
-    await this.updateWallet(wallet);
-    return apps;
-  };
-
-  public deleteConnectedApp = async (
-    id: string,
-    subAccount?: number
-  ): Promise<Array<ConnectedApp>> => {
-    const wallet = await this.getWallet(subAccount);
-    const apps = wallet.deleteConnectedApp(id);
-    await this.updateWallet(wallet);
-    return apps;
-  };
 
   public get currentWallet(): PlugWallet {
     this.checkUnlocked();

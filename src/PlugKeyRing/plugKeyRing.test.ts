@@ -369,7 +369,7 @@ describe('Plug KeyRing', () => {
     it('should persist data encypted correctly after registering a new token', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 'xtc'); // register XTC
+      await keyRing.registerToken({ canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai', standard: 'xtc' }); // register XTC
       const { currentWalletId, ...state } = await keyRing.getState();
       const encryptedState = CryptoJS.AES.encrypt(
         JSON.stringify(state),
@@ -389,12 +389,12 @@ describe('Plug KeyRing', () => {
   it('should persist data encypted correctly after adding a new app', async () => {
     await keyRing.create({ password: TEST_PASSWORD });
     await keyRing.unlock(TEST_PASSWORD);
-    await keyRing.addConnectedApp({
+    await keyRing.addConnectedApp({ app: {
       name: 'Chris',
       icon: ':smile:',
       url: 'dx4k2-mtdzp-qavet-nrazz-4tmro-oii6a-hlrlv-azdys-5j72q-ids2p-cae',
       whitelist: [],
-    });
+    }});
     const { currentWalletId, ...state } = await keyRing.getState();
     const encryptedState = CryptoJS.AES.encrypt(
       JSON.stringify(state),
@@ -535,9 +535,9 @@ describe('Plug KeyRing', () => {
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.createPrincipal();
       await keyRing.createPrincipal();
-      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 'xtc', 1); // register WTC to other subaccounts
-      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 'xtc', 2); // register WTC
-      await keyRing.registerToken('5ymop-yyaaa-aaaah-qaa4q-cai', 'xtc', 2); // register WTC twice
+      await keyRing.registerToken({ canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai', standard: 'xtc', subaccount: 1 }); // register WTC to other subaccounts
+      await keyRing.registerToken({ canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai', standard: 'xtc', subaccount: 2 }); // register WTC
+      await keyRing.registerToken({ canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai', standard: 'xtc', subaccount: 2 }); // register WTC twice
 
       const { wallets } = await keyRing.getState();
       expect(wallets[0].assets).toMatchObject(DEFAULT_ASSETS);
@@ -547,28 +547,28 @@ describe('Plug KeyRing', () => {
     test('should fail to register an invalid canister id', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      await expect(() => keyRing.registerToken('test', 'xtc')).rejects.toEqual(
+      await expect(() => keyRing.registerToken({ canisterId: 'test', standard: 'xtc' })).rejects.toEqual(
         new Error(ERRORS.INVALID_CANISTER_ID)
       );
       await expect(() =>
-        keyRing.registerToken(
-          'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
-          'xtc'
-        )
+        keyRing.registerToken({
+          canisterId: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+          standard: 'xtc',
+        })
       ).rejects.toEqual(new Error(ERRORS.INVALID_CANISTER_ID));
     });
     test('should fail to add an app with an invalid canister whitelisted', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       await expect(() =>
-        keyRing.addConnectedApp({
+        keyRing.addConnectedApp({ app: {
           name: 'Chris',
           icon: ':smile:',
           url: 'chris123',
           whitelist: [
             'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
           ],
-        })
+        }})
       ).rejects.toEqual(new Error(ERRORS.INVALID_APP));
     });
     test('should do nothing if app was already added', async () => {
@@ -580,8 +580,8 @@ describe('Plug KeyRing', () => {
         url: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
         whitelist: [],
       };
-      const connectedApps = await keyRing.addConnectedApp(app);
-      await keyRing.addConnectedApp(app);
+      const connectedApps = await keyRing.addConnectedApp({ app });
+      await keyRing.addConnectedApp({ app });
       expect(connectedApps).toEqual([app]);
     });
     test('should delete correctly a previously saved app', async () => {
@@ -599,12 +599,12 @@ describe('Plug KeyRing', () => {
         url: 'plugwallet.ooo',
         whitelist: [],
       };
-      let connectedApps = await keyRing.addConnectedApp(app1);
-      connectedApps = await keyRing.addConnectedApp(app2);
+      let connectedApps = await keyRing.addConnectedApp({ app: app1 });
+      connectedApps = await keyRing.addConnectedApp({ app: app2 });
       expect(connectedApps).toEqual([app1, app2]);
-      connectedApps = await keyRing.deleteConnectedApp(app1.url);
+      connectedApps = await keyRing.deleteConnectedApp({ url: app1.url });
       expect(connectedApps).toEqual([app2]);
-      connectedApps = await keyRing.deleteConnectedApp(app2.url);
+      connectedApps = await keyRing.deleteConnectedApp({ url: app2.url });
       expect(connectedApps).toEqual([]);
     });
     test('should do nothing when trying to delete an unexistant app', async () => {
@@ -616,7 +616,7 @@ describe('Plug KeyRing', () => {
         url: 'test123.com',
         whitelist: [],
       };
-      const connectedApps = await keyRing.deleteConnectedApp(account.url);
+      const connectedApps = await keyRing.deleteConnectedApp({ url: account.url });
       expect(connectedApps).toEqual([]);
     });
   });
@@ -681,14 +681,14 @@ describe('Plug KeyRing', () => {
       let ind = Math.round(Math.random() * (walletsCreated - 1));
       if (ind === 0) ind++;
 
-      expect(await keyRing.getBalances(ind)).toBe(balances[ind]);
+      expect(await keyRing.getBalances({ subaccount: ind })).toBe(balances[ind]);
     });
 
     test('get error with invalid wallet numbers', async () => {
-      await expect(keyRing.getBalances(-2)).rejects.toThrow(
+      await expect(keyRing.getBalances({ subaccount: -2 })).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
-      await expect(keyRing.getBalances(walletsCreated + 2)).rejects.toThrow(
+      await expect(keyRing.getBalances({ subaccount: walletsCreated + 2 })).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
     });
@@ -783,7 +783,7 @@ describe('Plug KeyRing', () => {
         expect(nfts).toEqual([mockdeNFTCollection]);
       });
       it('should fail to fetch NFTs on inexistant account', async () => {
-        await expect(keyRing.getNFTs(1)).rejects.toThrow(
+        await expect(keyRing.getNFTs({ subaccount: 1 })).rejects.toThrow(
           ERRORS.INVALID_WALLET_NUMBER
         );
       });
