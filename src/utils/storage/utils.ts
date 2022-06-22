@@ -64,7 +64,7 @@ const getVersionIndex = (version: string | undefined): number => {
 export const handleStorageUpdate = (
   storageVersion: string | undefined,
   storage: any
-): PlugState => {
+): PlugState & { mnemonic: string }=> {
   const index = getVersionIndex(storageVersion);
   if (index === VERSION_PATH.length) return storage;
 

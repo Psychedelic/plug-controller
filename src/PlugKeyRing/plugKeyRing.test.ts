@@ -195,7 +195,8 @@ describe('Plug KeyRing', () => {
       const stateWallet = state.wallets[0];
       expect(stateWallet).toEqual(wallet.toJSON());
       expect(state.password).toEqual(TEST_PASSWORD);
-      expect(bip39.validateMnemonic(state.mnemonic as string)).toEqual(true);
+      const mnemonic = await keyRing.getMnemonic(state.password as string);
+      expect(bip39.validateMnemonic(mnemonic as string)).toEqual(true);
       expect(stateWallet.assets).toEqual(DEFAULT_ASSETS);
     });
     it('should fail if not password was provided', async () => {
@@ -221,9 +222,10 @@ describe('Plug KeyRing', () => {
       expect(state.wallets.length).toEqual(1);
       const stateWallet = state.wallets[0];
       expect(stateWallet).toEqual(wallet.toJSON());
-      expect(state.mnemonic).toEqual(TEST_MNEMONIC);
+      const mnemonic = await keyRing.getMnemonic(state.password as string);
+      expect(mnemonic).toEqual(TEST_MNEMONIC);
       expect(state.password).toEqual(TEST_PASSWORD);
-      expect(bip39.validateMnemonic(state.mnemonic!)).toEqual(true);
+      expect(bip39.validateMnemonic(mnemonic!)).toEqual(true);
       expect(stateWallet.assets).toEqual(DEFAULT_ASSETS);
       expect(stateWallet.connectedApps).toEqual([]);
     });
