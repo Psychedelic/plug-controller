@@ -1,7 +1,7 @@
 import CryptoJS from 'crypto-js';
 import { HttpAgent, PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
-import { Principal } from '@dfinity/principal';
+
 import {
   NFTDetails,
   NFTCollection,
@@ -17,34 +17,14 @@ import { ERRORS } from '../errors';
 import PlugWallet from '../PlugWallet';
 import { createAccount } from '../utils/account';
 import Storage from '../utils/storage';
-import { validatePrincipalId } from './utils';
-import { ConnectedApp } from '../interfaces/account';
 import { recursiveParseBigint } from '../utils/object';
 import { handleStorageUpdate } from '../utils/storage/utils';
 import { getVersion } from '../utils/version';
-import { RecordExt } from '../interfaces/icns_registry';
-import { ValueType, Address, Error, Response } from '../interfaces/contact_registry';
+import { Address } from '../interfaces/contact_registry';
+
 import NetworkModule from './modules/Network';
-import { Balance } from '@psychedelic/dab-js/dist/interfaces/dip_721';
-
-interface CreatePrincipalOptions {
-  name?: string;
-  icon?: string;
-}
-
-interface CreateOptions extends CreatePrincipalOptions {
-  password: string;
-  entropy?: Buffer;
-}
-
-interface CreateAndPersistKeyRingOptions extends CreateOptions {
-  mnemonic: string;
-}
-
-interface ImportMnemonicOptions {
-  mnemonic: string;
-  password: string;
-}
+import { CreateAndPersistKeyRingOptions, CreateImportResponse, CreateOptions, CreatePrincipalOptions, ImportMnemonicOptions } from './interfaces';
+import { WALLET_METHODS } from './constants';
 
 class PlugKeyRing {
   // state
@@ -73,7 +53,10 @@ class PlugKeyRing {
   public getContacts: (args: { subaccount?: number }) => Promise<Array<Address>>;
   public addContact: (args: { contact: Address, subaccount?: number }) => Promise<boolean>;
   public deleteContact: (args: { addressName: string, subaccount?: number }) => Promise<boolean>;
-  public getAgent: (args?: { subaccount ?: number }) => HttpAgent 
+  public getAgent: (args?: { subaccount ?: number }) => HttpAgent;
+  public getBalance: (args: { token: StandardToken, subaccount?: number }) => Promise<TokenBalance>;
+  public getTransactions: (args: { subaccount?: number }) => Promise<GetTransactionsResponse>;
+  public send: (args: { to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
 
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
@@ -92,8 +75,7 @@ class PlugKeyRing {
   }
 
   private exposeWalletMethods(): void {
-    const METHODS = ['getNFTs', 'getBalances', 'burnXTC', 'transferNFT', 'registerToken', 'removeToken', 'getTokenInfo', 'getICNSData', 'setReverseResolvedName',  'sign', 'addContact', 'getContacts', 'deleteContact', 'getAgent'];
-    METHODS.forEach(method => {
+    WALLET_METHODS.forEach(method => {
       this[method] = async (args) => {
         const { subaccount, ...params } = args || {};
         const wallet = await this.getWallet(subaccount);
@@ -166,42 +148,20 @@ class PlugKeyRing {
   };
 
   // Key Management
-  public create = async ({
-    password = '',
-    icon,
-    name,
-    entropy,
-  }: CreateOptions): Promise<{
-    wallet: PlugWallet;
-    mnemonic: string;
-  }> => {
+  public create = async ({ password = '', icon, name, entropy }: CreateOptions): Promise<CreateImportResponse> => {
     const { mnemonic } = createAccount(entropy);
-    const wallet = await this.createAndPersistKeyRing({
-      mnemonic,
-      password,
-      icon,
-      name,
-    });
+    const wallet = await this.createAndPersistKeyRing({ mnemonic, password, icon, name });
     return { wallet, mnemonic };
   };
 
   // Key Management
-  public importMnemonic = async ({
-    mnemonic,
-    password,
-  }: ImportMnemonicOptions): Promise<{
-    wallet: PlugWallet;
-    mnemonic: string;
-  }> => {
+  public importMnemonic = async ({ mnemonic, password }: ImportMnemonicOptions): Promise<CreateImportResponse> => {
     const wallet = await this.createAndPersistKeyRing({ mnemonic, password });
     return { wallet, mnemonic };
   };
 
   // Key Management
-  // Assumes the state is already initialized
-  public createPrincipal = async (
-    opts?: CreatePrincipalOptions
-  ): Promise<PlugWallet> => {
+  public createPrincipal = async (opts?: CreatePrincipalOptions): Promise<PlugWallet> => {
     await this.checkInitialized();
     this.checkUnlocked();
     const wallet = new PlugWallet({
@@ -215,7 +175,6 @@ class PlugKeyRing {
     this.state.wallets = wallets;
     return wallet;
   };
-
 
   // Key Management
   public setCurrentPrincipal = async (walletNumber: number): Promise<void> => {
@@ -268,21 +227,6 @@ class PlugKeyRing {
     await this.updateWallet(wallet);
   };
 
-  public getBalance = async (
-    token: StandardToken,
-    subaccount?: number
-  ): Promise<TokenBalance> => {
-    const wallet = await this.getWallet(subaccount);
-    return wallet.getTokenBalance(token);
-  };
-
-  public getTransactions = async (
-    subaccount?: number
-  ): Promise<GetTransactionsResponse> => {
-    const wallet = await this.getWallet(subaccount)
-    return wallet.getTransactions();
-  };
-
   private validateSubaccount(subaccount: number): void {
     if (
       subaccount < 0 ||
@@ -298,22 +242,6 @@ class PlugKeyRing {
     if (!this.isInitialized) throw new Error(ERRORS.NOT_INITIALIZED);
   };
 
-  public send = async (
-    to: string,
-    amount: string,
-    canisterId: string,
-    opts?: TokenInterfaces.SendOpts
-  ): Promise<TokenInterfaces.SendResponse> => {
-    const wallet = await this.getWallet(this.currentWalletId || 0);
-    return wallet.send(
-      to,
-      amount,
-      canisterId,
-      opts
-    );
-  };
-
-
   public get currentWallet(): PlugWallet {
     this.checkUnlocked();
     return this.state.wallets[this.currentWalletId || 0];
@@ -325,8 +253,6 @@ class PlugKeyRing {
     this.validateSubaccount(currentWalletNumber);
     return this.state.wallets[currentWalletNumber].pemFile;
   };
-
-
 
   private checkUnlocked = (): void => {
     if (!this.isUnlocked) {

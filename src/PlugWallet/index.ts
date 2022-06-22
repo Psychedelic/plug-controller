@@ -278,9 +278,9 @@ class PlugWallet {
     return burnResult;
   };
 
-  public getTokenBalance = async (
+  public getTokenBalance = async ({ token }: {
     token: StandardToken
-  ): Promise<TokenBalance> => {
+  }): Promise<TokenBalance> => {
     const tokenActor = await getTokenActor({
       canisterId: token.canisterId,
       agent: this.agent,
@@ -309,7 +309,7 @@ class PlugWallet {
   public getBalances = async (): Promise<Array<TokenBalance>> => {
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
-      Object.values(this.assets).map(asset => this.getTokenBalance(asset.token))
+      Object.values(this.assets).map(asset => this.getTokenBalance({ token: asset.token }))
     );
 
     Object.values(tokenBalances).forEach(asset => {
@@ -392,12 +392,13 @@ class PlugWallet {
     return transactions;
   };
 
-  public send = async (
+  public send = async (args: {
     to: string,
     amount: string,
     canisterId: string,
     opts?: TokenInterfaces.SendOpts
-  ): Promise<TokenInterfaces.SendResponse> => {
+  }): Promise<TokenInterfaces.SendResponse> => {
+    const { to, amount, canisterId, opts } = args || {};
     const savedToken = this.assets[canisterId].token;
     const tokenActor = await getTokenActor({
       canisterId,

@@ -633,14 +633,14 @@ describe('Plug KeyRing', () => {
     test('get specific transactions', async () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
 
-      expect(await keyRing.getTransactions(ind)).toBe(transactions[ind]);
+      expect(await keyRing.getTransactions({ subaccount: ind })).toBe(transactions[ind]);
     });
 
     test('get error with invalid wallet numbers', async () => {
-      await expect(keyRing.getTransactions(-2)).rejects.toThrow(
+      await expect(keyRing.getTransactions({ subaccount: -2 })).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
-      await expect(keyRing.getTransactions(walletsCreated + 2)).rejects.toThrow(
+      await expect(keyRing.getTransactions({ subaccount: walletsCreated + 2 })).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
     });
@@ -661,11 +661,11 @@ describe('Plug KeyRing', () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = wallets[ind].principal;
 
-      await keyRing.send(
-        to.toString(),
-        amount.toString(),
-        TOKENS.ICP.canisterId
-      );
+      await keyRing.send({
+        to: to.toString(),
+        amount: amount.toString(),
+        canisterId: TOKENS.ICP.canisterId
+      });
       expect(createAgent).toHaveBeenCalled();
     });
     it('call sendICP with to account', async () => {
@@ -674,11 +674,11 @@ describe('Plug KeyRing', () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
       const to = getAccountId(Principal.fromText(wallets[ind].principal));
 
-      await keyRing.send(
-        to.toString(),
-        amount.toString(),
-        TOKENS.ICP.canisterId
-      );
+      await keyRing.send({
+        to: to.toString(),
+        amount: amount.toString(),
+        canisterId: TOKENS.ICP.canisterId
+      });
       expect(createAgent).toHaveBeenCalled();
       expect(mockedSendToken.mock.calls[0][0].amount).toEqual(amount);
       expect(mockedSendToken.mock.calls[0][0].to).toEqual(to);
