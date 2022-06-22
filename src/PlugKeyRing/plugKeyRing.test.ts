@@ -420,7 +420,6 @@ describe('Plug KeyRing', () => {
       const wallet = await keyRing.createPrincipal();
       await keyRing.setCurrentPrincipal(wallet.walletNumber);
       expect(keyRing.currentWalletId).toEqual(wallet.walletNumber);
-      expect(keyRing.currentWallet).toEqual(wallet);
     });
     it('should fail to set invalid current principal ', async () => {
       await keyRing.create({ password: TEST_PASSWORD });

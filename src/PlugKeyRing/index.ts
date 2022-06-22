@@ -117,18 +117,12 @@ class PlugKeyRing {
 
   // Storage get
   private loadFromPersistance = async (password: string): Promise<void> => {
-    const {
-      vault,
-      isInitialized,
-      currentWalletId,
-      version,
-    } = ((await this.storage.get()) || {}) as StorageData;
+    const storage = ((await this.storage.get()) || {}) as StorageData;
+    const { vault, isInitialized, currentWalletId, version } = storage;
     if (isInitialized && vault) {
       const newVersion = getVersion();
-      const decrypted =
-        newVersion === version
-          ? this.decryptState(vault, password)
-          : handleStorageUpdate(version, this.decryptState(vault, password));
+      const decrypted = this.decryptState(vault, password);
+      if (newVersion !== version) handleStorageUpdate(version, this.decryptState(vault, password));
       const wallets = decrypted.wallets.map(
         wallet =>
           new PlugWallet({
@@ -242,16 +236,9 @@ class PlugKeyRing {
     if (!this.isInitialized) throw new Error(ERRORS.NOT_INITIALIZED);
   };
 
-  public get currentWallet(): PlugWallet {
-    this.checkUnlocked();
-    return this.state.wallets[this.currentWalletId || 0];
-  }
-
-  public getPemFile = (walletNumber?: number): string => {
-    this.checkUnlocked();
-    const currentWalletNumber = (walletNumber ?? this.currentWalletId) || 0;
-    this.validateSubaccount(currentWalletNumber);
-    return this.state.wallets[currentWalletNumber].pemFile;
+  public getPemFile = async (walletNumber?: number): Promise<string> => {
+    const wallet = await this.getWallet(walletNumber);
+    return wallet.pemFile;
   };
 
   private checkUnlocked = (): void => {
@@ -307,7 +294,6 @@ class PlugKeyRing {
     JSON.parse(
       this.crypto.AES.decrypt(state, password).toString(this.crypto.enc.Utf8)
   );
-
 }
 
 export default PlugKeyRing;
