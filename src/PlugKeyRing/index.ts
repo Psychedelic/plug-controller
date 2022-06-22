@@ -25,6 +25,7 @@ import { getVersion } from '../utils/version';
 import { RecordExt } from '../interfaces/icns_registry';
 import { ValueType, Address, Error, Response } from '../interfaces/contact_registry';
 import NetworkModule from './modules/Network';
+import { Balance } from '@psychedelic/dab-js/dist/interfaces/dip_721';
 
 interface CreatePrincipalOptions {
   name?: string;
@@ -62,6 +63,9 @@ class PlugKeyRing {
 
   public currentWalletId?: number;
 
+  public getNFTs: (subaccount?: number) => Promise<NFTCollection[] | null>;
+  public getBalances: (subaccount?: number) => Promise<Array<TokenBalance>>;
+
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
     CryptoAdapter = CryptoJS,
@@ -79,7 +83,7 @@ class PlugKeyRing {
   }
 
   private exposeWalletMethods(): void {
-    const METHODS = ['getNFTs', 'transferNFT', 'getBalances'];
+    const METHODS = ['getNFTs', 'getBalances'];
     METHODS.forEach(method => {
       console.log('exposing method', method);
       this[method] = async (subAccount, ...params) => {
@@ -188,6 +192,21 @@ class PlugKeyRing {
     return { wallet, mnemonic };
   };
 
+  public transferNFT = async ({
+    subAccount,
+    token,
+    to,
+  }: {
+    subAccount?: number;
+    token: NFTDetails;
+    to: string;
+    standard: string;
+  }): Promise<NFTCollection[]> => {
+    const wallet = await this.getWallet(subAccount);
+    const collections = await wallet.transferNFT({ token, to });
+    await this.updateWallet(wallet);
+    return collections;
+  };
 
   // Key Management
   public importMnemonic = async ({
