@@ -386,30 +386,6 @@ describe('Plug KeyRing', () => {
       expect(isInitialized).toEqual(true);
     });
   });
-  it('should persist data encypted correctly after adding a new app', async () => {
-    await keyRing.create({ password: TEST_PASSWORD });
-    await keyRing.unlock(TEST_PASSWORD);
-    await keyRing.addConnectedApp({ app: {
-      name: 'Chris',
-      icon: ':smile:',
-      url: 'dx4k2-mtdzp-qavet-nrazz-4tmro-oii6a-hlrlv-azdys-5j72q-ids2p-cae',
-      whitelist: [],
-    }});
-    const { currentWalletId, ...state } = await keyRing.getState();
-    const encryptedState = CryptoJS.AES.encrypt(
-      JSON.stringify(state),
-      TEST_PASSWORD
-    );
-    const { vault: stored, isInitialized } = store.get();
-    expect(
-      CryptoJS.AES.decrypt(encryptedState, TEST_PASSWORD).toString(
-        CryptoJS.enc.Utf8
-      )
-    ).toEqual(
-      CryptoJS.AES.decrypt(stored, TEST_PASSWORD).toString(CryptoJS.enc.Utf8)
-    );
-    expect(isInitialized).toEqual(true);
-  });
   describe('principal management', () => {
     it('should create new principals correctly when unlocked', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
@@ -556,68 +532,6 @@ describe('Plug KeyRing', () => {
           standard: 'xtc',
         })
       ).rejects.toEqual(new Error(ERRORS.INVALID_CANISTER_ID));
-    });
-    test('should fail to add an app with an invalid canister whitelisted', async () => {
-      await keyRing.create({ password: TEST_PASSWORD });
-      await keyRing.unlock(TEST_PASSWORD);
-      await expect(() =>
-        keyRing.addConnectedApp({ app: {
-          name: 'Chris',
-          icon: ':smile:',
-          url: 'chris123',
-          whitelist: [
-            'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
-          ],
-        }})
-      ).rejects.toEqual(new Error(ERRORS.INVALID_APP));
-    });
-    test('should do nothing if app was already added', async () => {
-      await keyRing.create({ password: TEST_PASSWORD });
-      await keyRing.unlock(TEST_PASSWORD);
-      const app = {
-        name: 'Chris',
-        icon: ':smile:',
-        url: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
-        whitelist: [],
-      };
-      const connectedApps = await keyRing.addConnectedApp({ app });
-      await keyRing.addConnectedApp({ app });
-      expect(connectedApps).toEqual([app]);
-    });
-    test('should delete correctly a previously saved app', async () => {
-      await keyRing.create({ password: TEST_PASSWORD });
-      await keyRing.unlock(TEST_PASSWORD);
-      const app1 = {
-        name: 'App1',
-        icon: ':smile:',
-        url: 'test123.com',
-        whitelist: [],
-      };
-      const app2 = {
-        name: 'App2',
-        icon: ':sad:',
-        url: 'plugwallet.ooo',
-        whitelist: [],
-      };
-      let connectedApps = await keyRing.addConnectedApp({ app: app1 });
-      connectedApps = await keyRing.addConnectedApp({ app: app2 });
-      expect(connectedApps).toEqual([app1, app2]);
-      connectedApps = await keyRing.deleteConnectedApp({ url: app1.url });
-      expect(connectedApps).toEqual([app2]);
-      connectedApps = await keyRing.deleteConnectedApp({ url: app2.url });
-      expect(connectedApps).toEqual([]);
-    });
-    test('should do nothing when trying to delete an unexistant app', async () => {
-      await keyRing.create({ password: TEST_PASSWORD });
-      await keyRing.unlock(TEST_PASSWORD);
-      const account = {
-        name: 'Some app',
-        icon: ':smile:',
-        url: 'test123.com',
-        whitelist: [],
-      };
-      const connectedApps = await keyRing.deleteConnectedApp({ url: account.url });
-      expect(connectedApps).toEqual([]);
     });
   });
 

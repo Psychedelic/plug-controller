@@ -59,14 +59,21 @@ class PlugKeyRing {
   private crypto: any; // TODO: see what functions are needed and create an interface.
   private networkModule: NetworkModule;
 
-  // methods
+  // wallet methods
   public getBalances: (args?: { subaccount?: number }) => Promise<Array<TokenBalance>>;
   public getNFTs: (args?: { subaccount?: number, refresh?: boolean }) => Promise<NFTCollection[] | null>;
   public transferNFT: (args: { subaccount?: number; token: NFTDetails; to: string; standard: string; }) => Promise<NFTCollection[]>;
   public burnXTC: (args?: { to: string; amount: string; subaccount: number; }) => Promise<TokenInterfaces.BurnResult>;
   public registerToken: (args: { canisterId: string; standard?: string; subaccount?: number; image?: string; }) => Promise<Array<TokenBalance>>;
   public removeToken: (args: { canisterId: string; subaccount?: number; }) => Promise<Array<TokenBalance>>;
-  public getTokenInfo: (args: { canisterId: string, standard?: string, subaccount?: number }) => Promise<{ token: StandardToken; amount: string }>
+  public getTokenInfo: (args: { canisterId: string, standard?: string, subaccount?: number }) => Promise<{ token: StandardToken; amount: string }>;
+  public getICNSData: (args: { subaccount?: number  }) => Promise<{ names: string[]; reverseResolvedName: string | undefined }>;
+  public setReverseResolvedName: (args: { name: string, subaccount?: number }) => Promise<string>;
+  public sign: (args: { payload: BinaryBlob, subaccount?: number }) => Promise<BinaryBlob>;
+  public getContacts: (args: { subaccount?: number }) => Promise<Array<Address>>;
+  public addContact: (args: { contact: Address, subaccount?: number }) => Promise<boolean>;
+  public deleteContact: (args: { addressName: string, subaccount?: number }) => Promise<boolean>;
+  public getAgent: (args?: { subaccount ?: number }) => HttpAgent 
 
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
@@ -85,7 +92,7 @@ class PlugKeyRing {
   }
 
   private exposeWalletMethods(): void {
-    const METHODS = ['getNFTs', 'getBalances', 'burnXTC', 'transferNFT', 'registerToken', 'removeToken', 'getTokenInfo'];
+    const METHODS = ['getNFTs', 'getBalances', 'burnXTC', 'transferNFT', 'registerToken', 'removeToken', 'getTokenInfo', 'getICNSData', 'setReverseResolvedName',  'sign', 'addContact', 'getContacts', 'deleteContact', 'getAgent'];
     METHODS.forEach(method => {
       this[method] = async (args) => {
         const { subaccount, ...params } = args || {};
@@ -228,16 +235,6 @@ class PlugKeyRing {
     });
   };
 
-  // Queryish
-  public sign = async (
-    payload: BinaryBlob,
-    subaccount?: number
-  ): Promise<BinaryBlob> => {
-    const wallet = await this.getWallet(subaccount);
-    const signed = await wallet.sign(payload);
-    return signed;
-  };
-
   // General
   public unlock = async (password: string): Promise<boolean> => {
     await this.checkInitialized();
@@ -329,27 +326,7 @@ class PlugKeyRing {
     return this.state.wallets[currentWalletNumber].pemFile;
   };
 
-  public getICNSData = async (
-    walletNumber?: number
-  ): Promise<{ names: string[]; reverseResolvedName: string | undefined }> => {
-    const wallet = await this.getWallet(walletNumber);
-    return wallet.getICNSData();
-  };
 
-  public setICNSResolvedName = async (
-    name: string,
-    walletNumber?: number
-  ): Promise<string> => {
-    const wallet = await this.getWallet(walletNumber);
-    return wallet.setReverseResolvedName(name);
-  };
-
-  public getAgent = (walletNumber?: number): HttpAgent => {
-    this.checkUnlocked();
-    const currentWalletNumber = (walletNumber ?? this.currentWalletId) || 0;
-    this.validateSubaccount(currentWalletNumber);
-    return this.state.wallets[currentWalletNumber].getAgent();
-  };
 
   private checkUnlocked = (): void => {
     if (!this.isUnlocked) {
@@ -405,46 +382,6 @@ class PlugKeyRing {
       this.crypto.AES.decrypt(state, password).toString(this.crypto.enc.Utf8)
   );
 
-  // Wallet
-  public getContacts = async (walletNumber?: number): Promise<Array<Address>> => {
-    const wallet = await this.getWallet(walletNumber);
-    const contacts = await wallet.getContacts();
-    return contacts.map((c) => {
-      const value = c.value;
-      if (value.hasOwnProperty('PrincipalId')) {
-        value['PrincipalId'] = value['PrincipalId'].toText();
-      }
-      return {
-        ...c,
-        value
-      }
-    });
-  };
-
-  public addContact = async (
-    newContact: Address,
-    walletNumber?: number,
-  ): Promise<boolean> => {
-    const wallet = await this.getWallet(walletNumber);
-    const value = newContact.value;
-    if (value.hasOwnProperty('PrincipalId')) {
-      value['PrincipalId'] = Principal.fromText(value['PrincipalId']);
-    }
-    const response = await wallet.addContact({
-      ...newContact,
-      value,
-    });
-
-    return response;
-  };
-
-  public deleteContact = async (
-    addressName: string,
-    walletNumber?: number,
-  ): Promise<boolean> => {
-    const wallet = await this.getWallet(walletNumber);
-    return wallet.deleteContact(addressName);
-  };
 }
 
 export default PlugKeyRing;

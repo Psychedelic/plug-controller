@@ -453,7 +453,7 @@ class PlugWallet {
     return icnsAdapter.getICNSReverseResolvedName();
   };
 
-  public setReverseResolvedName = async (name: string): Promise<string> => {
+  public setReverseResolvedName = async ({ name }: { name: string }): Promise<string> => {
     const icnsAdapter = new ICNSAdapter(this.agent);
     return icnsAdapter.setICNSReverseResolvedName(name);
   };
@@ -466,9 +466,9 @@ class PlugWallet {
     }
   };
 
-  public addContact = async (newContact: Address): Promise<boolean> => {
+  public addContact = async ({ contact }: { contact: Address }): Promise<boolean> => {
     try {
-      const contactResponse = await addAddress(this.agent, newContact);
+      const contactResponse = await addAddress(this.agent, contact);
 
       return contactResponse.hasOwnProperty('Ok') ? true : false; 
     } catch (e) {
@@ -476,7 +476,7 @@ class PlugWallet {
     }
   };
 
-  public deleteContact = async (addressName: string): Promise<boolean> => {
+  public deleteContact = async ({ addressName }: { addressName: string }): Promise<boolean> => {
     try {
       const contactResponse = await removeAddress(this.agent, addressName);
 
