@@ -115,6 +115,13 @@ class PlugKeyRing {
     return wallet.publicKey;
   };
 
+  public async getMnemonic(password: string): Promise<string> {
+    await this.unlock(password);
+    const storage = await this.storage.get() as StorageData;
+    const decrypted = await this.decryptState(storage?.vault, password);
+    return decrypted.mnemonic || '';
+  }
+
   // Storage get
   private loadFromPersistance = async (password: string): Promise<void> => {
     const storage = ((await this.storage.get()) || {}) as StorageData;
