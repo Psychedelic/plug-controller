@@ -25,7 +25,8 @@
     "secp256k1": "^4.0.2",
     "text-encoding": "^0.7.0",
     "text-encoding-shim": "^1.0.5",
-    "tweetnacl": "^1.0.3"
+    "tweetnacl": "^1.0.3",
+    "uuidv4": "^6.2.13"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.13.0",
