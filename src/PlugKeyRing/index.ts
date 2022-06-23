@@ -305,7 +305,7 @@ class PlugKeyRing {
     const wallet = wallets[index];
     const registeredTokens = await wallet.registerToken(canisterId, standard, image);
     wallets.splice(index, 1, wallet);
-    this.state.wallets = wallets;
+    this.state = { ...this.state, wallets };
     await this.saveEncryptedState({ wallets }, this.state.password);
     return registeredTokens;
   };
@@ -511,9 +511,11 @@ class PlugKeyRing {
 
   private saveEncryptedState = async (newState, password): Promise<void> => {
     const mnemonic = await this.getMnemonic(password);
-    const stringData = JsonBigInt.stringify({ ...this.state, ...newState, mnemonic });
+    const state = { ...this.state, ...newState };
+    const stringData = JsonBigInt.stringify({ ...state, mnemonic });
     const encrypted = this.crypto.AES.encrypt(stringData, password);
     await this.storage.set({ vault: encrypted.toString() });
+    this.state = state;
   };
 
   private decryptState = (state, password): PlugState & { mnemonic: string } =>
