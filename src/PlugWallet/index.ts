@@ -447,7 +447,13 @@ class PlugWallet {
     return this.connectedApps;
   };
 
-  public getAgent(): HttpAgent {
+  public getAgent({ host }: { host?: string }): HttpAgent {
+    if (host) {
+      return createAgent({
+        secretKey: this.identity.getKeyPair().secretKey,
+        host,
+      });
+    }
     return this.agent;
   }
 

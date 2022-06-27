@@ -460,11 +460,11 @@ class PlugKeyRing {
     return this.state.wallets[currentWalletNumber].setReverseResolvedName(name);
   };
 
-  public getAgent = (walletNumber?: number): HttpAgent => {
+  public getAgent = ({ walletNumber, host }: { walletNumber?: number, host?: string }): HttpAgent => {
     this.checkUnlocked();
     const currentWalletNumber = (walletNumber ?? this.currentWalletId) || 0;
     this.validateSubaccount(currentWalletNumber);
-    return this.state.wallets[currentWalletNumber].getAgent();
+    return this.state.wallets[currentWalletNumber].getAgent({ host });
   };
 
   private checkUnlocked = (): void => {

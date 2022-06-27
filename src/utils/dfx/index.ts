@@ -14,6 +14,7 @@ export interface CreateAgentArgs {
   secretKey: BinaryBlob;
   defaultIdentity?: Secp256k1KeyIdentity;
   fetch?: any;
+  host?: string;
 }
 
 export const createIdentity = (secretKey: BinaryBlob): Secp256k1KeyIdentity =>
@@ -23,11 +24,12 @@ export const createAgent = ({
   secretKey,
   defaultIdentity,
   fetch = crossFetch,
+  host,
 }: CreateAgentArgs): HttpAgent => {
   const identity =
     defaultIdentity || createIdentity(blobFromUint8Array(secretKey));
   const agent = new HttpAgent({
-    host: PLUG_PROXY_HOST,
+    host: host || PLUG_PROXY_HOST,
     fetch: wrappedFetch(fetch),
     identity,
   });
