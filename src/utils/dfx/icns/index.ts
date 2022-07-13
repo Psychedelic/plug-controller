@@ -10,7 +10,6 @@ import ReverseRegistrar from '../../../interfaces/icns_reverse_registrar';
 import { Principal } from "@dfinity/principal";
 import { NFTCollection, standards } from "@psychedelic/dab-js";
 import { ERRORS } from "../../../errors";
-import { getAccountId } from "../../account";
 
 const ICNS_REGISTRY_ID = 'e5kvl-zyaaa-aaaan-qabaq-cai';
 const ICNS_RESOLVER_ID = 'euj6x-pqaaa-aaaan-qabba-cai';
