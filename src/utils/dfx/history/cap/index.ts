@@ -2,7 +2,10 @@
 /* eslint-disable no-underscore-dangle */
 import axios, { AxiosResponse, Method } from 'axios';
 import { Principal } from '@dfinity/principal';
-import { prettifyCapTransactions } from '@psychedelic/cap-js';
+import {
+  prettifyCapTransactions,
+  TransactionPrettified,
+} from '@psychedelic/cap-js';
 import { getTokens, getAllNFTS, TokenRegistry } from '@psychedelic/dab-js';
 import crossFetch from 'cross-fetch';
 
@@ -18,7 +21,7 @@ import {
   KyashuItem,
 } from '../../../../interfaces/cap';
 import { uniqueMap } from '../../../array';
-import { buildSonicData } from './sonic';
+import { buildSonicData, SONIC_SWAP_CANISTER_ID } from './sonic';
 import { HttpAgent } from '@dfinity/agent';
 
 const parseUnderscoreNumber = value =>
@@ -28,11 +31,11 @@ const getTransactionCanister = (contract: string): string | undefined =>
   contract?.split('#')?.[1];
 
 const formatTransaction = async (
-  transaction: any,
+  event,
   canistersInfo
 ): Promise<InferredTransaction> => {
-  const canisterId = getTransactionCanister(transaction.contractId);
-  const prettifyEvent = prettifyCapTransactions(transaction.event);
+  const { canisterId } = event;
+  const prettifyEvent = event.prettyEvent;
   if (canisterId) {
     prettifyEvent.details = {
       ...prettifyEvent.details,
@@ -52,7 +55,7 @@ const formatTransaction = async (
     parseUnderscoreNumber(token_identifier) ||
     '';
   const formattedTransaction = {
-    hash: transaction.sk,
+    hash: event.sk,
     timestamp: time,
     type: operation,
     details: {
@@ -85,11 +88,10 @@ const metadataArrayToObject = metadata =>
 
 const getCanistersInfo = async (
   canisterIds: string[],
-  agent?: HttpAgent,
-  fetch?: typeof crossFetch
+  agent?: HttpAgent
 ): Promise<any> => {
-  const dabTokensInfo = metadataArrayToObject(await getTokens());
-  const dabNFTsInfo = metadataArrayToObject(await getAllNFTS({}));
+  const dabTokensInfo = metadataArrayToObject(await getTokens({ agent }));
+  const dabNFTsInfo = metadataArrayToObject(await getAllNFTS({ agent }));
   const dabInfo = await Promise.all(
     canisterIds.map(async canisterId => {
       let canisterInfo = { canisterId };
@@ -100,11 +102,7 @@ const getCanistersInfo = async (
         canisterInfo['nftRegistryInfo'] = dabNFTsInfo[canisterId];
       try {
         // Fetch extra metadata from canister registry
-        const fetchedCanisterInfo = await getCanisterInfo(
-          canisterId,
-          agent,
-          fetch
-        );
+        const fetchedCanisterInfo = await getCanisterInfo(canisterId, agent);
         canisterInfo = { ...canisterInfo, ...fetchedCanisterInfo };
       } catch (error) {
         /* eslint-disable-next-line */
@@ -120,11 +118,46 @@ const getCanistersInfo = async (
   return canistersInfo;
 };
 
+const getCanisterIdsFromSonicTx = details => {
+  const { to, from, token0, token1, token, token_id, token_identifier } =
+    details || {};
+
+  const tokenId =
+    details?.tokenId ||
+    token ||
+    token_id ||
+    parseUnderscoreNumber(token_identifier) ||
+    undefined;
+
+  return [to, from, token0, token1, tokenId];
+};
+
+const getCanisterIds = (
+  prettyEvents: {
+    canisterId: string;
+    prettyEvent: TransactionPrettified;
+  }[]
+) => {
+  const canisterIds = prettyEvents.reduce(
+    (acum, { canisterId, prettyEvent }) => {
+      if (canisterId === SONIC_SWAP_CANISTER_ID) {
+        return acum
+          .concat([canisterId])
+          .concat(getCanisterIdsFromSonicTx(prettyEvent.details));
+      } else {
+        return acum.concat([canisterId]);
+      }
+    },
+    [] as string[]
+  );
+
+  return [...new Set(canisterIds)].filter(value => value);
+};
+
 export const getCapTransactions = async ({
   principalId,
   lastEvaluatedKey,
   agent,
-  fetch,
 }: GetCapTransactionsParams): Promise<GetUserTransactionResponse> => {
   let total: number = 0;
   let transactions: InferredTransaction[] = [];
@@ -143,14 +176,16 @@ export const getCapTransactions = async ({
           : {}),
       };
       const response = await axios(options);
-      const canisterIds = uniqueMap<KyashuItem, string>(
-        response.data.Items,
-        item => getTransactionCanister(item.contractId)
-      );
-      const canistersInfo = await getCanistersInfo(canisterIds, agent, fetch);
+      const prettifyEvents = response.data.Items.map(item => ({
+        sk: item.sk,
+        canisterId: getTransactionCanister(item.contractId),
+        prettyEvent: prettifyCapTransactions(item.event),
+      }));
+      const canisterIdsForInfo = getCanisterIds(prettifyEvents);
+      const canistersInfo = await getCanistersInfo(canisterIdsForInfo, agent);
       const lastTransactions = await Promise.all(
-        response.data.Items.map(async item =>
-          formatTransaction(item, canistersInfo)
+        prettifyEvents.map(async prettyEvent =>
+          formatTransaction(prettyEvent, canistersInfo)
         )
       );
       LastEvaluatedKey = response.data.LastEvaluatedKey;

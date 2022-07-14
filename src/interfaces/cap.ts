@@ -19,7 +19,6 @@ export interface GetCapTransactionsParams {
   principalId: string;
   lastEvaluatedKey?: LastEvaluatedKey;
   agent?: HttpAgent;
-  fetch?: typeof crossFetch;
 }
 
 export interface KyashuItem {
