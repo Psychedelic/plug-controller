@@ -1,4 +1,5 @@
 import { NFTCollection } from '@psychedelic/dab-js';
+import { NetworkModuleParams } from '../PlugKeyRing/modules/Network';
 import { ConnectedApp } from './account';
 import { TokenBalance } from './token';
 
@@ -46,4 +47,5 @@ export interface JSONWallet {
         }>;
     }>;
     icnsData: ICNSData;
+    networkModule?: NetworkModuleParams;
 }
