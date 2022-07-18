@@ -12,17 +12,20 @@ export interface NetworkModuleParams {
   networks?: Network[];
   network?: Network | null;
   storage: KeyringStorage;
+  onNetworkChange: (network: Network) => void;
 };
 
 class NetworkModule {
   public network: Network | null;
   public networks: Array<Network>;
   private storage: KeyringStorage;
+  private onNetworkChange: (network: Network | null) => void;
 
-  constructor({ networks, network, storage }: NetworkModuleParams) {
+  constructor({ networks, network, storage, onNetworkChange }: NetworkModuleParams) {
     this.networks = networks || [];
     this.network = network || null;
     this.storage = storage;
+    this.onNetworkChange = onNetworkChange;
   }
 
   private updateStorage() {
@@ -47,6 +50,7 @@ class NetworkModule {
     const network = this.networks.find((n) => n.id === networkId) || null;
     this.network = network;
     this.updateStorage();
+    this.onNetworkChange(network);
     return network;
   }
 

@@ -46,6 +46,7 @@ import {
   replacePrincipalsForICNS,
 } from '../utils/dfx/icns/utils';
 import { Address } from '../interfaces/contact_registry';
+import { Network } from '../PlugKeyRing/modules/Network';
 
 class PlugWallet {
   name: string;
@@ -103,6 +104,15 @@ class PlugWallet {
     this.agent = createAgent({
       secretKey: this.identity.getKeyPair().secretKey,
       fetch: this.fetch,
+    });
+  }
+
+  public setNetwork(network: Network | null) {
+    this.agent = createAgent({
+      secretKey: this.identity.getKeyPair().secretKey,
+      fetch: this.fetch,
+      host: network?.host,
+      wrapped: !network?.host, // Do not wrap the requests if using a custom network
     });
   }
 
@@ -193,6 +203,7 @@ class PlugWallet {
     image?: string,
   }): Promise<TokenBalance[]> => {
     const { canisterId, standard = 'ext', image } = args || {};
+    console.log('registerToken', canisterId, args);
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }

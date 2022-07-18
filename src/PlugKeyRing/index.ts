@@ -70,7 +70,10 @@ class PlugKeyRing {
     this.storage = StorageAdapter;
     this.crypto = CryptoAdapter;
     this.fetch = FetchAdapter;
-    this.networkModule = new NetworkModule({ storage: StorageAdapter });
+    this.networkModule = new NetworkModule({
+      storage: StorageAdapter,
+      onNetworkChange: this.exposeWalletMethods,
+    });
     this.exposeWalletMethods();
   }
 
@@ -80,6 +83,7 @@ class PlugKeyRing {
       this[method] = async (args) => {
         const { subaccount, ...params } = args || {};
         const wallet = await this.getWallet(subaccount);
+        wallet.setNetwork(this.networkModule?.network);
         const response = await wallet[method](params);
         await this.updateWallet(wallet);
         return response;
@@ -143,7 +147,11 @@ class PlugKeyRing {
       this.state = { ...decrypted, wallets };
       this.isInitialized = isInitialized;
       this.currentWalletId = currentWalletId;
-      this.networkModule = new NetworkModule({ ...networkModule, storage: this.storage });
+      this.networkModule = new NetworkModule({
+        ...networkModule,
+        storage: this.storage,
+        onNetworkChange: this.exposeWalletMethods,
+      });
       if (newVersion !== version) {
         this.saveEncryptedState({ wallets }, password);
         this.storage.set({ version: newVersion });
