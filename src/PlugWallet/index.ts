@@ -23,7 +23,6 @@ import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent } from '../utils/dfx';
 import { getICPTransactions } from '../utils/dfx/history/rosetta';
 import { TOKENS, DEFAULT_ASSETS } from '../constants/tokens';
-import { uniqueByObjKey } from '../utils/array';
 import {
   getXTCTransactions,
   requestCacheUpdate,
@@ -75,6 +74,8 @@ class PlugWallet {
 
   private agent: HttpAgent;
 
+  private network: Network;
+
   constructor({
     name,
     icon,
@@ -85,6 +86,7 @@ class PlugWallet {
     collections = [],
     fetch,
     icnsData = {},
+    network,
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
@@ -101,18 +103,22 @@ class PlugWallet {
     this.connectedApps = [...connectedApps];
     this.collections = [...collections];
     this.fetch = fetch;
+    this.network = network;
     this.agent = createAgent({
       secretKey: this.identity.getKeyPair().secretKey,
       fetch: this.fetch,
     });
+
   }
 
-  public setNetwork(network: Network | null) {
+  public setNetwork(network: Network) {
+    console.log('network host?', network?.host);
+    this.network = network;
     this.agent = createAgent({
       secretKey: this.identity.getKeyPair().secretKey,
       fetch: this.fetch,
       host: network?.host,
-      wrapped: !network?.host, // Do not wrap the requests if using a custom network
+      wrapped: network?.shouldProxy, // Do not wrap the requests if using a custom network
     });
   }
 
@@ -320,7 +326,7 @@ class PlugWallet {
   public getBalances = async (): Promise<Array<TokenBalance>> => {
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
-      Object.values(this.assets).map(asset => this.getTokenBalance({ token: asset.token }))
+      Object.values(this.network.assets).map(asset => this.getTokenBalance({ token: asset.token }))
     );
 
     Object.values(tokenBalances).forEach(asset => {

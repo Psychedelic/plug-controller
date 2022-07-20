@@ -22,7 +22,7 @@ import { handleStorageUpdate } from '../utils/storage/utils';
 import { getVersion } from '../utils/version';
 import { Address } from '../interfaces/contact_registry';
 
-import NetworkModule, { Network, NetworkModuleParams } from './modules/Network';
+import NetworkModule from './modules/Network';
 import { CreateAndPersistKeyRingOptions, CreateImportResponse, CreateOptions, CreatePrincipalOptions, ImportMnemonicOptions } from './interfaces';
 import { WALLET_METHODS } from './constants';
 
@@ -129,29 +129,30 @@ class PlugKeyRing {
   // Storage get
   private loadFromPersistance = async (password: string): Promise<void> => {
     const storage = ((await this.storage.get()) || {}) as StorageData;
-    console.log('storage', storage);
     const { vault, isInitialized, currentWalletId, version, networkModule } = storage;
     if (isInitialized && vault) {
       const newVersion = getVersion();
       const _decrypted = this.decryptState(vault, password);
       if (newVersion !== version) handleStorageUpdate(version, _decrypted);
       const { mnemonic, ...decrypted } = _decrypted;
+      this.networkModule = new NetworkModule({
+        ...networkModule,
+        storage: this.storage,
+        onNetworkChange: this.exposeWalletMethods,
+      });
       const wallets = _decrypted.wallets.map(
         wallet =>
           new PlugWallet({
             ...wallet,
             mnemonic: mnemonic as string,
             fetch: this.fetch,
+            network: this.networkModule.network ,
           })
       );
       this.state = { ...decrypted, wallets };
       this.isInitialized = isInitialized;
       this.currentWalletId = currentWalletId;
-      this.networkModule = new NetworkModule({
-        ...networkModule,
-        storage: this.storage,
-        onNetworkChange: this.exposeWalletMethods,
-      });
+      this.exposeWalletMethods();
       if (newVersion !== version) {
         this.saveEncryptedState({ wallets }, password);
         this.storage.set({ version: newVersion });
@@ -182,6 +183,7 @@ class PlugKeyRing {
       mnemonic,
       walletNumber: this.state.wallets.length,
       fetch: this.fetch,
+      network: this.networkModule.network,
     });
     const wallets = [...this.state.wallets, wallet];
     await this.saveEncryptedState({ wallets }, this.state.password);
@@ -280,6 +282,7 @@ class PlugKeyRing {
       mnemonic,
       walletNumber: 0,
       fetch: this.fetch,
+      network: this.networkModule.network,
     });
 
     const data = {

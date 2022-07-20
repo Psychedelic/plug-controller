@@ -20,6 +20,7 @@ import store from '../utils/storage/mock';
 import { getAccountId } from '../utils/account';
 import { DEFAULT_ASSETS, TOKENS } from '../constants/tokens';
 import { GetTransactionsResponse } from '../interfaces/transactions';
+import { Mainnet, Network } from './modules/Network';
 
 const mockSendICP = jest.fn();
 
@@ -144,6 +145,7 @@ describe('Plug KeyRing', () => {
     mnemonic: TEST_MNEMONIC,
     walletNumber: 0,
     fetch,
+    network: new Mainnet(),
   });
   let keyRing: PlugKeyRing;
   const cleanup = async (): Promise<void> => {
