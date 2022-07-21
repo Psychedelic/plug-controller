@@ -373,7 +373,7 @@ class PlugWallet {
     const xtcTransactions = await getXTCTransactions(this.principal);
     const capTransactions = await getCapTransactions({
       principalId: this.principal,
-      fetch: this.fetch,
+      agent: this.agent,
     });
     let transactionsGroup = [
       ...capTransactions.transactions,

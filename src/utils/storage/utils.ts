@@ -64,14 +64,15 @@ const getVersionIndex = (version: string | undefined): number => {
 export const handleStorageUpdate = (
   storageVersion: string | undefined,
   storage: any
-): PlugState & { mnemonic: string }=> {
+): PlugState & { mnemonic: string } => {
   const index = getVersionIndex(storageVersion);
   if (index === VERSION_PATH.length) return storage;
 
   let newStorage = storage;
   VERSION_PATH.slice(index).forEach(version => {
     console.log(`APPLYING STORAGE UPDATE V${version}...`);
-    newStorage = VERSION_HANDLER[version](storage);
+    newStorage = VERSION_HANDLER[version](newStorage);
   });
+
   return newStorage;
 };
