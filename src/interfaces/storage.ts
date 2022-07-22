@@ -1,4 +1,4 @@
-import { NetworkModuleParams } from '../PlugKeyRing/modules/Network';
+import { NetworkModuleParams } from '../PlugKeyRing/modules/NetworkModule';
 import { PlugState } from './plug_keyring'
 
 export interface StorageData {

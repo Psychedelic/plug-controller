@@ -20,7 +20,7 @@ import store from '../utils/storage/mock';
 import { getAccountId } from '../utils/account';
 import { DEFAULT_ASSETS, TOKENS } from '../constants/tokens';
 import { GetTransactionsResponse } from '../interfaces/transactions';
-import { Mainnet, Network } from './modules/Network';
+import { Mainnet } from './modules/NetworkModule/Network';
 
 const mockSendICP = jest.fn();
 

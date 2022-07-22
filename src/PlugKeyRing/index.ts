@@ -22,7 +22,7 @@ import { handleStorageUpdate } from '../utils/storage/utils';
 import { getVersion } from '../utils/version';
 import { Address } from '../interfaces/contact_registry';
 
-import NetworkModule from './modules/Network';
+import NetworkModule from './modules/NetworkModule';
 import { CreateAndPersistKeyRingOptions, CreateImportResponse, CreateOptions, CreatePrincipalOptions, ImportMnemonicOptions } from './interfaces';
 import { WALLET_METHODS } from './constants';
 
@@ -46,7 +46,7 @@ class PlugKeyRing {
   public burnXTC: (args?: { to: string; amount: string; subaccount: number; }) => Promise<TokenInterfaces.BurnResult>;
   public registerToken: (args: { canisterId: string; standard?: string; subaccount?: number; image?: string; }) => Promise<Array<TokenBalance>>;
   public removeToken: (args: { canisterId: string; subaccount?: number; }) => Promise<Array<TokenBalance>>;
-  public getTokenInfo: (args: { canisterId: string, standard?: string, subaccount?: number }) => Promise<{ token: StandardToken; amount: string }>;
+  public getTokenInfo: (args: { canisterId: string, standard?: string, subaccount?: number }) => Promise<TokenBalance>;
   public getICNSData: (args: { subaccount?: number  }) => Promise<{ names: string[]; reverseResolvedName: string | undefined }>;
   public setReverseResolvedName: (args: { name: string, subaccount?: number }) => Promise<string>;
   public sign: (args: { payload: BinaryBlob, subaccount?: number }) => Promise<BinaryBlob>;
@@ -83,7 +83,7 @@ class PlugKeyRing {
       this[method] = async (args) => {
         const { subaccount, ...params } = args || {};
         const wallet = await this.getWallet(subaccount);
-        wallet.setNetwork(this.networkModule?.network);
+        await wallet.setNetwork(this.networkModule?.network);
         const response = await wallet[method](params);
         await this.updateWallet(wallet);
         return response;

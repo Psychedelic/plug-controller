@@ -31,7 +31,7 @@ export const createAgent = ({
   const identity =
     defaultIdentity || createIdentity(blobFromUint8Array(secretKey));
   const agent = new HttpAgent({
-    host: host || PLUG_PROXY_HOST,
+    host: (wrapped ? PLUG_PROXY_HOST : host)|| PLUG_PROXY_HOST,
     fetch: wrapped ?  wrappedFetch(fetch) : fetch,
     identity,
   });

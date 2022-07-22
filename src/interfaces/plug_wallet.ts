@@ -1,5 +1,5 @@
 import { NFTCollection } from '@psychedelic/dab-js';
-import { Network, NetworkModuleParams } from '../PlugKeyRing/modules/Network';
+import { Network, NetworkModuleParams } from '../PlugKeyRing/modules/NetworkModule';
 import { ConnectedApp } from './account';
 import { TokenBalance } from './token';
 

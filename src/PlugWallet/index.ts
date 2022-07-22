@@ -45,7 +45,8 @@ import {
   replacePrincipalsForICNS,
 } from '../utils/dfx/icns/utils';
 import { Address } from '../interfaces/contact_registry';
-import { Network } from '../PlugKeyRing/modules/Network';
+import { Network } from '../PlugKeyRing/modules/NetworkModule';
+import { RegisteredToken } from '../PlugKeyRing/modules/NetworkModule/Network';
 
 class PlugWallet {
   name: string;
@@ -62,13 +63,13 @@ class PlugWallet {
 
   connectedApps: Array<ConnectedApp>;
 
-  assets: Assets;
-
   icnsData: ICNSData;
 
   collections: Array<NFTCollection>;
 
   contacts: Array<Address>;
+
+  assets: Assets;
 
   private identity: Secp256k1KeyIdentity;
 
@@ -111,8 +112,7 @@ class PlugWallet {
 
   }
 
-  public setNetwork(network: Network) {
-    console.log('network host?', network?.host);
+  public async setNetwork(network: Network) {
     this.network = network;
     this.agent = createAgent({
       secretKey: this.identity.getKeyPair().secretKey,
@@ -120,6 +120,7 @@ class PlugWallet {
       host: network?.host,
       wrapped: network?.shouldProxy, // Do not wrap the requests if using a custom network
     });
+    await this.getBalances();
   }
 
   public setName(val: string): void {
@@ -203,60 +204,51 @@ class PlugWallet {
     }
   };
 
+  public getTokenInfo = async ({ canisterId, standard }) => {
+    const token = await this.network.getTokenInfo({ canisterId, standard });
+    const balance = await this.getTokenBalance({ token });
+    return balance;
+  }
+
   public registerToken = async (args: {
     canisterId: string,
     standard: string,
     image?: string,
   }): Promise<TokenBalance[]> => {
     const { canisterId, standard = 'ext', image } = args || {};
-    console.log('registerToken', canisterId, args);
-    if (!validateCanisterId(canisterId)) {
-      throw new Error(ERRORS.INVALID_CANISTER_ID);
-    }
+
+    // Register token in network
+    const tokens = await this.network.registerToken({ canisterId, standard });
+
+    // Get token balance
     const tokenActor = await getTokenActor({
       canisterId,
       agent: this.agent,
       standard,
     });
-
-    const metadata = await tokenActor.getMetadata();
-
-    if (!('fungible' in metadata)) {
-      throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
-    }
-
     const balance = await tokenActor.getBalance(
       Principal.fromText(this.principal)
     );
 
+    // Format token and add asset to wallet state
     const color = randomColor({ luminosity: 'light' });
+    const registeredToken = tokens.find(t => t.canisterId === canisterId) as RegisteredToken;
     const tokenDescriptor = {
       amount: balance.value,
       token: {
-        ...metadata.fungible,
-        decimals: parseInt(metadata.fungible?.decimals.toString(), 10),
+        ...registeredToken,
+        decimals: parseInt(registeredToken.decimals.toString(), 10),
         canisterId,
         color,
         standard,
         image,
       },
     };
-    const newTokens = {
+    this.assets = {
       ...this.assets,
       [canisterId]: tokenDescriptor,
     };
-    // const unique = uniqueByObjKey(newTokens, 'symbol') as StandardToken[];
-    this.assets = newTokens;
-    return Object.values(newTokens);
-  };
-
-  public removeToken = async ({ canisterId }: { canisterId: string }): Promise<TokenBalance[]> => {
-    if (!Object.keys(this.assets).includes(canisterId)) {
-      return Object.values(this.assets);
-    }
-    const { [canisterId]: removedToken, ...newTokens } = this.assets;
-    this.assets = newTokens;
-    return Object.values(newTokens);
+    return Object.values(this.assets);
   };
 
   public toJSON = (): JSONWallet => ({
@@ -326,52 +318,11 @@ class PlugWallet {
   public getBalances = async (): Promise<Array<TokenBalance>> => {
     // Get Custom Token Balances
     const tokenBalances = await Promise.all(
-      Object.values(this.network.assets).map(asset => this.getTokenBalance({ token: asset.token }))
+      this.network.registeredTokens.map(token => this.getTokenBalance({ token }))
     );
-
-    Object.values(tokenBalances).forEach(asset => {
-      const { canisterId } = asset.token;
-      const { amount } = asset;
-      this.assets[canisterId] = {
-        ...this.assets[canisterId],
-        amount,
-      };
-    });
-
+    const assets = tokenBalances.reduce((acc, token) => ({ ...acc, [token.token.canisterId]: token }), {});
+    this.assets = assets;
     return tokenBalances;
-  };
-
-  public getTokenInfo = async (args: {
-    canisterId: string,
-    standard?: string,
-  }): Promise<{ token: StandardToken; amount: string }> => {
-    const { canisterId, standard = 'ext' }= args || {};
-    if (!validateCanisterId(canisterId)) {
-      throw new Error(ERRORS.INVALID_CANISTER_ID);
-    }
-    const savedStandard = this.assets[canisterId]?.token.standard || standard;
-    const tokenActor = await getTokenActor({
-      canisterId,
-      agent: this.agent,
-      standard: savedStandard,
-    });
-
-    const metadataResult = await tokenActor.getMetadata();
-
-    const metadata = metadataResult;
-    if (!('fungible' in metadata)) {
-      throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
-    }
-    const tokenBalance = await tokenActor.getBalance(
-      this.identity.getPrincipal()
-    );
-    const token = {
-      ...metadata.fungible,
-      canisterId,
-      standard: savedStandard,
-    };
-
-    return { token, amount: tokenBalance.value };
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
