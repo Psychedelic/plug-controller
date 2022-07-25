@@ -39,7 +39,15 @@ class NetworkModule {
   }
 
   public addNetwork(network: NetworkParams) {
-    this.networks.push(new Network(network));
+    // Validate network host is a valid https url
+    if (!network.host.startsWith('https://')) {
+      throw new Error('Network must start with https://');
+    }
+    this.networks = [...this.networks, createNetwork(network)];
+    // this.networks should not contain duplicates by host
+    this.networks = this.networks.filter(
+      (n, i) => this.networks.findIndex((n2) => n2.host === n.host) === i,
+    );
     this.update();
     return this.networks;
   }
@@ -52,6 +60,7 @@ class NetworkModule {
     if (networkId === this.network.id) {
       this.network = this.networks.find(network => network.id === 'mainnet') || new Mainnet();
     }
+    this.update();
     return this.networks;
   }
 

@@ -120,7 +120,6 @@ class PlugWallet {
       host: network?.host,
       wrapped: network?.shouldProxy, // Do not wrap the requests if using a custom network
     });
-    await this.getBalances();
   }
 
   public setName(val: string): void {
@@ -290,12 +289,12 @@ class PlugWallet {
   public getTokenBalance = async ({ token }: {
     token: StandardToken
   }): Promise<TokenBalance> => {
-    const tokenActor = await getTokenActor({
-      canisterId: token.canisterId,
-      agent: this.agent,
-      standard: token.standard,
-    });
     try {
+      const tokenActor = await getTokenActor({
+        canisterId: token.canisterId,
+        agent: this.agent,
+        standard: token.standard,
+      });
       const balance = await tokenActor.getBalance(this.identity.getPrincipal());
       return {
         amount: balance.value,

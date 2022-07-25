@@ -24,6 +24,14 @@ export type EditNetworkParams = {
 
 export type RegisteredToken = StandardToken & { registered: boolean };
 
+// Function that takes in an array of tokens and returns an array without duplicates
+export const uniqueTokens = (tokens: RegisteredToken[]) => {
+  const uniqueTokens = tokens.filter((token, index) => {
+    return tokens.findIndex(t => t.canisterId === token.canisterId) === index;
+  });
+  return uniqueTokens;
+}
+
 export class Network {
   public name: string;
   public host: string;
@@ -42,14 +50,14 @@ export class Network {
       this.registeredTokens = [...networkParams.registeredTokens];
     } else {
       // If ledger canister ID is present, add ICP as a default token.
-      this.registeredTokens = networkParams?.ledgerCanisterId ? [{
+      this.registeredTokens = [{
         name: 'ICP',
         symbol: 'ICP',
-        canisterId: networkParams.ledgerCanisterId,
+        canisterId: networkParams.ledgerCanisterId || '',
         standard: standards.TOKEN.icp,
         decimals: 8,
         registered: true,
-      }] : [];
+      }];
     }
   }
 
@@ -70,7 +78,7 @@ export class Network {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
     }
     const token = { ...metadata.fungible, canisterId, standard, registered: false };
-    this.registeredTokens.push(token);
+    this.registeredTokens = uniqueTokens([...this.registeredTokens, token]);
     return token;
   }
 
@@ -104,13 +112,7 @@ export class Network {
     };
   }
 }
-// Function that takes in an array of tokens and returns an array without duplicates
-export const uniqueTokens = (tokens: RegisteredToken[]) => {
-  const uniqueTokens = tokens.filter((token, index) => {
-    return tokens.findIndex(t => t.canisterId === token.canisterId) === index;
-  });
-  return uniqueTokens;
-}
+
 
 
 export class Mainnet extends Network {

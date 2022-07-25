@@ -14,7 +14,7 @@ const wrappedFetchInternal = (
 ): void => {
   fetch(resource, ...initArgs)
     .then((response) => {
-      if(!response.success) {
+      if(!(response.success || response.ok)) {
         const fallbackResource = new URL(resource);
         fallbackResource.host = IC_URL_HOST;
         fetch(fallbackResource, ...initArgs)
