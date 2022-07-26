@@ -3,7 +3,6 @@ import crossFetch from 'cross-fetch';
 
 import { IC_URL_HOST } from './constants';
 
-
 /* eslint-disable no-param-reassign */
 const wrappedFetchInternal = (
   fetch,
@@ -13,8 +12,8 @@ const wrappedFetchInternal = (
   ...initArgs
 ): void => {
   fetch(resource, ...initArgs)
-    .then((response) => {
-      if(!response.success) {
+    .then(response => {
+      if (!response.success && !response.ok) {
         const fallbackResource = new URL(resource);
         fallbackResource.host = IC_URL_HOST;
         fetch(fallbackResource, ...initArgs)

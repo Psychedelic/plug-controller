@@ -17,14 +17,12 @@ export interface CanisterInfo {
 
 export const getCanisterInfo = async (
   canisterId: string,
-  agent?: HttpAgent,
-  fetch?: typeof crossFetch
+  agent?: HttpAgent
 ): Promise<CanisterInfo | undefined> => {
   const finalAgent =
     agent ||
     new HttpAgent({
       host: PLUG_PROXY_HOST,
-      fetch: fetch ? wrappedFetch(fetch) : wrappedFetch(),
     });
 
   const result = await getCanisterInfoFromDab({
