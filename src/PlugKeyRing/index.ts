@@ -165,7 +165,6 @@ class PlugKeyRing {
         await this.saveEncryptedState({ wallets }, password, mnemonic);
         await this.storage.set({ version: newVersion });
       }
-      this.unlock(password);
     }
   };
 
