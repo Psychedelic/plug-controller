@@ -9,10 +9,7 @@ export interface NetworkModuleParams {
   onNetworkChange: (network: Network) => void;
 };
 
-const createNetwork = (network?: NetworkParams) =>
-  (!network || network.id === 'mainnet')
-    ? new Mainnet(network)
-    : new Network(network);
+const createNetwork = (network) => network.id === 'mainnet' ? new Mainnet(network) : new Network(network);
 
 class NetworkModule {
   public network: Network;
@@ -21,29 +18,32 @@ class NetworkModule {
   private onNetworkChange?: (network: Network) => void;
 
 
-
   constructor({ networks, network, storage, onNetworkChange }: NetworkModuleParams) {
-    this.networks = networks?.map(createNetwork) || [new Mainnet()];
-    this.network = createNetwork(network);
     this.storage = storage;
     this.onNetworkChange = onNetworkChange;
+    const _network = { ...network, onChange: this.update.bind(this) } as NetworkParams;
+    this.network = !network ? new Mainnet(_network) : createNetwork(_network);
+    this.networks = networks?.map(
+      (net) => createNetwork({ ...net, onChange: this.update.bind(this) })
+    ) || [new Mainnet({ onChange: this.update.bind(this) })];
   }
 
+  public updateStorage() {
+    this.storage.set({ networkModule: this.toJSON() });
+  }
+  
   private update() {
-    this.updateStorage();
+    this.updateStorage?.();
     this.onNetworkChange?.(this.network);
   }
 
-  private updateStorage() {
-    this.storage.set({ networkModule: this.toJSON() });
-  }
 
   public addNetwork(network: NetworkParams) {
     // Validate network host is a valid https url
     if (!network.host.startsWith('https://')) {
       throw new Error('Network must start with https://');
     }
-    this.networks = [...this.networks, createNetwork(network)];
+    this.networks = [...this.networks, createNetwork({ ...network, onChange: this.update.bind(this) })];
     // this.networks should not contain duplicates by host
     this.networks = this.networks.filter(
       (n, i) => this.networks.findIndex((n2) => n2.host === n.host) === i,
@@ -58,7 +58,7 @@ class NetworkModule {
     
     // If we remove the current network, default to mainnet.
     if (networkId === this.network.id) {
-      this.network = this.networks.find(network => network.id === 'mainnet') || new Mainnet();
+      this.network = this.networks.find(network => network.id === 'mainnet') || new Mainnet({ onChange: this.update });
     }
     this.update();
     return this.networks;

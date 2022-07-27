@@ -72,7 +72,7 @@ class PlugKeyRing {
     this.fetch = FetchAdapter;
     this.networkModule = new NetworkModule({
       storage: StorageAdapter,
-      onNetworkChange: this.exposeWalletMethods,
+      onNetworkChange: this.exposeWalletMethods.bind(this),
     });
     this.exposeWalletMethods();
   }
@@ -83,6 +83,7 @@ class PlugKeyRing {
       this[method] = async (args) => {
         const { subaccount, ...params } = args || {};
         const wallet = await this.getWallet(subaccount);
+        console.log(';setting network', this.networkModule);
         await wallet.setNetwork(this.networkModule?.network);
         const response = await wallet[method](params);
         await this.updateWallet(wallet);
@@ -138,7 +139,7 @@ class PlugKeyRing {
       this.networkModule = new NetworkModule({
         ...networkModule,
         storage: this.storage,
-        onNetworkChange: this.exposeWalletMethods,
+        onNetworkChange: this.exposeWalletMethods.bind(this),
       });
       const wallets = _decrypted.wallets.map(
         wallet =>

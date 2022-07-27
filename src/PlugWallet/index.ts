@@ -217,7 +217,7 @@ class PlugWallet {
     const { canisterId, standard = 'ext', image } = args || {};
 
     // Register token in network
-    const tokens = await this.network.registerToken({ canisterId, standard });
+    const tokens = await this.network.registerToken({ canisterId, standard, walletId: this.walletNumber });
 
     // Get token balance
     const tokenActor = await getTokenActor({
@@ -316,9 +316,8 @@ class PlugWallet {
    */
   public getBalances = async (): Promise<Array<TokenBalance>> => {
     // Get Custom Token Balances
-    const tokenBalances = await Promise.all(
-      this.network.registeredTokens.map(token => this.getTokenBalance({ token }))
-    );
+    const walletTokens = this.network.getTokens(this.walletNumber);
+    const tokenBalances = await Promise.all(walletTokens.map(token => this.getTokenBalance({ token })));
     const assets = tokenBalances.reduce((acc, token) => ({ ...acc, [token.token.canisterId]: token }), {});
     this.assets = assets;
     return tokenBalances;

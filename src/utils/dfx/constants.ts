@@ -12,3 +12,4 @@ export const CANISTER_REGEX = /(\w{5}-){4}\w{3}/;
 export const CANISTER_MAX_LENGTH = 27;
 export const XTC_ID = 'aanaa-xaaaa-aaaah-aaeiq-cai';
 export const ALPHANUM_REGEX = /^[a-zA-Z0-9]+$/;
+export const IC_MAINNET_URLS = ['https://mainnet.dfinity.network', 'ic0.app'];

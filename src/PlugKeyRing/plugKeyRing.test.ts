@@ -145,7 +145,7 @@ describe('Plug KeyRing', () => {
     mnemonic: TEST_MNEMONIC,
     walletNumber: 0,
     fetch,
-    network: new Mainnet(),
+    network: new Mainnet({ }),
   });
   let keyRing: PlugKeyRing;
   const cleanup = async (): Promise<void> => {
