@@ -3,14 +3,17 @@
 import crc32 from 'buffer-crc32';
 import CryptoJS from 'crypto-js';
 
-export const byteArrayToWordArray = (byteArray: Uint8Array) => {
+export const byteArrayToWordArray = (
+  byteArray: Uint8Array,
+  cryptoAdapter = CryptoJS
+) => {
   const wordArray = [] as any;
   let i;
   for (i = 0; i < byteArray.length; i += 1) {
     wordArray[(i / 4) | 0] |= byteArray[i] << (24 - 8 * i);
   }
   // eslint-disable-next-line
-  const result = CryptoJS.lib.WordArray.create(
+  const result = cryptoAdapter.lib.WordArray.create(
     wordArray,
     byteArray.length
   );
@@ -59,8 +62,7 @@ export const generateChecksum = (hash: Uint8Array) => {
   return hex.padStart(8, '0');
 };
 
-
-export const lebDecode = (pipe) =>{
+export const lebDecode = pipe => {
   let weight = BigInt(1);
   let value = BigInt(0);
   let byte;
@@ -74,4 +76,4 @@ export const lebDecode = (pipe) =>{
     weight *= BigInt(128);
   } while (byte >= 0x80);
   return value;
-}
+};

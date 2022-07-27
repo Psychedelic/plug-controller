@@ -4,6 +4,7 @@ import {
 } from '@psychedelic/dab-js';
 import { HttpAgent } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
+import crossFetch from 'cross-fetch';
 
 import { PLUG_PROXY_HOST } from './dfx/constants';
 import { wrappedFetch } from './dfx/wrappedFetch';
@@ -22,7 +23,6 @@ export const getCanisterInfo = async (
     agent ||
     new HttpAgent({
       host: PLUG_PROXY_HOST,
-      fetch: wrappedFetch(),
     });
 
   const result = await getCanisterInfoFromDab({
@@ -35,13 +35,14 @@ export const getCanisterInfo = async (
 
 export const getMultipleCanisterInfo = async (
   canisterIds: string[],
-  agent?: HttpAgent
+  agent?: HttpAgent,
+  fetch?: typeof crossFetch
 ): Promise<CanisterInfo[]> => {
   const finalAgent =
     agent ||
     new HttpAgent({
       host: PLUG_PROXY_HOST,
-      fetch: wrappedFetch(),
+      fetch: fetch ? wrappedFetch(fetch) : wrappedFetch(),
     });
 
   const result = await getMultipleCanisterInfoFromDab({

@@ -23,9 +23,10 @@ interface DerivedKey {
 */
 export const getAccountId = (
   principal: Principal,
-  subaccount?: number
+  subaccount?: number,
+  cryptoAdapter = CryptoJS
 ): string => {
-  const sha = CryptoJS.algo.SHA224.create();
+  const sha = cryptoAdapter.algo.SHA224.create();
   sha.update(ACCOUNT_DOMAIN_SEPERATOR); // Internally parsed with UTF-8, like go does
   sha.update(byteArrayToWordArray(principal.toUint8Array()));
   const subBuffer = Buffer.from(SUB_ACCOUNT_ZERO);

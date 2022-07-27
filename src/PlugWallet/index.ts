@@ -8,7 +8,6 @@ import {
   NFTDetails,
   getTokenActor,
   TokenInterfaces,
-
   getAddresses,
   addAddress,
   removeAddress,
@@ -135,7 +134,7 @@ class PlugWallet {
   }
 
   private nativeGetNFTs = async () => {
-    const icnsAdapter = new ICNSAdapter(this.agent); 
+    const icnsAdapter = new ICNSAdapter(this.agent);
     try {
       this.collections = await getAllUserNFTs({
         user: this.principal,
@@ -147,11 +146,11 @@ class PlugWallet {
       console.warn('Error when trying to fetch NFTs natively from the IC', e);
       return null;
     }
-  }
+  };
 
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
   public getNFTs = async (args?: {
-    refresh?: boolean
+    refresh?: boolean;
   }): Promise<NFTCollection[] | null> => {
     try {
       const icnsAdapter = new ICNSAdapter(this.agent);
@@ -162,7 +161,10 @@ class PlugWallet {
       const icnsCollection = await icnsAdapter.getICNSCollection();
       return [...this.collections, icnsCollection];
     } catch (e) {
-      console.warn('Error when trying to fetch NFTs from Kyasshu. Fetching natively...', e);
+      console.warn(
+        'Error when trying to fetch NFTs from Kyasshu. Fetching natively...',
+        e
+      );
       // If kya fails, try native integration
       return await this.nativeGetNFTs();
     }
@@ -210,9 +212,9 @@ class PlugWallet {
   }
 
   public registerToken = async (args: {
-    canisterId: string,
-    standard: string,
-    image?: string,
+    canisterId: string;
+    standard: string;
+    image?: string;
   }): Promise<TokenBalance[]> => {
     const { canisterId, standard = 'ext', image } = args || {};
 
@@ -262,7 +264,7 @@ class PlugWallet {
     icnsData: this.icnsData,
   });
 
-  public burnXTC = async (args: { to: string, amount: string }) => {
+  public burnXTC = async (args: { to: string; amount: string }) => {
     if (!validateCanisterId(args.to)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
@@ -286,8 +288,10 @@ class PlugWallet {
     return burnResult;
   };
 
-  public getTokenBalance = async ({ token }: {
-    token: StandardToken
+  public getTokenBalance = async ({
+    token,
+  }: {
+    token: StandardToken;
   }): Promise<TokenBalance> => {
     try {
       const tokenActor = await getTokenActor({
@@ -327,7 +331,10 @@ class PlugWallet {
     const icnsAdapter = new ICNSAdapter(this.agent);
     const icpTrxs = await getICPTransactions(this.accountId);
     const xtcTransactions = await getXTCTransactions(this.principal);
-    const capTransactions = await getCapTransactions(this.principal);
+    const capTransactions = await getCapTransactions({
+      principalId: this.principal,
+      agent: this.agent,
+    });
     let transactionsGroup = [
       ...capTransactions.transactions,
       ...icpTrxs.transactions,
@@ -359,10 +366,10 @@ class PlugWallet {
   };
 
   public send = async (args: {
-    to: string,
-    amount: string,
-    canisterId: string,
-    opts?: TokenInterfaces.SendOpts
+    to: string;
+    amount: string;
+    canisterId: string;
+    opts?: TokenInterfaces.SendOpts;
   }): Promise<TokenInterfaces.SendResponse> => {
     const { to, amount, canisterId, opts } = args || {};
     const savedToken = this.assets[canisterId].token;
@@ -420,7 +427,11 @@ class PlugWallet {
     return icnsAdapter.getICNSReverseResolvedName();
   };
 
-  public setReverseResolvedName = async ({ name }: { name: string }): Promise<string> => {
+  public setReverseResolvedName = async ({
+    name,
+  }: {
+    name: string;
+  }): Promise<string> => {
     const icnsAdapter = new ICNSAdapter(this.agent);
     return icnsAdapter.setICNSReverseResolvedName(name);
   };
@@ -433,23 +444,31 @@ class PlugWallet {
     }
   };
 
-  public addContact = async ({ contact }: { contact: Address }): Promise<boolean> => {
+  public addContact = async ({
+    contact,
+  }: {
+    contact: Address;
+  }): Promise<boolean> => {
     try {
       const contactResponse = await addAddress(this.agent, contact);
 
-      return contactResponse.hasOwnProperty('Ok') ? true : false; 
+      return contactResponse.hasOwnProperty('Ok') ? true : false;
     } catch (e) {
-      return false
+      return false;
     }
   };
 
-  public deleteContact = async ({ addressName }: { addressName: string }): Promise<boolean> => {
+  public deleteContact = async ({
+    addressName,
+  }: {
+    addressName: string;
+  }): Promise<boolean> => {
     try {
       const contactResponse = await removeAddress(this.agent, addressName);
 
-      return contactResponse.hasOwnProperty('Ok') ? true : false; 
+      return contactResponse.hasOwnProperty('Ok') ? true : false;
     } catch (e) {
-      return false
+      return false;
     }
   };
 }

@@ -23,7 +23,13 @@ import { getVersion } from '../utils/version';
 import { Address } from '../interfaces/contact_registry';
 
 import NetworkModule from './modules/NetworkModule';
-import { CreateAndPersistKeyRingOptions, CreateImportResponse, CreateOptions, CreatePrincipalOptions, ImportMnemonicOptions } from './interfaces';
+import {
+  CreateAndPersistKeyRingOptions,
+  CreateImportResponse,
+  CreateOptions,
+  CreatePrincipalOptions,
+  ImportMnemonicOptions,
+} from './interfaces';
 import { WALLET_METHODS } from './constants';
 
 class PlugKeyRing {
@@ -61,7 +67,7 @@ class PlugKeyRing {
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
     CryptoAdapter = CryptoJS,
-    FetchAdapter?: any,
+    FetchAdapter?: any
   ) {
     this.state = { wallets: [] };
     this.isUnlocked = false;
@@ -80,7 +86,7 @@ class PlugKeyRing {
   // Wallet proxy methods
   private exposeWalletMethods(): void {
     WALLET_METHODS.forEach(method => {
-      this[method] = async (args) => {
+      this[method] = async args => {
         const { subaccount, ...params } = args || {};
         const wallet = await this.getWallet(subaccount);
         console.log(';setting network', this.networkModule);
@@ -88,7 +94,7 @@ class PlugKeyRing {
         const response = await wallet[method](params);
         await this.updateWallet(wallet);
         return response;
-      }
+      };
     });
   }
 
@@ -103,8 +109,8 @@ class PlugKeyRing {
     this.checkUnlocked();
     const index = (subaccount ?? this.currentWalletId) || 0;
     this.validateSubaccount(index);
-    return this.state?.wallets?.[index]; 
-  }
+    return this.state?.wallets?.[index];
+  };
 
   private updateWallet = async (wallet: PlugWallet): Promise<void> => {
     await this.checkUnlocked();
@@ -112,7 +118,7 @@ class PlugKeyRing {
     wallets.splice(wallet.walletNumber, 1, wallet);
     this.state.wallets = wallets;
     await this.saveEncryptedState({ wallets }, this.state.password);
-  }
+  };
 
   public init = async (): Promise<void> => {
     const state = (await this.storage.get()) as StorageData;
@@ -133,8 +139,10 @@ class PlugKeyRing {
     const { vault, isInitialized, currentWalletId, version, networkModule } = storage;
     if (isInitialized && vault) {
       const newVersion = getVersion();
-      const _decrypted = this.decryptState(vault, password);
-      if (newVersion !== version) handleStorageUpdate(version, _decrypted);
+      const _decrypted =
+        newVersion !== version
+          ? handleStorageUpdate(version, this.decryptState(vault, password))
+          : this.decryptState(vault, password);
       const { mnemonic, ...decrypted } = _decrypted;
       this.networkModule = new NetworkModule({
         ...networkModule,
@@ -155,27 +163,42 @@ class PlugKeyRing {
       this.currentWalletId = currentWalletId;
       this.exposeWalletMethods();
       if (newVersion !== version) {
-        this.saveEncryptedState({ wallets }, password);
-        this.storage.set({ version: newVersion });
+        await this.saveEncryptedState({ wallets }, password, mnemonic);
+        await this.storage.set({ version: newVersion });
       }
     }
   };
 
   // Key Management
-  public create = async ({ password = '', icon, name, entropy }: CreateOptions): Promise<CreateImportResponse> => {
+  public create = async ({
+    password = '',
+    icon,
+    name,
+    entropy,
+  }: CreateOptions): Promise<CreateImportResponse> => {
     const { mnemonic } = createAccount(entropy);
-    const wallet = await this.createAndPersistKeyRing({ mnemonic, password, icon, name });
+    const wallet = await this.createAndPersistKeyRing({
+      mnemonic,
+      password,
+      icon,
+      name,
+    });
     return { wallet, mnemonic };
   };
 
   // Key Management
-  public importMnemonic = async ({ mnemonic, password }: ImportMnemonicOptions): Promise<CreateImportResponse> => {
+  public importMnemonic = async ({
+    mnemonic,
+    password,
+  }: ImportMnemonicOptions): Promise<CreateImportResponse> => {
     const wallet = await this.createAndPersistKeyRing({ mnemonic, password });
     return { wallet, mnemonic };
   };
 
   // Key Management
-  public createPrincipal = async (opts?: CreatePrincipalOptions): Promise<PlugWallet> => {
+  public createPrincipal = async (
+    opts?: CreatePrincipalOptions
+  ): Promise<PlugWallet> => {
     await this.checkInitialized();
     this.checkUnlocked();
     const mnemonic = await this.getMnemonic(this.state.password as string);
@@ -300,7 +323,10 @@ class PlugKeyRing {
       isUnlocked: true,
       currentWalletId: 0,
       version: getVersion(),
-      vault: this.crypto.AES.encrypt(JSON.stringify({ mnemonic }), password).toString(), // Pre-save mnemonic in storage
+      vault: this.crypto.AES.encrypt(
+        JSON.stringify({ mnemonic }),
+        password
+      ).toString(), // Pre-save mnemonic in storage
     });
     await this.saveEncryptedState(data, password);
     await this.unlock(password);
@@ -308,9 +334,17 @@ class PlugKeyRing {
   };
 
   // Storage
-  private saveEncryptedState = async (newState, password): Promise<void> => {
-    const mnemonic = await this.getMnemonic(password);
-    const stringData = JsonBigInt.stringify({ ...this.state, ...newState, mnemonic });
+  private saveEncryptedState = async (
+    newState,
+    password,
+    defaultMnemonic?
+  ): Promise<void> => {
+    const mnemonic = defaultMnemonic || (await this.getMnemonic(password));
+    const stringData = JsonBigInt.stringify({
+      ...this.state,
+      ...newState,
+      mnemonic,
+    });
     const encrypted = this.crypto.AES.encrypt(stringData, password);
     await this.storage.set({ vault: encrypted.toString() });
   };
@@ -319,7 +353,7 @@ class PlugKeyRing {
   private decryptState = (state, password): PlugState & { mnemonic: string } =>
     JSON.parse(
       this.crypto.AES.decrypt(state, password).toString(this.crypto.enc.Utf8)
-  );
+    );
 }
 
 export default PlugKeyRing;
