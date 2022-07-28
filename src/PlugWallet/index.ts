@@ -21,7 +21,7 @@ import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent } from '../utils/dfx';
 import { getICPTransactions } from '../utils/dfx/history/rosetta';
-import { TOKENS, DEFAULT_ASSETS } from '../constants/tokens';
+import { TOKENS, DEFAULT_MAINNET_ASSETS } from '../constants/tokens';
 import {
   getXTCTransactions,
   requestCacheUpdate,
@@ -82,7 +82,7 @@ class PlugWallet {
     walletNumber,
     mnemonic,
     connectedApps = [],
-    assets = DEFAULT_ASSETS,
+    assets = DEFAULT_MAINNET_ASSETS,
     collections = [],
     fetch,
     icnsData = {},

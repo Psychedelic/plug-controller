@@ -93,7 +93,12 @@ class NetworkModule {
   }
 
   public toJSON() {
-    return { network: this.network.toJSON(), networks: this.networks };
+    return {
+      networkId: this.networkId,
+      networks: Object.values(this.networks).reduce(
+        (acum, net) => ({ ...acum, [net.id]: net.toJSON() }), {},
+      )
+    };
   }
 }
 

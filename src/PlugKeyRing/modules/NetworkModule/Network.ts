@@ -5,7 +5,7 @@ import { getTokenActor, standards } from "@psychedelic/dab-js";
 import { ERRORS } from "../../../errors";
 import { validateCanisterId } from "../../utils";
 import { IC_URL_HOST, PLUG_PROXY_HOST } from "../../../utils/dfx/constants";
-import { DEFAULT_TOKENS, TOKENS } from "../../../constants/tokens";
+import { DEFAULT_MAINNET_TOKENS, TOKENS } from "../../../constants/tokens";
 import { StandardToken } from "../../../interfaces/token";
 import { KeyringStorage } from "../../../interfaces/storage";
 
@@ -137,7 +137,7 @@ export class Mainnet extends Network {
     });
     this.id = 'mainnet';
     this.shouldProxy = true;
-    this.defaultTokens = DEFAULT_TOKENS;
+    this.defaultTokens = DEFAULT_MAINNET_TOKENS;
     this.registeredTokens = registeredTokens || [];
   }
 
