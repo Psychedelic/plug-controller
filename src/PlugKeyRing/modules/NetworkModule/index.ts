@@ -3,29 +3,39 @@ import { KeyringStorage } from "../../../interfaces/storage";
 import { EditNetworkParams, Mainnet, Network, NetworkParams } from "./Network";
 
 export interface NetworkModuleParams {
-  networks?: Network[];
-  network?: NetworkParams;
+  networks?: { [networkId: string]: Network };
+  networkId?: string;
   storage: KeyringStorage;
   onNetworkChange: (network: Network) => void;
 };
 
 const createNetwork = (network) => network.id === 'mainnet' ? new Mainnet(network) : new Network(network);
+const createNetworks = (networks?: { [id: string]: Network }, onChange?: () => void) => {
+  if (!!Object.values(networks || {})?.length) {
+    return Object.values(networks!)?.reduce(
+    (acum, net) => ({ ...acum, [net.id]: createNetwork({ ...net, onChange }),
+    }), {})
+
+  }  
+ return { mainnet: new Mainnet({ onChange }) };
+};
 
 class NetworkModule {
-  public network: Network;
-  public networks: Array<Network>;
+  public networkId: string;
+  public networks: { [networkId: string]: Network };
   private storage: KeyringStorage;
   private onNetworkChange?: (network: Network) => void;
 
 
-  constructor({ networks, network, storage, onNetworkChange }: NetworkModuleParams) {
+  constructor({ networks, networkId, storage, onNetworkChange }: NetworkModuleParams) {
     this.storage = storage;
     this.onNetworkChange = onNetworkChange;
-    const _network = { ...network, onChange: this.update.bind(this) } as NetworkParams;
-    this.network = !network ? new Mainnet(_network) : createNetwork(_network);
-    this.networks = networks?.map(
-      (net) => createNetwork({ ...net, onChange: this.update.bind(this) })
-    ) || [new Mainnet({ onChange: this.update.bind(this) })];
+    this.networkId = networkId || 'mainnet';
+    this.networks = createNetworks(networks, this.update.bind(this));
+  }
+
+  public get network(): Network {
+    return this.networks[this.networkId];
   }
 
   public updateStorage() {
@@ -38,47 +48,46 @@ class NetworkModule {
   }
 
 
-  public addNetwork(network: NetworkParams) {
+  public addNetwork(networkParams: NetworkParams) {
     // Validate network host is a valid https url
-    if (!network.host.startsWith('https://')) {
-      throw new Error('Network must start with https://');
+    // if (!networkParams.host.startsWith('https://')) {
+    //   throw new Error('Network must start with https://');
+    // }
+    if (Object.values(this.networks).some((net) => net.host === networkParams.host)) {
+      throw new Error(`A Network with host ${networkParams.host} already exists`);
     }
-    this.networks = [...this.networks, createNetwork({ ...network, onChange: this.update.bind(this) })];
-    // this.networks should not contain duplicates by host
-    this.networks = this.networks.filter(
-      (n, i) => this.networks.findIndex((n2) => n2.host === n.host) === i,
-    );
+    const network = createNetwork({ ...networkParams, onChange: this.update.bind(this) });
+    this.networks = { ...this.networks, [network.id!]: network };
     this.update();
     return this.networks;
   }
 
   public removeNetwork(networkId: string) {
     if (networkId === 'mainnet') throw new Error('Cannot remove mainnet');
-    this.networks = this.networks.filter(network => network.id !== networkId);
-    
+    if (!Object.keys(this.networks).includes(networkId)) throw new Error(ERRORS.INVALID_NETWORK_ID);
     // If we remove the current network, default to mainnet.
     if (networkId === this.network.id) {
-      this.network = this.networks.find(network => network.id === 'mainnet') || new Mainnet({ onChange: this.update });
+      this.networkId = 'mainnet';
     }
+    const { [networkId]: network, ...networks } = this.networks;
+    this.networks = networks;
     this.update();
     return this.networks;
   }
 
   public setNetwork(networkId: string) {
-    const network = this.networks.find((n) => n.id === networkId);
+    const network = this.networks[networkId];
     if (!network) throw new Error(ERRORS.INVALID_NETWORK_ID);
-    this.network = network;
+    this.networkId = networkId;
     this.update();
     return network;
   }
 
   public editNetwork(networkId: string, params: EditNetworkParams) {
-    const network = this.networks.find((n) => n.id === networkId);
+    const network = this.networks[networkId];
     if (!network) throw new Error(ERRORS.INVALID_NETWORK_ID);
     network?.edit?.(params);
-    if (networkId === this.network.id) {
-      this.network = network;
-    }
+    this.networks = { ...this.networks, [networkId]: network };
     this.update();
     return network;
   }

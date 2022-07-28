@@ -48,7 +48,7 @@ export class Network {
     this.name = networkParams.name;
     this.host = networkParams.host;
     this.onChange = networkParams.onChange;
-    this.id = uuid();
+    this.id = networkParams?.id || uuid();
     this.shouldProxy = false;
     this.ledgerCanisterId = networkParams.ledgerCanisterId || '';
     this.defaultTokens = [{
