@@ -135,7 +135,7 @@ class PlugKeyRing {
   // Storage get
   private loadFromPersistance = async (password: string): Promise<void> => {
     const storage = ((await this.storage.get()) || {}) as StorageData;
-    const { vault, isInitialized, currentWalletId, version, networkModule } = storage;
+    const { vault, isInitialized, currentWalletId, version, networkModule = {} } = storage;
     if (isInitialized && vault) {
       const newVersion = getVersion();
       const _decrypted =
