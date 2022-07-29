@@ -39,7 +39,7 @@ export class Network {
   public host: string;
   public ledgerCanisterId?: string;
   public id: string;
-  public shouldProxy: boolean;
+  public isCustom: boolean;
   public defaultTokens: StandardToken[];
   public registeredTokens: RegisteredToken[];
   private onChange;
@@ -49,7 +49,7 @@ export class Network {
     this.host = networkParams.host;
     this.onChange = networkParams.onChange;
     this.id = networkParams?.id || uuid();
-    this.shouldProxy = false;
+    this.isCustom = true;
     this.ledgerCanisterId = networkParams.ledgerCanisterId || '';
     this.defaultTokens = [{
       name: 'ICP',
@@ -136,7 +136,7 @@ export class Mainnet extends Network {
       ledgerCanisterId: TOKENS.ICP.canisterId,
     });
     this.id = 'mainnet';
-    this.shouldProxy = true;
+    this.isCustom = false;
     this.defaultTokens = DEFAULT_MAINNET_TOKENS;
     this.registeredTokens = registeredTokens || [];
   }

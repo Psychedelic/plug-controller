@@ -117,7 +117,7 @@ class PlugWallet {
       secretKey: this.identity.getKeyPair().secretKey,
       fetch: this.fetch,
       host: network?.host,
-      wrapped: network?.shouldProxy, // Do not wrap the requests if using a custom network
+      wrapped: !network?.isCustom, // Do not wrap the requests if using a custom network
     });
   }
 
@@ -152,6 +152,7 @@ class PlugWallet {
   public getNFTs = async (args?: {
     refresh?: boolean;
   }): Promise<NFTCollection[] | null> => {
+    if (this.network.isCustom) return [];
     try {
       const icnsAdapter = new ICNSAdapter(this.agent);
       this.collections = await getCachedUserNFTs({
@@ -328,6 +329,7 @@ class PlugWallet {
   };
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
+    if (this.network.isCustom) return { total: 0, transactions: [] };
     const icnsAdapter = new ICNSAdapter(this.agent);
     const icpTrxs = await getICPTransactions(this.accountId);
     const xtcTransactions = await getXTCTransactions(this.principal);
@@ -415,6 +417,7 @@ class PlugWallet {
     names: string[];
     reverseResolvedName: string | undefined;
   }> => {
+    if (this.network.isCustom) return { names: [], reverseResolvedName: undefined };
     const icnsAdapter = new ICNSAdapter(this.agent);
     const names = await icnsAdapter.getICNSNames();
     const reverseResolvedName = await icnsAdapter.getICNSReverseResolvedName();
@@ -437,6 +440,7 @@ class PlugWallet {
   };
 
   public getContacts = async (): Promise<Array<Address>> => {
+    if (this.network.isCustom) return [];
     try {
       return await getAddresses(this.agent);
     } catch (e) {
