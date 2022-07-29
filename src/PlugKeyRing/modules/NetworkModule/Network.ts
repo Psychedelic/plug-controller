@@ -1,4 +1,4 @@
-import { uuid } from "uuidv4";
+import { v4 as uuid } from "uuid";
 import { HttpAgent } from "@dfinity/agent";
 import { getTokenActor, standards } from "@psychedelic/dab-js";
 
