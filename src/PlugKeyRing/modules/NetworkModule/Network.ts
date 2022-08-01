@@ -69,11 +69,10 @@ export class Network {
     this.onChange?.();
   }
 
-  public getTokenInfo = async ({ canisterId, standard }) => {
+  public getTokenInfo = async ({ canisterId, standard, agent }) => {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const agent = new HttpAgent({ host: this.host });
     const tokenActor = await getTokenActor({ canisterId, standard, agent });
     const metadata = await tokenActor.getMetadata();
     if (!('fungible' in metadata)) {
@@ -84,10 +83,10 @@ export class Network {
     return token;
   }
 
-  public registerToken = async ({ canisterId, standard, walletId }: { canisterId: string, standard: string, walletId: number }) => {
+  public registerToken = async ({ canisterId, standard, walletId, agent }: { canisterId: string, standard: string, walletId: number, agent: HttpAgent }) => {
     const token = this.registeredTokens.find(({ canisterId: id }) => id === canisterId);
     if (!token) {
-      await this.getTokenInfo({ canisterId, standard });
+      await this.getTokenInfo({ canisterId, standard, agent });
     }
     this.registeredTokens = this.registeredTokens.map(
       t => t.canisterId === canisterId ? { ...t, registeredBy: [...t?.registeredBy, walletId] } : t

@@ -207,7 +207,7 @@ class PlugWallet {
   };
 
   public getTokenInfo = async ({ canisterId, standard }) => {
-    const token = await this.network.getTokenInfo({ canisterId, standard });
+    const token = await this.network.getTokenInfo({ canisterId, standard, agent: this.agent });
     const balance = await this.getTokenBalance({ token });
     return balance;
   }
@@ -220,7 +220,7 @@ class PlugWallet {
     const { canisterId, standard = 'ext', image } = args || {};
 
     // Register token in network
-    const tokens = await this.network.registerToken({ canisterId, standard, walletId: this.walletNumber });
+    const tokens = await this.network.registerToken({ canisterId, standard, walletId: this.walletNumber, agent: this.agent });
 
     // Get token balance
     const tokenActor = await getTokenActor({
