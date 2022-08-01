@@ -146,7 +146,7 @@ describe('Plug KeyRing', () => {
     mnemonic: TEST_MNEMONIC,
     walletNumber: 0,
     fetch,
-    network: new Mainnet({ }),
+    network: new Mainnet({}, fetch),
   });
   let keyRing: PlugKeyRing;
   const cleanup = async (): Promise<void> => {
@@ -374,7 +374,10 @@ describe('Plug KeyRing', () => {
     it('should persist data encypted correctly after registering a new token', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      await keyRing.registerToken({ canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai', standard: 'xtc' }); // register XTC
+      await keyRing.registerToken({
+        canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai',
+        standard: 'xtc',
+      }); // register XTC
       const { currentWalletId, ...state } = await keyRing.getState();
       const encryptedState = CryptoJS.AES.encrypt(
         JSON.stringify(state),
@@ -515,9 +518,21 @@ describe('Plug KeyRing', () => {
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.createPrincipal();
       await keyRing.createPrincipal();
-      await keyRing.registerToken({ canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai', standard: 'xtc', subaccount: 1 }); // register WTC to other subaccounts
-      await keyRing.registerToken({ canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai', standard: 'xtc', subaccount: 2 }); // register WTC
-      await keyRing.registerToken({ canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai', standard: 'xtc', subaccount: 2 }); // register WTC twice
+      await keyRing.registerToken({
+        canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai',
+        standard: 'xtc',
+        subaccount: 1,
+      }); // register WTC to other subaccounts
+      await keyRing.registerToken({
+        canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai',
+        standard: 'xtc',
+        subaccount: 2,
+      }); // register WTC
+      await keyRing.registerToken({
+        canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai',
+        standard: 'xtc',
+        subaccount: 2,
+      }); // register WTC twice
 
       const { wallets } = await keyRing.getState();
       expect(wallets[0].assets).toMatchObject(DEFAULT_MAINNET_ASSETS);
@@ -527,12 +542,13 @@ describe('Plug KeyRing', () => {
     test('should fail to register an invalid canister id', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      await expect(() => keyRing.registerToken({ canisterId: 'test', standard: 'xtc' })).rejects.toEqual(
-        new Error(ERRORS.INVALID_CANISTER_ID)
-      );
+      await expect(() =>
+        keyRing.registerToken({ canisterId: 'test', standard: 'xtc' })
+      ).rejects.toEqual(new Error(ERRORS.INVALID_CANISTER_ID));
       await expect(() =>
         keyRing.registerToken({
-          canisterId: 'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
+          canisterId:
+            'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe',
           standard: 'xtc',
         })
       ).rejects.toEqual(new Error(ERRORS.INVALID_CANISTER_ID));
@@ -599,16 +615,18 @@ describe('Plug KeyRing', () => {
       let ind = Math.round(Math.random() * (walletsCreated - 1));
       if (ind === 0) ind++;
 
-      expect(await keyRing.getBalances({ subaccount: ind })).toBe(balances[ind]);
+      expect(await keyRing.getBalances({ subaccount: ind })).toBe(
+        balances[ind]
+      );
     });
 
     test('get error with invalid wallet numbers', async () => {
       await expect(keyRing.getBalances({ subaccount: -2 })).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
-      await expect(keyRing.getBalances({ subaccount: walletsCreated + 2 })).rejects.toThrow(
-        ERRORS.INVALID_WALLET_NUMBER
-      );
+      await expect(
+        keyRing.getBalances({ subaccount: walletsCreated + 2 })
+      ).rejects.toThrow(ERRORS.INVALID_WALLET_NUMBER);
     });
   });
 
@@ -637,16 +655,18 @@ describe('Plug KeyRing', () => {
     test('get specific transactions', async () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
 
-      expect(await keyRing.getTransactions({ subaccount: ind })).toBe(transactions[ind]);
+      expect(await keyRing.getTransactions({ subaccount: ind })).toBe(
+        transactions[ind]
+      );
     });
 
     test('get error with invalid wallet numbers', async () => {
       await expect(keyRing.getTransactions({ subaccount: -2 })).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
-      await expect(keyRing.getTransactions({ subaccount: walletsCreated + 2 })).rejects.toThrow(
-        ERRORS.INVALID_WALLET_NUMBER
-      );
+      await expect(
+        keyRing.getTransactions({ subaccount: walletsCreated + 2 })
+      ).rejects.toThrow(ERRORS.INVALID_WALLET_NUMBER);
     });
   });
 
@@ -668,7 +688,7 @@ describe('Plug KeyRing', () => {
       await keyRing.send({
         to: to.toString(),
         amount: amount.toString(),
-        canisterId: TOKENS.ICP.canisterId
+        canisterId: TOKENS.ICP.canisterId,
       });
       expect(createAgent).toHaveBeenCalled();
     });
@@ -681,7 +701,7 @@ describe('Plug KeyRing', () => {
       await keyRing.send({
         to: to.toString(),
         amount: amount.toString(),
-        canisterId: TOKENS.ICP.canisterId
+        canisterId: TOKENS.ICP.canisterId,
       });
       expect(createAgent).toHaveBeenCalled();
       expect(mockedSendToken.mock.calls[0][0].amount).toEqual(amount);
