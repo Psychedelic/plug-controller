@@ -22,7 +22,7 @@ import { handleStorageUpdate } from '../utils/storage/utils';
 import { getVersion } from '../utils/version';
 import { Address } from '../interfaces/contact_registry';
 
-import NetworkModule from './modules/Network';
+import NetworkModule from './modules/NetworkModule';
 import {
   CreateAndPersistKeyRingOptions,
   CreateImportResponse,
@@ -46,75 +46,23 @@ class PlugKeyRing {
   private networkModule: NetworkModule;
 
   // wallet methods
-  public getBalances: (args?: {
-    subaccount?: number;
-  }) => Promise<Array<TokenBalance>>;
-  public getNFTs: (args?: {
-    subaccount?: number;
-    refresh?: boolean;
-  }) => Promise<NFTCollection[] | null>;
-  public transferNFT: (args: {
-    subaccount?: number;
-    token: NFTDetails;
-    to: string;
-    standard: string;
-  }) => Promise<NFTCollection[]>;
-  public burnXTC: (args?: {
-    to: string;
-    amount: string;
-    subaccount: number;
-  }) => Promise<TokenInterfaces.BurnResult>;
-  public registerToken: (args: {
-    canisterId: string;
-    standard?: string;
-    subaccount?: number;
-    image?: string;
-  }) => Promise<Array<TokenBalance>>;
-  public removeToken: (args: {
-    canisterId: string;
-    subaccount?: number;
-  }) => Promise<Array<TokenBalance>>;
-  public getTokenInfo: (args: {
-    canisterId: string;
-    standard?: string;
-    subaccount?: number;
-  }) => Promise<{ token: StandardToken; amount: string }>;
-  public getICNSData: (args: {
-    subaccount?: number;
-  }) => Promise<{ names: string[]; reverseResolvedName: string | undefined }>;
-  public setReverseResolvedName: (args: {
-    name: string;
-    subaccount?: number;
-  }) => Promise<string>;
-  public sign: (args: {
-    payload: BinaryBlob;
-    subaccount?: number;
-  }) => Promise<BinaryBlob>;
-  public getContacts: (args: {
-    subaccount?: number;
-  }) => Promise<Array<Address>>;
-  public addContact: (args: {
-    contact: Address;
-    subaccount?: number;
-  }) => Promise<boolean>;
-  public deleteContact: (args: {
-    addressName: string;
-    subaccount?: number;
-  }) => Promise<boolean>;
-  public getAgent: (args?: { subaccount?: number }) => HttpAgent;
-  public getBalance: (args: {
-    token: StandardToken;
-    subaccount?: number;
-  }) => Promise<TokenBalance>;
-  public getTransactions: (args: {
-    subaccount?: number;
-  }) => Promise<GetTransactionsResponse>;
-  public send: (args: {
-    to: string;
-    amount: string;
-    canisterId: string;
-    opts?: TokenInterfaces.SendOpts;
-  }) => Promise<TokenInterfaces.SendResponse>;
+  public getBalances: (args?: { subaccount?: number }) => Promise<Array<TokenBalance>>;
+  public getNFTs: (args?: { subaccount?: number, refresh?: boolean }) => Promise<NFTCollection[] | null>;
+  public transferNFT: (args: { subaccount?: number; token: NFTDetails; to: string; standard: string; }) => Promise<NFTCollection[]>;
+  public burnXTC: (args?: { to: string; amount: string; subaccount: number; }) => Promise<TokenInterfaces.BurnResult>;
+  public registerToken: (args: { canisterId: string; standard?: string; subaccount?: number; image?: string; }) => Promise<Array<TokenBalance>>;
+  public removeToken: (args: { canisterId: string; subaccount?: number; }) => Promise<Array<TokenBalance>>;
+  public getTokenInfo: (args: { canisterId: string, standard?: string, subaccount?: number }) => Promise<TokenBalance>;
+  public getICNSData: (args: { subaccount?: number  }) => Promise<{ names: string[]; reverseResolvedName: string | undefined }>;
+  public setReverseResolvedName: (args: { name: string, subaccount?: number }) => Promise<string>;
+  public sign: (args: { payload: BinaryBlob, subaccount?: number }) => Promise<BinaryBlob>;
+  public getContacts: (args: { subaccount?: number }) => Promise<Array<Address>>;
+  public addContact: (args: { contact: Address, subaccount?: number }) => Promise<boolean>;
+  public deleteContact: (args: { addressName: string, subaccount?: number }) => Promise<boolean>;
+  public getAgent: (args?: { subaccount ?: number }) => HttpAgent;
+  public getBalance: (args: { token: StandardToken, subaccount?: number }) => Promise<TokenBalance>;
+  public getTransactions: (args: { subaccount?: number }) => Promise<GetTransactionsResponse>;
+  public send: (args: { to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
 
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
@@ -128,15 +76,20 @@ class PlugKeyRing {
     this.storage = StorageAdapter;
     this.crypto = CryptoAdapter;
     this.fetch = FetchAdapter;
-    this.networkModule = new NetworkModule();
+    this.networkModule = new NetworkModule({
+      storage: StorageAdapter,
+      onNetworkChange: this.exposeWalletMethods.bind(this),
+    });
     this.exposeWalletMethods();
   }
 
+  // Wallet proxy methods
   private exposeWalletMethods(): void {
     WALLET_METHODS.forEach(method => {
       this[method] = async args => {
         const { subaccount, ...params } = args || {};
         const wallet = await this.getWallet(subaccount);
+        await wallet.setNetwork(this.networkModule?.network);
         const response = await wallet[method](params);
         await this.updateWallet(wallet);
         return response;
@@ -144,6 +97,12 @@ class PlugKeyRing {
     });
   }
 
+  public getPublicKey = async (subaccount?: number): Promise<PublicKey> => {
+    const wallet = await this.getWallet(subaccount);
+    return wallet.publicKey;
+  };
+
+  // Keyring aux methods
   private getWallet = async (subaccount?: number): Promise<PlugWallet> => {
     await this.checkInitialized();
     this.checkUnlocked();
@@ -167,15 +126,8 @@ class PlugKeyRing {
     this.currentWalletId = state?.currentWalletId || 0;
   };
 
-  // Query
-  public getPublicKey = async (subaccount?: number): Promise<PublicKey> => {
-    const wallet = await this.getWallet(subaccount);
-    return wallet.publicKey;
-  };
-
   public async getMnemonic(password: string): Promise<string> {
-    await this.unlock(password);
-    const storage = (await this.storage.get()) as StorageData;
+    const storage = await this.storage.get() as StorageData;
     const decrypted = await this.decryptState(storage?.vault, password);
     return decrypted.mnemonic || '';
   }
@@ -183,7 +135,7 @@ class PlugKeyRing {
   // Storage get
   private loadFromPersistance = async (password: string): Promise<void> => {
     const storage = ((await this.storage.get()) || {}) as StorageData;
-    const { vault, isInitialized, currentWalletId, version } = storage;
+    const { vault, isInitialized, currentWalletId, version, networkModule = {} } = storage;
     if (isInitialized && vault) {
       const newVersion = getVersion();
       const _decrypted =
@@ -191,17 +143,24 @@ class PlugKeyRing {
           ? handleStorageUpdate(version, this.decryptState(vault, password))
           : this.decryptState(vault, password);
       const { mnemonic, ...decrypted } = _decrypted;
+      this.networkModule = new NetworkModule({
+        ...networkModule,
+        storage: this.storage,
+        onNetworkChange: this.exposeWalletMethods.bind(this),
+      });
       const wallets = _decrypted.wallets.map(
         wallet =>
           new PlugWallet({
             ...wallet,
             mnemonic: mnemonic as string,
             fetch: this.fetch,
+            network: this.networkModule.network ,
           })
       );
       this.state = { ...decrypted, wallets };
       this.isInitialized = isInitialized;
       this.currentWalletId = currentWalletId;
+      this.exposeWalletMethods();
       if (newVersion !== version) {
         await this.saveEncryptedState({ wallets }, password, mnemonic);
         await this.storage.set({ version: newVersion });
@@ -247,6 +206,7 @@ class PlugKeyRing {
       mnemonic,
       walletNumber: this.state.wallets.length,
       fetch: this.fetch,
+      network: this.networkModule.network,
     });
     const wallets = [...this.state.wallets, wallet];
     await this.saveEncryptedState({ wallets }, this.state.password);
@@ -345,6 +305,7 @@ class PlugKeyRing {
       mnemonic,
       walletNumber: 0,
       fetch: this.fetch,
+      network: this.networkModule.network,
     });
 
     const data = {
@@ -366,8 +327,8 @@ class PlugKeyRing {
         password
       ).toString(), // Pre-save mnemonic in storage
     });
-    await this.unlock(password);
     await this.saveEncryptedState(data, password);
+    await this.unlock(password);
     return wallet;
   };
 

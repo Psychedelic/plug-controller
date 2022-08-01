@@ -10,6 +10,7 @@ import {
   getTokenActor,
   getCachedUserNFTs,
   getNFTActor,
+  NFTDetails,
 } from '@psychedelic/dab-js';
 
 import PlugKeyRing from '.';
@@ -18,8 +19,9 @@ import PlugWallet from '../PlugWallet';
 import { createAgent } from '../utils/dfx';
 import store from '../utils/storage/mock';
 import { getAccountId } from '../utils/account';
-import { DEFAULT_ASSETS, TOKENS } from '../constants/tokens';
+import { DEFAULT_MAINNET_ASSETS, TOKENS } from '../constants/tokens';
 import { GetTransactionsResponse } from '../interfaces/transactions';
+import { Mainnet } from './modules/NetworkModule/Network';
 
 const mockSendICP = jest.fn();
 
@@ -144,6 +146,7 @@ describe('Plug KeyRing', () => {
     mnemonic: TEST_MNEMONIC,
     walletNumber: 0,
     fetch,
+    network: new Mainnet({ }),
   });
   let keyRing: PlugKeyRing;
   const cleanup = async (): Promise<void> => {
@@ -197,7 +200,7 @@ describe('Plug KeyRing', () => {
       expect(state.password).toEqual(TEST_PASSWORD);
       const mnemonic = await keyRing.getMnemonic(state.password as string);
       expect(bip39.validateMnemonic(mnemonic as string)).toEqual(true);
-      expect(stateWallet.assets).toEqual(DEFAULT_ASSETS);
+      expect(stateWallet.assets).toEqual(DEFAULT_MAINNET_ASSETS);
     });
     it('should fail if not password was provided', async () => {
       await expect(() => keyRing.create({ password: '' })).rejects.toEqual(
@@ -226,7 +229,7 @@ describe('Plug KeyRing', () => {
       expect(mnemonic).toEqual(TEST_MNEMONIC);
       expect(state.password).toEqual(TEST_PASSWORD);
       expect(bip39.validateMnemonic(mnemonic!)).toEqual(true);
-      expect(stateWallet.assets).toEqual(DEFAULT_ASSETS);
+      expect(stateWallet.assets).toEqual(DEFAULT_MAINNET_ASSETS);
       expect(stateWallet.connectedApps).toEqual([]);
     });
     it('should fail if not password or mnemonic were provided', async () => {
@@ -517,9 +520,9 @@ describe('Plug KeyRing', () => {
       await keyRing.registerToken({ canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai', standard: 'xtc', subaccount: 2 }); // register WTC twice
 
       const { wallets } = await keyRing.getState();
-      expect(wallets[0].assets).toMatchObject(DEFAULT_ASSETS);
-      expect(wallets[1].assets).toMatchObject(DEFAULT_ASSETS);
-      expect(wallets[2].assets).toMatchObject(DEFAULT_ASSETS);
+      expect(wallets[0].assets).toMatchObject(DEFAULT_MAINNET_ASSETS);
+      expect(wallets[1].assets).toMatchObject(DEFAULT_MAINNET_ASSETS);
+      expect(wallets[2].assets).toMatchObject(DEFAULT_MAINNET_ASSETS);
     });
     test('should fail to register an invalid canister id', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
@@ -708,7 +711,7 @@ describe('Plug KeyRing', () => {
         const to =
           'ogkan-uvha2-mbm2l-isqcz-odcvg-szdx6-qj5tg-ydzjf-qrwe2-lbzwp-7qe';
         const transferred = await keyRing.transferNFT({
-          token: tokens[0],
+          token: tokens[0] as NFTDetails<bigint>,
           to,
           standard: tokens[0].standard,
         });

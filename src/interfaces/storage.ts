@@ -1,3 +1,4 @@
+import { NetworkModuleParams } from '../PlugKeyRing/modules/NetworkModule';
 import { PlugState } from './plug_keyring'
 
 export interface StorageData {
@@ -6,6 +7,7 @@ export interface StorageData {
     isUnlocked: boolean;
     currentWalletId: number;
     version: string;
+    networkModule: NetworkModuleParams;
 }
 
 export interface KeyringStorage {

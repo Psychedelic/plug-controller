@@ -21,4 +21,5 @@ export const ERRORS = {
   ICNS_REVERSE_RESOLVER_ERROR: 'Error while interacting with ICNS reverse resolver',
   ICNS_REGISTRY_ERROR: 'Error while interacting with ICNS registry',
   ICNS_RESOLVER_ERROR: 'Error while interacting with ICNS resolver',
+  INVALID_NETWORK_ID: 'Invalid network id',
 };

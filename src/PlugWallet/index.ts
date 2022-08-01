@@ -21,8 +21,7 @@ import { createAccountFromMnemonic } from '../utils/account';
 import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent } from '../utils/dfx';
 import { getICPTransactions } from '../utils/dfx/history/rosetta';
-import { TOKENS, DEFAULT_ASSETS } from '../constants/tokens';
-import { uniqueByObjKey } from '../utils/array';
+import { TOKENS, DEFAULT_MAINNET_ASSETS } from '../constants/tokens';
 import {
   getXTCTransactions,
   requestCacheUpdate,
@@ -45,6 +44,8 @@ import {
   replacePrincipalsForICNS,
 } from '../utils/dfx/icns/utils';
 import { Address } from '../interfaces/contact_registry';
+import { Network } from '../PlugKeyRing/modules/NetworkModule';
+import { RegisteredToken } from '../PlugKeyRing/modules/NetworkModule/Network';
 
 class PlugWallet {
   name: string;
@@ -61,17 +62,19 @@ class PlugWallet {
 
   connectedApps: Array<ConnectedApp>;
 
-  assets: Assets;
-
   icnsData: ICNSData;
 
   collections: Array<NFTCollection>;
 
   contacts: Array<Address>;
 
+  assets: Assets;
+
   private identity: Secp256k1KeyIdentity;
 
   private agent: HttpAgent;
+
+  private network: Network;
 
   constructor({
     name,
@@ -79,10 +82,11 @@ class PlugWallet {
     walletNumber,
     mnemonic,
     connectedApps = [],
-    assets = DEFAULT_ASSETS,
+    assets = DEFAULT_MAINNET_ASSETS,
     collections = [],
     fetch,
     icnsData = {},
+    network,
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
@@ -99,9 +103,21 @@ class PlugWallet {
     this.connectedApps = [...connectedApps];
     this.collections = [...collections];
     this.fetch = fetch;
+    this.network = network;
     this.agent = createAgent({
       secretKey: this.identity.getKeyPair().secretKey,
       fetch: this.fetch,
+    });
+
+  }
+
+  public async setNetwork(network: Network) {
+    this.network = network;
+    this.agent = createAgent({
+      secretKey: this.identity.getKeyPair().secretKey,
+      fetch: this.fetch,
+      host: network?.host,
+      wrapped: !network?.isCustom, // Do not wrap the requests if using a custom network
     });
   }
 
@@ -136,6 +152,7 @@ class PlugWallet {
   public getNFTs = async (args?: {
     refresh?: boolean;
   }): Promise<NFTCollection[] | null> => {
+    if (this.network.isCustom) return [];
     try {
       const icnsAdapter = new ICNSAdapter(this.agent);
       this.collections = await getCachedUserNFTs({
@@ -189,63 +206,51 @@ class PlugWallet {
     }
   };
 
+  public getTokenInfo = async ({ canisterId, standard }) => {
+    const token = await this.network.getTokenInfo({ canisterId, standard });
+    const balance = await this.getTokenBalance({ token });
+    return balance;
+  }
+
   public registerToken = async (args: {
     canisterId: string;
     standard: string;
     image?: string;
   }): Promise<TokenBalance[]> => {
     const { canisterId, standard = 'ext', image } = args || {};
-    if (!validateCanisterId(canisterId)) {
-      throw new Error(ERRORS.INVALID_CANISTER_ID);
-    }
+
+    // Register token in network
+    const tokens = await this.network.registerToken({ canisterId, standard, walletId: this.walletNumber });
+
+    // Get token balance
     const tokenActor = await getTokenActor({
       canisterId,
       agent: this.agent,
       standard,
     });
-
-    const metadata = await tokenActor.getMetadata();
-
-    if (!('fungible' in metadata)) {
-      throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
-    }
-
     const balance = await tokenActor.getBalance(
       Principal.fromText(this.principal)
     );
 
+    // Format token and add asset to wallet state
     const color = randomColor({ luminosity: 'light' });
+    const registeredToken = tokens.find(t => t.canisterId === canisterId) as RegisteredToken;
     const tokenDescriptor = {
       amount: balance.value,
       token: {
-        ...metadata.fungible,
-        decimals: parseInt(metadata.fungible?.decimals.toString(), 10),
+        ...registeredToken,
+        decimals: parseInt(registeredToken.decimals.toString(), 10),
         canisterId,
         color,
         standard,
         image,
       },
     };
-    const newTokens = {
+    this.assets = {
       ...this.assets,
       [canisterId]: tokenDescriptor,
     };
-    // const unique = uniqueByObjKey(newTokens, 'symbol') as StandardToken[];
-    this.assets = newTokens;
-    return Object.values(newTokens);
-  };
-
-  public removeToken = async ({
-    canisterId,
-  }: {
-    canisterId: string;
-  }): Promise<TokenBalance[]> => {
-    if (!Object.keys(this.assets).includes(canisterId)) {
-      return Object.values(this.assets);
-    }
-    const { [canisterId]: removedToken, ...newTokens } = this.assets;
-    this.assets = newTokens;
-    return Object.values(newTokens);
+    return Object.values(this.assets);
   };
 
   public toJSON = (): JSONWallet => ({
@@ -289,12 +294,12 @@ class PlugWallet {
   }: {
     token: StandardToken;
   }): Promise<TokenBalance> => {
-    const tokenActor = await getTokenActor({
-      canisterId: token.canisterId,
-      agent: this.agent,
-      standard: token.standard,
-    });
     try {
+      const tokenActor = await getTokenActor({
+        canisterId: token.canisterId,
+        agent: this.agent,
+        standard: token.standard,
+      });
       const balance = await tokenActor.getBalance(this.identity.getPrincipal());
       return {
         amount: balance.value,
@@ -316,58 +321,15 @@ class PlugWallet {
    */
   public getBalances = async (): Promise<Array<TokenBalance>> => {
     // Get Custom Token Balances
-    const tokenBalances = await Promise.all(
-      Object.values(this.assets).map(asset =>
-        this.getTokenBalance({ token: asset.token })
-      )
-    );
-
-    Object.values(tokenBalances).forEach(asset => {
-      const { canisterId } = asset.token;
-      const { amount } = asset;
-      this.assets[canisterId] = {
-        ...this.assets[canisterId],
-        amount,
-      };
-    });
-
+    const walletTokens = this.network.getTokens(this.walletNumber);
+    const tokenBalances = await Promise.all(walletTokens.map(token => this.getTokenBalance({ token })));
+    const assets = tokenBalances.reduce((acc, token) => ({ ...acc, [token.token.canisterId]: token }), {});
+    this.assets = assets;
     return tokenBalances;
   };
 
-  public getTokenInfo = async (args: {
-    canisterId: string;
-    standard?: string;
-  }): Promise<{ token: StandardToken; amount: string }> => {
-    const { canisterId, standard = 'ext' } = args || {};
-    if (!validateCanisterId(canisterId)) {
-      throw new Error(ERRORS.INVALID_CANISTER_ID);
-    }
-    const savedStandard = this.assets[canisterId]?.token.standard || standard;
-    const tokenActor = await getTokenActor({
-      canisterId,
-      agent: this.agent,
-      standard: savedStandard,
-    });
-
-    const metadataResult = await tokenActor.getMetadata();
-
-    const metadata = metadataResult;
-    if (!('fungible' in metadata)) {
-      throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
-    }
-    const tokenBalance = await tokenActor.getBalance(
-      this.identity.getPrincipal()
-    );
-    const token = {
-      ...metadata.fungible,
-      canisterId,
-      standard: savedStandard,
-    };
-
-    return { token, amount: tokenBalance.value };
-  };
-
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
+    if (this.network.isCustom) return { total: 0, transactions: [] };
     const icnsAdapter = new ICNSAdapter(this.agent);
     const icpTrxs = await getICPTransactions(this.accountId);
     const xtcTransactions = await getXTCTransactions(this.principal);
@@ -455,6 +417,7 @@ class PlugWallet {
     names: string[];
     reverseResolvedName: string | undefined;
   }> => {
+    if (this.network.isCustom) return { names: [], reverseResolvedName: undefined };
     const icnsAdapter = new ICNSAdapter(this.agent);
     const names = await icnsAdapter.getICNSNames();
     const reverseResolvedName = await icnsAdapter.getICNSReverseResolvedName();
@@ -477,6 +440,7 @@ class PlugWallet {
   };
 
   public getContacts = async (): Promise<Array<Address>> => {
+    if (this.network.isCustom) return [];
     try {
       return await getAddresses(this.agent);
     } catch (e) {
