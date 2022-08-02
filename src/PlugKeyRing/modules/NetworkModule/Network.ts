@@ -8,6 +8,8 @@ import { IC_URL_HOST, PLUG_PROXY_HOST } from "../../../utils/dfx/constants";
 import { DEFAULT_MAINNET_TOKENS, TOKENS } from "../../../constants/tokens";
 import { StandardToken } from "../../../interfaces/token";
 import { KeyringStorage } from "../../../interfaces/storage";
+import { createAgent } from "../../../utils/dfx";
+import { BinaryBlob } from "@dfinity/candid";
 
 export type NetworkParams = {
   name: string;
@@ -43,8 +45,9 @@ export class Network {
   public defaultTokens: StandardToken[];
   public registeredTokens: RegisteredToken[];
   private onChange;
+  private fetch: any
 
-  constructor(networkParams: NetworkParams) {
+  constructor(networkParams: NetworkParams, fetch: any) {
     this.name = networkParams.name;
     this.host = networkParams.host;
     this.onChange = networkParams.onChange;
@@ -59,7 +62,7 @@ export class Network {
       decimals: 8,
     }];
     this.registeredTokens = [...(networkParams.registeredTokens || [])];
-
+    this.fetch = fetch;
   }
 
   public edit({ name, host, ledgerCanisterId }: EditNetworkParams) {
@@ -69,11 +72,21 @@ export class Network {
     this.onChange?.();
   }
 
-  public getTokenInfo = async ({ canisterId, standard }) => {
+  public createAgent({ secretKey } : {secretKey:BinaryBlob})  {
+    const agent = createAgent({
+      secretKey,
+      host: this.host,
+      fetch: this.fetch,
+      wrapped: this.isCustom
+    });
+    return agent;
+  }
+
+  public getTokenInfo = async ({ canisterId, standard, secretKey }) => {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const agent = new HttpAgent({ host: this.host });
+    const agent = this.createAgent({ secretKey });
     const tokenActor = await getTokenActor({ canisterId, standard, agent });
     const metadata = await tokenActor.getMetadata();
     if (!('fungible' in metadata)) {
@@ -84,10 +97,10 @@ export class Network {
     return token;
   }
 
-  public registerToken = async ({ canisterId, standard, walletId }: { canisterId: string, standard: string, walletId: number }) => {
+  public registerToken = async ({ canisterId, standard, walletId, secretKey }: { canisterId: string, standard: string, walletId: number, secretKey: BinaryBlob }) => {
     const token = this.registeredTokens.find(({ canisterId: id }) => id === canisterId);
     if (!token) {
-      await this.getTokenInfo({ canisterId, standard });
+      await this.getTokenInfo({ canisterId, standard, secretKey });
     }
     this.registeredTokens = this.registeredTokens.map(
       t => t.canisterId === canisterId ? { ...t, registeredBy: [...t?.registeredBy, walletId] } : t
@@ -127,14 +140,14 @@ export class Network {
 
 
 export class Mainnet extends Network {
-  constructor({ registeredTokens, onChange }: { registeredTokens?: RegisteredToken[], onChange?: () => void }) {
+  constructor({ registeredTokens, onChange }: { registeredTokens?: RegisteredToken[], onChange?: () => void }, fetch: any) {
     super({
       onChange,
       registeredTokens,
       name: 'Mainnet',
       host: `https://${IC_URL_HOST}`,
       ledgerCanisterId: TOKENS.ICP.canisterId,
-    });
+    }, fetch);
     this.id = 'mainnet';
     this.isCustom = false;
     this.defaultTokens = DEFAULT_MAINNET_TOKENS;

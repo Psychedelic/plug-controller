@@ -77,6 +77,7 @@ class PlugKeyRing {
     this.crypto = CryptoAdapter;
     this.fetch = FetchAdapter;
     this.networkModule = new NetworkModule({
+      fetch: this.fetch,
       storage: StorageAdapter,
       onNetworkChange: this.exposeWalletMethods.bind(this),
     });
@@ -145,6 +146,7 @@ class PlugKeyRing {
       const { mnemonic, ...decrypted } = _decrypted;
       this.networkModule = new NetworkModule({
         ...networkModule,
+        fetch: this.fetch,
         storage: this.storage,
         onNetworkChange: this.exposeWalletMethods.bind(this),
       });

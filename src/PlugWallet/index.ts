@@ -113,12 +113,7 @@ class PlugWallet {
 
   public async setNetwork(network: Network) {
     this.network = network;
-    this.agent = createAgent({
-      secretKey: this.identity.getKeyPair().secretKey,
-      fetch: this.fetch,
-      host: network?.host,
-      wrapped: !network?.isCustom, // Do not wrap the requests if using a custom network
-    });
+    this.agent = network.createAgent({ secretKey: this.identity.getKeyPair().secretKey});
   }
 
   public setName(val: string): void {
@@ -207,7 +202,7 @@ class PlugWallet {
   };
 
   public getTokenInfo = async ({ canisterId, standard }) => {
-    const token = await this.network.getTokenInfo({ canisterId, standard });
+    const token = await this.network.getTokenInfo({ canisterId, standard, secretKey: this.identity.getKeyPair().secretKey });
     const balance = await this.getTokenBalance({ token });
     return balance;
   }
@@ -220,7 +215,7 @@ class PlugWallet {
     const { canisterId, standard = 'ext', image } = args || {};
 
     // Register token in network
-    const tokens = await this.network.registerToken({ canisterId, standard, walletId: this.walletNumber });
+    const tokens = await this.network.registerToken({ canisterId, standard, walletId: this.walletNumber, secretKey: this.identity.getKeyPair().secretKey });
 
     // Get token balance
     const tokenActor = await getTokenActor({
