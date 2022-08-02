@@ -210,12 +210,18 @@ class PlugWallet {
   public registerToken = async (args: {
     canisterId: string;
     standard: string;
-    image?: string;
+    logo?: string;
   }): Promise<TokenBalance[]> => {
-    const { canisterId, standard = 'ext', image } = args || {};
+    const { canisterId, standard = 'ext', logo } = args || {};
 
     // Register token in network
-    const tokens = await this.network.registerToken({ canisterId, standard, walletId: this.walletNumber, secretKey: this.identity.getKeyPair().secretKey });
+    const tokens = await this.network.registerToken({
+      canisterId,
+      standard,
+      walletId: this.walletNumber,
+      secretKey: this.identity.getKeyPair().secretKey,
+      logo,
+    });
 
     // Get token balance
     const tokenActor = await getTokenActor({
@@ -238,7 +244,7 @@ class PlugWallet {
         canisterId,
         color,
         standard,
-        image,
+        logo,
       },
     };
     this.assets = {
@@ -295,6 +301,7 @@ class PlugWallet {
         agent: this.agent,
         standard: token.standard,
       });
+
       const balance = await tokenActor.getBalance(this.identity.getPrincipal());
       return {
         amount: balance.value,

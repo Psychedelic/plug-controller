@@ -1,15 +1,14 @@
 import { v4 as uuid } from "uuid";
-import { HttpAgent } from "@dfinity/agent";
+import { BinaryBlob } from "@dfinity/candid";
 import { getTokenActor, standards } from "@psychedelic/dab-js";
 
 import { ERRORS } from "../../../errors";
 import { validateCanisterId } from "../../utils";
-import { IC_URL_HOST, PLUG_PROXY_HOST } from "../../../utils/dfx/constants";
+import { IC_URL_HOST } from "../../../utils/dfx/constants";
 import { DEFAULT_MAINNET_TOKENS, TOKENS } from "../../../constants/tokens";
 import { StandardToken } from "../../../interfaces/token";
-import { KeyringStorage } from "../../../interfaces/storage";
+import { recursiveParseBigint } from "../../../utils/object";
 import { createAgent } from "../../../utils/dfx";
-import { BinaryBlob } from "@dfinity/candid";
 
 export type NetworkParams = {
   name: string;
@@ -97,13 +96,13 @@ export class Network {
     return token;
   }
 
-  public registerToken = async ({ canisterId, standard, walletId, secretKey }: { canisterId: string, standard: string, walletId: number, secretKey: BinaryBlob }) => {
+  public registerToken = async ({ canisterId, standard, walletId, secretKey, logo }: { canisterId: string, standard: string, walletId: number, secretKey: BinaryBlob, logo?: string }) => {
     const token = this.registeredTokens.find(({ canisterId: id }) => id === canisterId);
     if (!token) {
       await this.getTokenInfo({ canisterId, standard, secretKey });
     }
     this.registeredTokens = this.registeredTokens.map(
-      t => t.canisterId === canisterId ? { ...t, registeredBy: [...t?.registeredBy, walletId] } : t
+      t => t.canisterId === canisterId ? { ...t, logo, registeredBy: [...t?.registeredBy, walletId] } : t
     );
     await this.onChange?.();
     return this.registeredTokens;
@@ -131,7 +130,7 @@ export class Network {
       name: this.name,
       host: this.host,
       ledgerCanisterId: this.ledgerCanisterId,
-      registeredTokens: this.registeredTokens,
+      registeredTokens: this.registeredTokens?.map(recursiveParseBigint),
       id: this.id,
     };
   }
