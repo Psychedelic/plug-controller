@@ -22,7 +22,7 @@ import { handleStorageUpdate } from '../utils/storage/utils';
 import { getVersion } from '../utils/version';
 import { Address } from '../interfaces/contact_registry';
 
-import NetworkModule from './modules/NetworkModule';
+import NetworkModule, { NetworkModuleParams } from './modules/NetworkModule';
 import {
   CreateAndPersistKeyRingOptions,
   CreateImportResponse,
@@ -136,7 +136,7 @@ class PlugKeyRing {
   // Storage get
   private loadFromPersistance = async (password: string): Promise<void> => {
     const storage = ((await this.storage.get()) || {}) as StorageData;
-    const { vault, isInitialized, currentWalletId, version, networkModule = {} } = storage;
+    const { vault, isInitialized, currentWalletId, version, networkModule } = storage;
     if (isInitialized && vault) {
       const newVersion = getVersion();
       const _decrypted =
@@ -145,7 +145,7 @@ class PlugKeyRing {
           : this.decryptState(vault, password);
       const { mnemonic, ...decrypted } = _decrypted;
       this.networkModule = new NetworkModule({
-        ...networkModule,
+        ...(networkModule || _decrypted.networkModule || {}),
         fetch: this.fetch,
         storage: this.storage,
         onNetworkChange: this.exposeWalletMethods.bind(this),
@@ -351,7 +351,7 @@ class PlugKeyRing {
   };
 
   // Storage
-  private decryptState = (state, password): PlugState & { mnemonic: string } =>
+  private decryptState = (state, password): PlugState & { mnemonic: string, networkModule?: NetworkModuleParams } =>
     JSON.parse(
       this.crypto.AES.decrypt(state, password).toString(this.crypto.enc.Utf8)
     );
