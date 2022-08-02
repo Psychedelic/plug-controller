@@ -77,6 +77,7 @@ class PlugKeyRing {
     this.crypto = CryptoAdapter;
     this.fetch = FetchAdapter;
     this.networkModule = new NetworkModule({
+      fetch: this.fetch,
       storage: StorageAdapter,
       onNetworkChange: this.exposeWalletMethods.bind(this),
     });
@@ -145,6 +146,7 @@ class PlugKeyRing {
       const { mnemonic, ...decrypted } = _decrypted;
       this.networkModule = new NetworkModule({
         ...networkModule,
+        fetch: this.fetch,
         storage: this.storage,
         onNetworkChange: this.exposeWalletMethods.bind(this),
       });
@@ -353,6 +355,21 @@ class PlugKeyRing {
     JSON.parse(
       this.crypto.AES.decrypt(state, password).toString(this.crypto.enc.Utf8)
     );
+
+  public checkPassword = async (password: string): Promise<boolean> => {
+    await this.checkInitialized();
+    try {
+      const { vault, isInitialized } = ((await this.storage.get()) ||
+        {}) as StorageData;
+      if (isInitialized && vault) {
+        const decrypted = this.decryptState(vault, password);
+        return decrypted.password === password;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
 }
 
 export default PlugKeyRing;

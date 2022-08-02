@@ -3,35 +3,38 @@ import { KeyringStorage } from "../../../interfaces/storage";
 import { EditNetworkParams, Mainnet, Network, NetworkParams } from "./Network";
 
 export interface NetworkModuleParams {
+  fetch: any;
   networks?: { [networkId: string]: Network };
   networkId?: string;
   storage: KeyringStorage;
   onNetworkChange: (network: Network) => void;
 };
 
-const createNetwork = (network) => network.id === 'mainnet' ? new Mainnet(network) : new Network(network);
-const createNetworks = (networks?: { [id: string]: Network }, onChange?: () => void) => {
+const createNetwork = (fetch, network) => network.id === 'mainnet' ? new Mainnet(network, fetch) : new Network(network, fetch);
+const createNetworks = (fetch, networks?: { [id: string]: Network }, onChange?: () => void) => {
   if (!!Object.values(networks || {})?.length) {
     return Object.values(networks!)?.reduce(
-    (acum, net) => ({ ...acum, [net.id]: createNetwork({ ...net, onChange }),
+    (acum, net) => ({ ...acum, [net.id]: createNetwork(fetch, { ...net, onChange }),
     }), {})
 
   }  
- return { mainnet: new Mainnet({ onChange }) };
+ return { mainnet: new Mainnet({ onChange }, fetch) };
 };
 
 class NetworkModule {
   public networkId: string;
   public networks: { [networkId: string]: Network };
+  private fetch: any;
   private storage: KeyringStorage;
   private onNetworkChange?: (network: Network) => void;
 
 
-  constructor({ networks, networkId, storage, onNetworkChange }: NetworkModuleParams) {
+  constructor({ networks, networkId, storage, onNetworkChange, fetch }: NetworkModuleParams) {
+    this.fetch = fetch;
     this.storage = storage;
     this.onNetworkChange = onNetworkChange;
     this.networkId = networkId || 'mainnet';
-    this.networks = createNetworks(networks, this.update.bind(this));
+    this.networks = createNetworks(this.fetch, networks, this.update.bind(this));
   }
 
   public get network(): Network {
@@ -56,7 +59,7 @@ class NetworkModule {
     if (Object.values(this.networks).some((net) => net.host === networkParams.host)) {
       throw new Error(`A Network with host ${networkParams.host} already exists`);
     }
-    const network = createNetwork({ ...networkParams, onChange: this.update.bind(this) });
+    const network = createNetwork(this.fetch, { ...networkParams, onChange: this.update.bind(this) });
     this.networks = { ...this.networks, [network.id!]: network };
     this.update();
     return this.networks;
