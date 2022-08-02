@@ -24,10 +24,16 @@ export default (storage: any) => {
     }
 
     // If we already had this token, only update the registeredby array
-    const registeredToken = acum.find((t) => t.canisterId === token.canisterId);
-    if (registeredToken) {
-      const updatedToken = { ...registeredToken, registeredBy: [...registeredToken.registeredBy, ...token.registeredBy] };
-      return acum.map((t) => t.canisterId === token.canisterId ? updatedToken : t);
+    const registeredTokenIndex = acum.findIndex((t) => t.canisterId === token.canisterId);
+    if (registeredTokenIndex > -1) {
+      const registeredToken = registeredTokens[registeredTokenIndex];
+      const updatedToken = {
+        ...registeredToken,
+        registeredBy: [...registeredToken.registeredBy, ...token.registeredBy],
+      };
+      const copy = [...acum];
+      copy[registeredTokenIndex] = updatedToken;
+      return copy;
     }
     // Else just add the token (first time we find it)
     return [...acum, token];
