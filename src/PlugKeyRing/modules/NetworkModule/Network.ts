@@ -8,6 +8,7 @@ import { IC_URL_HOST, PLUG_PROXY_HOST } from "../../../utils/dfx/constants";
 import { DEFAULT_MAINNET_TOKENS, TOKENS } from "../../../constants/tokens";
 import { StandardToken } from "../../../interfaces/token";
 import { KeyringStorage } from "../../../interfaces/storage";
+import { recursiveParseBigint } from "../../../utils/object";
 
 export type NetworkParams = {
   name: string;
@@ -84,13 +85,13 @@ export class Network {
     return token;
   }
 
-  public registerToken = async ({ canisterId, standard, walletId }: { canisterId: string, standard: string, walletId: number }) => {
+  public registerToken = async ({ canisterId, standard, walletId, logo }: { canisterId: string, standard: string, walletId: number, logo?: string }) => {
     const token = this.registeredTokens.find(({ canisterId: id }) => id === canisterId);
     if (!token) {
       await this.getTokenInfo({ canisterId, standard });
     }
     this.registeredTokens = this.registeredTokens.map(
-      t => t.canisterId === canisterId ? { ...t, registeredBy: [...t?.registeredBy, walletId] } : t
+      t => t.canisterId === canisterId ? { ...t, logo, registeredBy: [...t?.registeredBy, walletId] } : t
     );
     await this.onChange?.();
     return this.registeredTokens;
@@ -118,7 +119,7 @@ export class Network {
       name: this.name,
       host: this.host,
       ledgerCanisterId: this.ledgerCanisterId,
-      registeredTokens: this.registeredTokens,
+      registeredTokens: this.registeredTokens?.map(recursiveParseBigint),
       id: this.id,
     };
   }
