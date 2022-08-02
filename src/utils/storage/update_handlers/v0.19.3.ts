@@ -7,14 +7,14 @@ export default (storage: any) => {
   const wallets: JSONWallet[] = storage.wallets;
 
   // For each wallet, get its tokens and add the wallet id to the list of registered by
-  const tokens = wallets.map((wallet) => Object.values(wallet.assets).map(
+  const nestedTokens = wallets?.map((wallet) => (Object.values(wallet?.assets) || []).map(
     (asset) => ({
-      ...asset.token,
+      ...(asset?.token || {}),
       registeredBy: [wallet.walletNumber],
       logo: asset?.token?.logo || (asset?.token as any)?.image,
     }),
-    )).flat();
-  
+    ));
+  const tokens = nestedTokens?.flat?.() || [];
   // Remove default tokens and merge duplicates, concatting their registeredBy
   const registeredTokens = tokens.reduce((acum, token) => {
 
