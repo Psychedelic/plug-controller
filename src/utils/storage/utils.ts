@@ -2,7 +2,7 @@ import extension from 'extensionizer';
 
 import handler14_5 from './update_handlers/v0.14.5';
 import handler16_8 from './update_handlers/v0.16.8';
-import handler19_2 from './update_handlers/v0.19.3';
+import handler19_3 from './update_handlers/v0.19.3';
 
 import { PlugState } from '../../interfaces/plug_keyring';
 import { NetworkModuleParams } from '../../PlugKeyRing/modules/NetworkModule';
@@ -36,7 +36,7 @@ const VERSION_HANDLER: { [version: string]: (storage: any) => PlugState } = {
   },
   '0.14.5': handler14_5,
   '0.16.8': handler16_8,
-  '0.19.3': handler19_2,
+  '0.19.3': handler19_3,
 };
 
 const compareVersion = (a: string, b: string): number => {
