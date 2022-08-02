@@ -355,6 +355,21 @@ class PlugKeyRing {
     JSON.parse(
       this.crypto.AES.decrypt(state, password).toString(this.crypto.enc.Utf8)
     );
+
+  public checkPassword = async (password: string): Promise<boolean> => {
+    await this.checkInitialized();
+    try {
+      const { vault, isInitialized } = ((await this.storage.get()) ||
+        {}) as StorageData;
+      if (isInitialized && vault) {
+        const decrypted = this.decryptState(vault, password);
+        return decrypted.password === password;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
 }
 
 export default PlugKeyRing;
