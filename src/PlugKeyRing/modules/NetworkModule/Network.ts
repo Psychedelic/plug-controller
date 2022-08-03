@@ -76,7 +76,7 @@ export class Network {
       secretKey,
       host: this.host,
       fetch: this.fetch,
-      wrapped: this.isCustom
+      wrapped: !this.isCustom
     });
     return agent;
   }

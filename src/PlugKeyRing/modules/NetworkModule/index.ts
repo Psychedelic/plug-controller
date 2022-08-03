@@ -14,10 +14,9 @@ const createNetwork = (fetch, network) => network.id === 'mainnet' ? new Mainnet
 const createNetworks = (fetch, networks?: { [id: string]: Network }, onChange?: () => void) => {
   if (!!Object.values(networks || {})?.length) {
     return Object.values(networks!)?.reduce(
-    (acum, net) => ({ ...acum, [net.id]: createNetwork(fetch, { ...net, onChange }),
-    }), {})
-
-  }  
+      (acum, net) => ({ ...acum, [net.id]: createNetwork(fetch, { ...net, onChange }) })
+    , {});
+  }
  return { mainnet: new Mainnet({ onChange }, fetch) };
 };
 

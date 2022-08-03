@@ -9,7 +9,7 @@
       "module": "commonjs",
       "target": "es2016",
       "lib": [
-          "es6"
+          "es2020"
       ],
       "resolveJsonModule": true,
       "experimentalDecorators": true,
