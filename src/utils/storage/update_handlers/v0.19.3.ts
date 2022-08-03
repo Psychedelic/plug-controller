@@ -26,7 +26,7 @@ export default (storage: any) => {
     // If we already had this token, only update the registeredby array
     const registeredTokenIndex = acum.findIndex((t) => t.canisterId === token.canisterId);
     if (registeredTokenIndex > -1) {
-      const registeredToken = registeredTokens[registeredTokenIndex];
+      const registeredToken = acum[registeredTokenIndex];
       const updatedToken = {
         ...registeredToken,
         registeredBy: [...registeredToken.registeredBy, ...token.registeredBy],
