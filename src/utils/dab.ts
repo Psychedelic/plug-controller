@@ -10,6 +10,7 @@ import { PLUG_PROXY_HOST } from './dfx/constants';
 import { wrappedFetch } from './dfx/wrappedFetch';
 
 export interface CanisterInfo {
+  canisterId: string;
   name: string;
   description: string;
   icon: string;
@@ -17,12 +18,14 @@ export interface CanisterInfo {
 
 export const getCanisterInfo = async (
   canisterId: string,
-  agent?: HttpAgent
+  agent?: HttpAgent,
+  fetch?: typeof crossFetch
 ): Promise<CanisterInfo | undefined> => {
   const finalAgent =
     agent ||
     new HttpAgent({
       host: PLUG_PROXY_HOST,
+      fetch: fetch ? wrappedFetch(fetch) : wrappedFetch(),
     });
 
   const result = await getCanisterInfoFromDab({
