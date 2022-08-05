@@ -403,7 +403,14 @@ class PlugWallet {
     return result;
   };
 
-  public getAgent(): HttpAgent {
+  public getAgent({ host }: { host?: string }): HttpAgent {
+    if (host) {
+      return createAgent({
+        secretKey: this.identity.getKeyPair().secretKey,
+        host,
+        wrapped: false,
+      })
+    }
     return this.agent;
   }
 
