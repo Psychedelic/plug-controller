@@ -409,6 +409,7 @@ class PlugWallet {
         secretKey: this.identity.getKeyPair().secretKey,
         host,
         wrapped: false,
+        fetch: this.fetch,
       })
     }
     return this.agent;
