@@ -59,7 +59,7 @@ class PlugKeyRing {
   public getContacts: (args: { subaccount?: number }) => Promise<Array<Address>>;
   public addContact: (args: { contact: Address, subaccount?: number }) => Promise<boolean>;
   public deleteContact: (args: { addressName: string, subaccount?: number }) => Promise<boolean>;
-  public getAgent: (args?: { subaccount ?: number }) => HttpAgent;
+  public getAgent: (args?: { subaccount ?: number, host?: string }) => HttpAgent;
   public getBalance: (args: { token: StandardToken, subaccount?: number }) => Promise<TokenBalance>;
   public getTransactions: (args: { subaccount?: number }) => Promise<GetTransactionsResponse>;
   public send: (args: { to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
