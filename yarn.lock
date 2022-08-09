@@ -799,10 +799,10 @@
     axios "^0.24.0"
     cross-fetch "^3.1.4"
 
-"@psychedelic/dab-js@1.4.4":
-  version "1.4.4"
-  resolved "https://npm.pkg.github.com/download/@Psychedelic/dab-js/1.4.4/5816040f8f36c7db5bce36ae1153a828b8f78dbf#5816040f8f36c7db5bce36ae1153a828b8f78dbf"
-  integrity sha512-FuRfyj6nttdN3Jrdo/Rg+76Lnb856WhRR6GKwQ9MidNQCbPfb/WUkPODAdH/+oS0uLNefoJDa/tz8O/FvW4tZA==
+"@psychedelic/dab-js@1.4.5":
+  version "1.4.5"
+  resolved "https://npm.pkg.github.com/download/@Psychedelic/dab-js/1.4.5/eccee7c10979dcf0c55ab0bc7f02e863a4a8b54f#eccee7c10979dcf0c55ab0bc7f02e863a4a8b54f"
+  integrity sha512-UQ2SGF+1YOGjZPWp0BeA+hR90PyVBHlRoJMVhERu9w49PcNEYR+Sf+Toa0MwGpZfwAT5rSQYbSkKBqQnWjHzHA==
   dependencies:
     "@dfinity/agent" "0.9.3"
     "@dfinity/candid" "0.9.3"
