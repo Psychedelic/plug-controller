@@ -150,8 +150,7 @@ const getCanisterIds = (
     },
     [] as string[]
   );
-
-  return [...new Set(canisterIds)].filter(value => value);
+  return [...new Set(canisterIds.map((id) => parsePrincipal(id)))].filter(value => value);
 };
 
 export const getCapTransactions = async ({
@@ -160,7 +159,7 @@ export const getCapTransactions = async ({
   agent,
 }: GetCapTransactionsParams): Promise<GetUserTransactionResponse> => {
   let total: number = 0;
-  let transactions: InferredTransaction[] = [];
+  let events: { sk: string, canisterId: string, prettyEvent: TransactionPrettified }[] = [];
   let LastEvaluatedKey: LastEvaluatedKey | undefined = lastEvaluatedKey;
   try {
     do {
@@ -181,16 +180,9 @@ export const getCapTransactions = async ({
         canisterId: getTransactionCanister(item.contractId),
         prettyEvent: prettifyCapTransactions(item.event),
       }));
-      const canisterIdsForInfo = getCanisterIds(prettifyEvents);
-      const canistersInfo = await getCanistersInfo(canisterIdsForInfo, agent);
-      const lastTransactions = await Promise.all(
-        prettifyEvents.map(async prettyEvent =>
-          formatTransaction(prettyEvent, canistersInfo)
-        )
-      );
       LastEvaluatedKey = response.data.LastEvaluatedKey;
       total += response.data.Count;
-      transactions = [...transactions, ...lastTransactions];
+      events = [...events, ...prettifyEvents];
     } while (LastEvaluatedKey);
   } catch (e) {
     console.error('CAP transactions error:', e);
@@ -199,8 +191,23 @@ export const getCapTransactions = async ({
       transactions: [],
     };
   }
+  // Keep only last 50 txs by timestamp
+  const lastEvents = events.sort(
+    (a, b) => (a.prettyEvent.time < b.prettyEvent.time)
+      ? -1
+      : ((a.prettyEvent.time > b.prettyEvent.time)
+          ? 1
+          : 0
+        ),
+    ).slice(-50);
+  const canistersInfo = await getCanistersInfo(getCanisterIds(lastEvents), agent);
+  const transactions = await Promise.all(
+      lastEvents.map(async prettyEvent =>
+        formatTransaction(prettyEvent, canistersInfo)
+      )
+    );
   return {
-    total,
+    total: total >= 50 ? 50 : total,
     transactions,
   };
 };
