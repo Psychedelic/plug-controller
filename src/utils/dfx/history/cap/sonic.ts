@@ -22,6 +22,9 @@ export const buildSonicData = async ({
   canistersInfo,
   tokenId,
 }) => {
+  console.log('operation ->', operation);
+  console.log('details ->', details);
+  console.log('canistersInfo ->', canistersInfo);
   if (canisterId !== SONIC_SWAP_CANISTER_ID) return;
   const { amount, amountIn, amountOut } = details || {};
   const isSwap = operation?.toLowerCase?.()?.includes?.('swap');
@@ -33,8 +36,20 @@ export const buildSonicData = async ({
   };
   if (isSwap) {
     data.swap = {
-      from: canistersInfo[details?.from]?.tokenRegistryInfo,
-      to: canistersInfo[details?.to]?.tokenRegistryInfo,
+      from: canistersInfo[details?.from]?.tokenRegistryInfo || {
+        name: canistersInfo[details?.from]?.name,
+        thumbnail: canistersInfo[details?.from]?.logo_url,
+        logo: canistersInfo[details?.from]?.logo_url,
+        description: canistersInfo[details?.from]?.description,
+        symbol: canistersInfo[details?.from]?.name.split(" ")[0],
+      },
+      to: canistersInfo[details?.to]?.tokenRegistryInfo || {
+        name: canistersInfo[details?.to]?.name,
+        thumbnail: canistersInfo[details?.to]?.logo_url,
+        logo: canistersInfo[details?.to]?.logo_url,
+        description: canistersInfo[details?.to]?.description,
+        symbol: canistersInfo[details?.to]?.name.split(" ")[0],
+      },
       amountIn,
       amountOut,
     };
