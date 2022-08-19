@@ -31,10 +31,21 @@ export const buildSonicData = async ({
     token: canistersInfo[tokenId]?.tokenRegistryInfo,
     amount,
   };
+  
+  const formatSwapData = (data) => (data?.tokenRegistryInfo || {
+    name: data?.name,
+    thumbnail: data?.logo_url,
+    logo: data?.logo_url,
+    description: data?.description,
+  });
+
+  const from = formatSwapData(canistersInfo[details?.from]);
+  const to = formatSwapData(canistersInfo[details?.to]);
+
   if (isSwap) {
     data.swap = {
-      from: canistersInfo[details?.from]?.tokenRegistryInfo,
-      to: canistersInfo[details?.to]?.tokenRegistryInfo,
+      from,
+      to,
       amountIn,
       amountOut,
     };
