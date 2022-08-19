@@ -37,7 +37,6 @@ export const buildSonicData = async ({
     thumbnail: data?.logo_url,
     logo: data?.logo_url,
     description: data?.description,
-    symbol: data?.name.split(' ')[0], //replace when symbol field is added to DAB
   });
 
   const from = formatSwapData(canistersInfo[details?.from]);
