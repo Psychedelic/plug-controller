@@ -100,7 +100,6 @@ export class Network {
     const token = this.registeredTokens.find(({ canisterId: id }) => id === canisterId);
     const defaultToken = this.defaultTokens.find(({ canisterId: id }) => id === canisterId);
     if (defaultToken) {
-      await this.onChange?.();
       return this.defaultTokens;
     }
     if (!token) {
