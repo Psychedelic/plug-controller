@@ -12,7 +12,7 @@ import {
   addAddress,
   removeAddress,
   getAllUserNFTs,
-} from '@psychedelic/dab-js';
+} from '@psychedelic/dab-js-test';
 import randomColor from 'random-color';
 
 import { ERRORS } from '../errors';
@@ -113,7 +113,7 @@ class PlugWallet {
 
   public async setNetwork(network: Network) {
     this.network = network;
-    this.agent = network.createAgent({ secretKey: this.identity.getKeyPair().secretKey});
+    this.agent = network.createAgent({ secretKey: this.identity.getKeyPair().secretKey });
   }
 
   public setName(val: string): void {
@@ -205,6 +205,12 @@ class PlugWallet {
     const token = await this.network.getTokenInfo({ canisterId, standard, secretKey: this.identity.getKeyPair().secretKey });
     const balance = await this.getTokenBalance({ token });
     return balance;
+  }
+
+  public getNFTInfo = async ({ canisterId, standard }) => {
+    console.log(canisterId, standard);
+    const nft = await this.network.getNftInfo({ canisterId, secretKey: this.identity.getKeyPair().secretKey, standard });
+    return nft;
   }
 
   public registerToken = async (args: {

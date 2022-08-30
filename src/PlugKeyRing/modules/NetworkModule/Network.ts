@@ -1,6 +1,6 @@
 import { v4 as uuid } from "uuid";
 import { BinaryBlob } from "@dfinity/candid";
-import { getTokenActor, standards } from "@psychedelic/dab-js";
+import { getNFTActor,getNFTInfo, getTokenActor, standards } from "@psychedelic/dab-js-test";
 
 import { ERRORS } from "../../../errors";
 import { validateCanisterId } from "../../utils";
@@ -43,6 +43,7 @@ export class Network {
   public isCustom: boolean;
   public defaultTokens: StandardToken[];
   public registeredTokens: RegisteredToken[];
+  // public registeredNfts: RegisteredNft[]; //charlar con rocky
   private onChange;
   private fetch: any
 
@@ -71,7 +72,7 @@ export class Network {
     this.onChange?.();
   }
 
-  public createAgent({ secretKey } : {secretKey:BinaryBlob})  {
+  public createAgent({ secretKey }: { secretKey: BinaryBlob }) {
     const agent = createAgent({
       secretKey,
       host: this.host,
@@ -87,6 +88,7 @@ export class Network {
     }
     const agent = this.createAgent({ secretKey });
     const tokenActor = await getTokenActor({ canisterId, standard, agent });
+    console.log(tokenActor);
     const metadata = await tokenActor.getMetadata();
     if (!('fungible' in metadata)) {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
@@ -94,6 +96,17 @@ export class Network {
     const token = { ...metadata.fungible, canisterId, standard, registeredBy: [] };
     this.registeredTokens = uniqueTokens([...this.registeredTokens, token]);
     return token;
+  }
+
+  public getNftInfo = async ({ canisterId, secretKey, standard }) => {
+    if (!validateCanisterId(canisterId)) {
+      throw new Error(ERRORS.INVALID_CANISTER_ID);
+    }
+    const agent = this.createAgent({ secretKey });
+    const nftActor = getNFTActor({ canisterId, agent, standard });
+    const metadata = await nftActor.getMetadata();
+    console.log(metadata);
+    return metadata
   }
 
   public registerToken = async ({ canisterId, standard, walletId, secretKey, logo }: { canisterId: string, standard: string, walletId: number, secretKey: BinaryBlob, logo?: string }) => {

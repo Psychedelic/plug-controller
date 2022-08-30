@@ -799,10 +799,24 @@
     axios "^0.24.0"
     cross-fetch "^3.1.4"
 
-"@psychedelic/dab-js@1.4.6":
+"@psychedelic/dab-js-test-test@1.4.6":
   version "1.4.6"
-  resolved "https://npm.pkg.github.com/download/@Psychedelic/dab-js/1.4.6/8c06156d4c51634e2a35a837e3b89d18f246ce0e#8c06156d4c51634e2a35a837e3b89d18f246ce0e"
-  integrity sha512-p5MhoUikpqb+osqjg4dthiKFYt9X4EMKPOBbe6OD20iOxvmTIqQ3dqejwXSJO28ohFCnZseRG+UQsfoz+6jhTw==
+  resolved "https://npm.pkg.github.com/download/@Psychedelic/dab-js-test/1.4.6/0a8c2b5a0681d58e4928fa9c57282041a01a04bd#0a8c2b5a0681d58e4928fa9c57282041a01a04bd"
+  integrity sha512-OEua0ANWdtjS8YU/Ks4THPrv2ztFYdduBLuLOJnJI+pwQ6FiFguZomP5f2QKsoL6yyUv1krvQyOw3Ff099bHOg==
+  dependencies:
+    "@dfinity/agent" "0.9.3"
+    "@dfinity/candid" "0.9.3"
+    "@dfinity/identity" "0.9.3"
+    "@dfinity/principal" "0.9.3"
+    axios "^0.24.0"
+    buffer-crc32 "^0.2.13"
+    cross-fetch "^3.1.4"
+    crypto-js "^4.1.1"
+
+"@psychedelic/dab-js-test@1.4.7":
+  version "1.4.7"
+  resolved "https://npm.pkg.github.com/download/@Psychedelic/dab-js-test/1.4.7/2c0de3b66de07f9410c8edc8fc799a9b22236d5d#2c0de3b66de07f9410c8edc8fc799a9b22236d5d"
+  integrity sha512-+zc5O0gbPFno0ljh+9+XwvEYf30VCswluPAnatmB6xVmR6eQIZw2DqbLclTDRhNQIE+hP/pjUwXsqDWINjhOhA==
   dependencies:
     "@dfinity/agent" "0.9.3"
     "@dfinity/candid" "0.9.3"

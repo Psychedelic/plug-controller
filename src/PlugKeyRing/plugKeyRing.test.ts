@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable camelcase */
-jest.mock('@psychedelic/dab-js');
+jest.mock('@psychedelic/dab-js-test');
 
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
@@ -11,7 +11,7 @@ import {
   getCachedUserNFTs,
   getNFTActor,
   NFTDetails,
-} from '@psychedelic/dab-js';
+} from '@psychedelic/dab-js-test';
 
 import PlugKeyRing from '.';
 import { ERRORS } from '../errors';

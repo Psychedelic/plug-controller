@@ -1,4 +1,4 @@
-import { NFTCollection } from '@psychedelic/dab-js';
+import { NFTCollection } from '@psychedelic/dab-js-test';
 import { Network, NetworkModuleParams } from '../PlugKeyRing/modules/NetworkModule';
 import { ConnectedApp } from './account';
 import { TokenBalance } from './token';

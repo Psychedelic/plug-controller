@@ -9,6 +9,7 @@ export const WALLET_METHODS = [
 'registerToken',
 'removeToken',
 'getTokenInfo',
+'getNFTInfo',
 'getICNSData',
 'setReverseResolvedName',
 'sign',

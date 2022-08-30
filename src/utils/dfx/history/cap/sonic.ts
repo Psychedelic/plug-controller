@@ -1,4 +1,4 @@
-import { TokenRegistry } from '@psychedelic/dab-js';
+import { TokenRegistry } from '@psychedelic/dab-js-test';
 import { parsePrincipal } from '../../../object';
 
 export const SONIC_SWAP_CANISTER_ID = '3xwpq-ziaaa-aaaah-qcn4a-cai';
