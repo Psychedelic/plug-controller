@@ -3,6 +3,7 @@ import extension from 'extensionizer';
 import handler14_5 from './update_handlers/v0.14.5';
 import handler16_8 from './update_handlers/v0.16.8';
 import handler19_3 from './update_handlers/v0.19.3';
+import handler20_0 from './update_handlers/v0.20.0';
 
 import { PlugState } from '../../interfaces/plug_keyring';
 import { NetworkModuleParams } from '../../PlugKeyRing/modules/NetworkModule';
@@ -28,7 +29,7 @@ export const checkForError = (): Error | undefined => {
   return new Error(lastError.message);
 };
 
-const VERSION_PATH: Array<string> = ['0.14.1', '0.14.5', '0.16.8', '0.19.3'];
+const VERSION_PATH: Array<string> = ['0.14.1', '0.14.5', '0.16.8', '0.19.3', '0.20.0'];
 
 const VERSION_HANDLER: { [version: string]: (storage: any) => PlugState } = {
   '0.14.1': (storage: any) => {
@@ -37,6 +38,7 @@ const VERSION_HANDLER: { [version: string]: (storage: any) => PlugState } = {
   '0.14.5': handler14_5,
   '0.16.8': handler16_8,
   '0.19.3': handler19_3,
+  '0.20.0': handler20_0,
 };
 
 const compareVersion = (a: string, b: string): number => {

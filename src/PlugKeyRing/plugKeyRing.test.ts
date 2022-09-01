@@ -22,6 +22,8 @@ import { getAccountId } from '../utils/account';
 import { DEFAULT_MAINNET_ASSETS, TOKENS } from '../constants/tokens';
 import { GetTransactionsResponse } from '../interfaces/transactions';
 import { Mainnet } from './modules/NetworkModule/Network';
+import { Types } from '../utils/account/constants';
+import { createAccountFromMnemonic } from '../utils/account';
 
 const mockSendICP = jest.fn();
 
@@ -141,12 +143,14 @@ const createManyTransactions = (): GetTransactionsResponse => {
 };
 
 describe('Plug KeyRing', () => {
+  const { identity } = createAccountFromMnemonic(TEST_MNEMONIC,0);
   const testWallet = new PlugWallet({
     name: 'test',
-    mnemonic: TEST_MNEMONIC,
     walletNumber: 0,
     fetch,
     network: new Mainnet({}, fetch),
+    type: Types.fromMnemonic,
+    identity,
   });
   let keyRing: PlugKeyRing;
   const cleanup = async (): Promise<void> => {

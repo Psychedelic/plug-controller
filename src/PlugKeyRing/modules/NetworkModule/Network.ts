@@ -9,6 +9,7 @@ import { DEFAULT_MAINNET_TOKENS, TOKENS } from "../../../constants/tokens";
 import { StandardToken } from "../../../interfaces/token";
 import { recursiveParseBigint } from "../../../utils/object";
 import { createAgent } from "../../../utils/dfx";
+import { SignIdentity } from '@dfinity/agent';
 
 export type NetworkParams = {
   name: string;
@@ -70,10 +71,10 @@ export class Network {
     this.ledgerCanisterId = ledgerCanisterId || this.ledgerCanisterId;
     this.onChange?.();
   }
-
-  public createAgent({ secretKey } : {secretKey:BinaryBlob})  {
+  
+  public createAgent({ defaultIdentity } : {defaultIdentity: SignIdentity})  {
     const agent = createAgent({
-      secretKey,
+      defaultIdentity,
       host: this.host,
       fetch: this.fetch,
       wrapped: !this.isCustom
@@ -81,11 +82,11 @@ export class Network {
     return agent;
   }
 
-  public getTokenInfo = async ({ canisterId, standard, secretKey }) => {
+  public getTokenInfo = async ({ canisterId, standard, defaultIdentity }) => {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const agent = this.createAgent({ secretKey });
+    const agent = this.createAgent({ defaultIdentity });
     const tokenActor = await getTokenActor({ canisterId, standard, agent });
     const metadata = await tokenActor.getMetadata();
     if (!('fungible' in metadata)) {
@@ -96,10 +97,10 @@ export class Network {
     return token;
   }
 
-  public registerToken = async ({ canisterId, standard, walletId, secretKey, logo }: { canisterId: string, standard: string, walletId: number, secretKey: BinaryBlob, logo?: string }) => {
+  public registerToken = async ({ canisterId, standard, walletId, defaultIdentity, logo }: { canisterId: string, standard: string, walletId: number, defaultIdentity: SignIdentity, logo?: string }) => {
     const token = this.registeredTokens.find(({ canisterId: id }) => id === canisterId);
     if (!token) {
-      await this.getTokenInfo({ canisterId, standard, secretKey });
+      await this.getTokenInfo({ canisterId, standard, defaultIdentity });
     }
     this.registeredTokens = this.registeredTokens.map(
       t => t.canisterId === canisterId ? { ...t, logo, registeredBy: [...t?.registeredBy, walletId] } : t
