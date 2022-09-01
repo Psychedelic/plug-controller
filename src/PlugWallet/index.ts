@@ -208,7 +208,6 @@ class PlugWallet {
   }
 
   public getNFTInfo = async ({ canisterId, standard }) => {
-    console.log(canisterId, standard);
     const nft = await this.network.getNftInfo({ canisterId, secretKey: this.identity.getKeyPair().secretKey, standard });
     return nft;
   }

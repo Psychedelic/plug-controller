@@ -105,7 +105,6 @@ export class Network {
     const agent = this.createAgent({ secretKey });
     const nftActor = getNFTActor({ canisterId, agent, standard });
     const metadata = await nftActor.getMetadata();
-    console.log(metadata);
     return metadata
   }
 
