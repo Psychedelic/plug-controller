@@ -99,6 +99,10 @@ export class Network {
 
   public registerToken = async ({ canisterId, standard, walletId, defaultIdentity, logo }: { canisterId: string, standard: string, walletId: number, defaultIdentity: SignIdentity, logo?: string }) => {
     const token = this.registeredTokens.find(({ canisterId: id }) => id === canisterId);
+    const defaultToken = this.defaultTokens.find(({ canisterId: id }) => id === canisterId);
+    if (defaultToken) {
+      return this.defaultTokens;
+    }
     if (!token) {
       await this.getTokenInfo({ canisterId, standard, defaultIdentity });
     }
