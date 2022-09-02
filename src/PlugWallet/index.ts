@@ -188,7 +188,7 @@ class PlugWallet {
       // Optimistically update the state
       const collections = this.collections.map(col => ({
         ...col,
-        tokens: col.tokens.filter(tok => tok.id !== token.id),
+        tokens: col.tokens.filter(tok => tok.index !== token.index),
       }));
       this.collections = collections.filter(col => col.tokens.length);
       getCachedUserNFTs({ userPID: this.principal, refresh: true }).catch(
