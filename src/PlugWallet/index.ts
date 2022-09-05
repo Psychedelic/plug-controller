@@ -142,7 +142,6 @@ class PlugWallet {
         agent: this.agent,
       });
       const customNfts = this.network.registeredNFTS;
-      console.log('customNfts', customNfts);
       
       const destructuredCustomNft = customNfts.map(c => {
         return {...c, principal_id: c.canisterId};
@@ -177,7 +176,6 @@ class PlugWallet {
   }): Promise<NFTCollection[] | null> => {
     if (this.network.isCustom) return [];
     try {
-      console.log('las collections registradas previas al fetch son ==>>', this.collections);
       const icnsAdapter = new ICNSAdapter(this.agent);
       this.collections = await getCachedUserNFTs({
         userPID: this.principal,
@@ -185,7 +183,6 @@ class PlugWallet {
       });
 
       const customNfts = this.network.registeredNFTS;
-      console.log('customNfts', customNfts);
       
       const destructuredCustomNft = customNfts.map(c => {
         return {...c, principal_id: c.canisterId};
@@ -210,7 +207,6 @@ class PlugWallet {
 
       this.collections = uniqueTokens([...this.collections, icnsCollection, ...resultCollectionWithTokens]);
 
-      console.log('lo que va a retornar getNFTS es  -->>', this.collections);
 
       return this.collections;
     } catch (e) {

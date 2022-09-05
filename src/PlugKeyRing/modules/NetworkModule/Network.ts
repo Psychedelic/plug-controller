@@ -91,7 +91,6 @@ export class Network {
     }
     const agent = this.createAgent({ secretKey });
     const tokenActor = await getTokenActor({ canisterId, standard, agent });
-    console.log(tokenActor);
     const metadata = await tokenActor.getMetadata();
     if (!('fungible' in metadata)) {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
@@ -109,24 +108,18 @@ export class Network {
     const nftActor = getNFTActor({ canisterId, agent, standard });
     const metadata = await nftActor.getMetadata();
     const nft = {...metadata, registeredBy: []};
-    console.log('el nft que esta en getNftInfo me trae (retorna) =>', nft);
-    console.log('registeredTokens ----->>>', this.registeredNFTS);
     this.registeredNFTS = uniqueTokens([...this.registeredNFTS, nft]);
-    console.log('registeredTokens luego de  ----->>>', this.registeredNFTS);
     return nft
   }
 
   public registerNFT = async ({
     canisterId, standard, walletId, secretKey,
   }) => {
-    console.log('entro aca!!!!!!!');
     const nft = this.registeredNFTS.find(({ canisterId: id }) => id === canisterId);
-    console.log('lo encontro ? ->', nft);
     if (!nft) {
       await this.getNftInfo({canisterId, secretKey, standard});
     }
     this.registeredNFTS = this.registeredNFTS.map(n => n.canisterId === canisterId ? {...n, registeredBy: [...n?.registeredBy, walletId]} : n);
-    console.log('me consologue en network el array => ', this.registeredNFTS);
     await this.onChange?.();
     return this.registeredNFTS;
   };
