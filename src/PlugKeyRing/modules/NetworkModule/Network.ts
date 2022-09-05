@@ -1,6 +1,6 @@
 import { v4 as uuid } from "uuid";
 import { BinaryBlob } from "@dfinity/candid";
-import { getNFTActor,getNFTInfo, getTokenActor, standards } from "@psychedelic/dab-js-test";
+import { getNFTActor,getNFTInfo, getTokenActor, NFTCollection, standards } from "@psychedelic/dab-js-test";
 
 import { ERRORS } from "../../../errors";
 import { validateCanisterId } from "../../utils";
@@ -15,6 +15,7 @@ export type NetworkParams = {
   host: string;
   ledgerCanisterId?: string;
   registeredTokens?: RegisteredToken[];
+  registeredNFTS?: RegisteredNFT[];
   id?: string;
   onChange?: () => void;
 }
@@ -27,8 +28,9 @@ export type EditNetworkParams = {
 
 export type RegisteredToken = StandardToken & { registeredBy: Array<number> };
 
+export type RegisteredNFT = NFTCollection &  { registeredBy: Array<number> };
 // Function that takes in an array of tokens and returns an array without duplicates
-export const uniqueTokens = (tokens: RegisteredToken[]) => {
+export const uniqueTokens = (tokens) => {
   const uniqueTokens = tokens.filter((token, index) => {
     return tokens.findIndex(t => t.canisterId === token.canisterId) === index;
   });
@@ -43,7 +45,7 @@ export class Network {
   public isCustom: boolean;
   public defaultTokens: StandardToken[];
   public registeredTokens: RegisteredToken[];
-  // public registeredNfts: RegisteredNft[]; //charlar con rocky
+  public registeredNFTS: RegisteredNFT[];
   private onChange;
   private fetch: any
 
@@ -62,6 +64,7 @@ export class Network {
       decimals: 8,
     }];
     this.registeredTokens = [...(networkParams.registeredTokens || [])];
+    this.registeredNFTS = [...(networkParams.registeredNFTS || [])];
     this.fetch = fetch;
   }
 
@@ -105,8 +108,28 @@ export class Network {
     const agent = this.createAgent({ secretKey });
     const nftActor = getNFTActor({ canisterId, agent, standard });
     const metadata = await nftActor.getMetadata();
-    return metadata
+    const nft = {...metadata, registeredBy: []};
+    console.log('el nft que esta en getNftInfo me trae (retorna) =>', nft);
+    console.log('registeredTokens ----->>>', this.registeredNFTS);
+    this.registeredNFTS = uniqueTokens([...this.registeredNFTS, nft]);
+    console.log('registeredTokens luego de  ----->>>', this.registeredNFTS);
+    return nft
   }
+
+  public registerNFT = async ({
+    canisterId, standard, walletId, secretKey,
+  }) => {
+    console.log('entro aca!!!!!!!');
+    const nft = this.registeredNFTS.find(({ canisterId: id }) => id === canisterId);
+    console.log('lo encontro ? ->', nft);
+    if (!nft) {
+      await this.getNftInfo({canisterId, secretKey, standard});
+    }
+    this.registeredNFTS = this.registeredNFTS.map(n => n.canisterId === canisterId ? {...n, registeredBy: [...n?.registeredBy, walletId]} : n);
+    console.log('me consologue en network el array => ', this.registeredNFTS);
+    await this.onChange?.();
+    return this.registeredNFTS;
+  };
 
   public registerToken = async ({ canisterId, standard, walletId, secretKey, logo }: { canisterId: string, standard: string, walletId: number, secretKey: BinaryBlob, logo?: string }) => {
     const token = this.registeredTokens.find(({ canisterId: id }) => id === canisterId);

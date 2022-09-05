@@ -12,6 +12,8 @@ import {
   addAddress,
   removeAddress,
   getAllUserNFTs,
+  getUserCollectionTokens,
+  DABCollection
 } from '@psychedelic/dab-js-test';
 import randomColor from 'random-color';
 
@@ -45,7 +47,7 @@ import {
 } from '../utils/dfx/icns/utils';
 import { Address } from '../interfaces/contact_registry';
 import { Network } from '../PlugKeyRing/modules/NetworkModule';
-import { RegisteredToken } from '../PlugKeyRing/modules/NetworkModule/Network';
+import { RegisteredNFT, RegisteredToken, uniqueTokens } from '../PlugKeyRing/modules/NetworkModule/Network';
 
 class PlugWallet {
   name: string;
@@ -65,6 +67,8 @@ class PlugWallet {
   icnsData: ICNSData;
 
   collections: Array<NFTCollection>;
+  
+  customCollections: Array<NFTCollection>;
 
   contacts: Array<Address>;
 
@@ -84,6 +88,7 @@ class PlugWallet {
     connectedApps = [],
     assets = DEFAULT_MAINNET_ASSETS,
     collections = [],
+    customCollections = [],
     fetch,
     icnsData = {},
     network,
@@ -102,6 +107,7 @@ class PlugWallet {
     this.principal = identity.getPrincipal().toText();
     this.connectedApps = [...connectedApps];
     this.collections = [...collections];
+    this.customCollections = customCollections;
     this.fetch = fetch;
     this.network = network;
     this.agent = createAgent({
@@ -135,8 +141,30 @@ class PlugWallet {
         user: this.principal,
         agent: this.agent,
       });
+      const customNfts = this.network.registeredNFTS;
+      console.log('customNfts', customNfts);
+      
+      const destructuredCustomNft = customNfts.map(c => {
+        return {...c, principal_id: c.canisterId};
+      });
+
+      const collectionWithTokens = destructuredCustomNft.map(async (c) => {
+        const cDABCollection: DABCollection = {
+          icon: c.icon || '',
+          principal_id: c.principal_id as unknown as Principal,
+          name: c.name,
+          description: c.description || '',
+          standard: c.standard,
+        }
+        const tokens = getUserCollectionTokens(cDABCollection, this.principal as unknown as Principal, this.agent);
+        return tokens
+      });
+      const resultCollectionWithTokens = await Promise.all(collectionWithTokens);
       const icnsCollection = await icnsAdapter.getICNSCollection();
-      return [...this.collections, icnsCollection];
+
+      this.collections = uniqueTokens([...this.collections, icnsCollection, ...resultCollectionWithTokens]);
+
+      return this.collections;
     } catch (e) {
       console.warn('Error when trying to fetch NFTs natively from the IC', e);
       return null;
@@ -149,13 +177,42 @@ class PlugWallet {
   }): Promise<NFTCollection[] | null> => {
     if (this.network.isCustom) return [];
     try {
+      console.log('las collections registradas previas al fetch son ==>>', this.collections);
       const icnsAdapter = new ICNSAdapter(this.agent);
       this.collections = await getCachedUserNFTs({
         userPID: this.principal,
         refresh: args?.refresh,
       });
+
+      const customNfts = this.network.registeredNFTS;
+      console.log('customNfts', customNfts);
+      
+      const destructuredCustomNft = customNfts.map(c => {
+        return {...c, principal_id: c.canisterId};
+      });
+
+      const collectionWithTokens = destructuredCustomNft.map(async (c) => {
+        const cDABCollection: DABCollection = {
+          icon: c.icon || '',
+          principal_id: Principal.fromText(c.principal_id),
+          name: c.name,
+          description: c.description || '',
+          standard: c.standard,
+        }
+
+        const tokens = getUserCollectionTokens(cDABCollection, Principal.fromText(this.principal), this.agent);
+        return tokens
+      });
+
+      const resultCollectionWithTokens = await Promise.all(collectionWithTokens);
       const icnsCollection = await icnsAdapter.getICNSCollection();
-      return [...this.collections, icnsCollection];
+      
+
+      this.collections = uniqueTokens([...this.collections, icnsCollection, ...resultCollectionWithTokens]);
+
+      console.log('lo que va a retornar getNFTS es  -->>', this.collections);
+
+      return this.collections;
     } catch (e) {
       console.warn(
         'Error when trying to fetch NFTs from Kyasshu. Fetching natively...',
@@ -210,6 +267,14 @@ class PlugWallet {
   public getNFTInfo = async ({ canisterId, standard }) => {
     const nft = await this.network.getNftInfo({ canisterId, secretKey: this.identity.getKeyPair().secretKey, standard });
     return nft;
+  }
+
+  public registerNFT = async ({canisterId, standard}) => {
+    const nfts = await this.network.registerNFT({canisterId, standard, walletId: this.walletNumber, secretKey: this.identity.getKeyPair().secretKey});
+    if (nfts) {
+      this.collections = [...this.collections, nfts[0]];
+    }
+    return nfts;
   }
 
   public registerToken = async (args: {
@@ -267,7 +332,7 @@ class PlugWallet {
     icon: this.icon,
     connectedApps: this.connectedApps,
     assets: this.assets,
-    nftCollections: recursiveParseBigint(this.collections),
+    collections: recursiveParseBigint(this.collections),
     icnsData: this.icnsData,
   });
 
@@ -334,6 +399,7 @@ class PlugWallet {
     this.assets = assets;
     return tokenBalances;
   };
+
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
     if (this.network.isCustom) return { total: 0, transactions: [] };

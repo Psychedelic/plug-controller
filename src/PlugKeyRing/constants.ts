@@ -7,6 +7,7 @@ export const WALLET_METHODS = [
 'transferNFT',
 'send',
 'registerToken',
+'registerNFT',
 'removeToken',
 'getTokenInfo',
 'getNFTInfo',
