@@ -190,7 +190,7 @@ class PlugWallet {
       // Optimistically update the state
       const collections = this.collections.map(col => ({
         ...col,
-        tokens: col.tokens.filter(tok => tok.id !== token.id),
+        tokens: col.tokens.filter(tok => tok.index !== token.index),
       }));
       this.collections = collections.filter(col => col.tokens.length);
       getCachedUserNFTs({ userPID: this.principal, refresh: true }).catch(
@@ -488,6 +488,28 @@ class PlugWallet {
     } catch (e) {
       return false;
     }
+  };
+
+  public removeToken = async (args: {
+    canisterId: string;
+  }): Promise<RegisteredToken[]> => {
+    const { canisterId } = args || {};
+
+    // Register token in network
+    const tokens = await this.network.removeToken({
+      canisterId,
+    });
+
+    const assets = Object.keys(this.assets)
+      .filter(key => key !== canisterId)
+      .reduce((obj, key) => {
+        obj[key] = this.assets[key];
+        return obj;
+      },{});
+
+    this.assets = assets;
+
+    return tokens;
   };
 }
 
