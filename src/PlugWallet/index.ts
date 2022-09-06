@@ -488,7 +488,7 @@ class PlugWallet {
 
   public removeToken = async (args: {
     canisterId: string;
-  }): Promise<RegisteredToken[]> => {
+  }): Promise<TokenBalance[]> => {
     const { canisterId } = args || {};
 
     // Register token in network
@@ -505,7 +505,7 @@ class PlugWallet {
 
     this.assets = assets;
 
-    return tokens;
+    return Object.values(this.assets);
   };
 }
 
