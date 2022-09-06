@@ -491,7 +491,6 @@ class PlugWallet {
   }): Promise<TokenBalance[]> => {
     const { canisterId } = args || {};
 
-    // Register token in network
     const tokens = await this.network.removeToken({
       canisterId,
     });
