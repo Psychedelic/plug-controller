@@ -489,14 +489,15 @@ class PlugWallet {
   public removeToken = async (args: {
     canisterId: string;
   }): Promise<RegisteredToken[]> => {
+    const { canisterId } = args || {};
 
     // Register token in network
     const tokens = await this.network.removeToken({
-      args.canisterId,
+      canisterId,
     });
 
     const assets = Object.keys(this.assets)
-      .filter(key => key !== args.canisterId)
+      .filter(key => key !== canisterId)
       .reduce((obj, key) => {
         obj[key] = this.assets[key];
         return obj;
