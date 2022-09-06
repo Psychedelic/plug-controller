@@ -494,7 +494,6 @@ class PlugWallet {
 
     if (isDefaultAsset) return Object.values(this.assets);
 
-    // Register token in network
     const tokens = await this.network.removeToken({
       canisterId,
     });
