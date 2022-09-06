@@ -6,9 +6,8 @@ import { ERRORS } from '../../errors';
 export class IdentityFactory {
     public static createIdentity(type: string, secretKey: string): GenericSignIdentity {
         switch (type) {
-            case Types.fromPem256k1:
-                return Secp256k1KeyIdentity.fromJSON(secretKey);
-            case Types.fromMnemonic:
+            case Types.pem256k1:
+            case Types.mnemonic:
                 return Secp256k1KeyIdentity.fromJSON(secretKey);
             default:
                 throw new Error(ERRORS.INVALID_TYPE_ERROR);

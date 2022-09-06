@@ -4,13 +4,13 @@ import {
   } from '../interfaces/plug_wallet';
 
 export interface PlugState {
-    wallets: Array<JSONWallet>;
-    password?: string;
-    currentWalletId?: number;
-}
-
-export interface PlugStateInstance {
-  wallets: Array<PlugWallet>;
   password?: string;
   currentWalletId?: number;
+}
+export interface PlugStateStorage extends PlugState {
+  wallets: Array<JSONWallet>;
+}
+
+export interface PlugStateInstance extends PlugState {
+  wallets: Array<PlugWallet>;
 }

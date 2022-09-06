@@ -3,12 +3,12 @@
 /* eslint-disable camelcase */
 import { AnonymousIdentity, HttpAgent } from '@dfinity/agent';
 import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
+import { SignIdentity } from '@dfinity/agent';
 import crossFetch from 'cross-fetch';
 
 import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
 import { wrappedFetch } from './wrappedFetch';
 import { IC_MAINNET_URLS, PLUG_PROXY_HOST } from './constants';
-import { SignIdentity } from '@dfinity/agent';
 import { ERRORS } from '../../errors';
 
 export interface CreateAgentArgs {

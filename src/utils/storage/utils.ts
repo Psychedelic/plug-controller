@@ -5,7 +5,7 @@ import handler16_8 from './update_handlers/v0.16.8';
 import handler19_3 from './update_handlers/v0.19.3';
 import handler20_0 from './update_handlers/v0.20.0';
 
-import { PlugState } from '../../interfaces/plug_keyring';
+import { PlugStateStorage } from '../../interfaces/plug_keyring';
 import { NetworkModuleParams } from '../../PlugKeyRing/modules/NetworkModule';
 
 
@@ -31,7 +31,7 @@ export const checkForError = (): Error | undefined => {
 
 const VERSION_PATH: Array<string> = ['0.14.1', '0.14.5', '0.16.8', '0.19.3', '0.20.0'];
 
-const VERSION_HANDLER: { [version: string]: (storage: any) => PlugState } = {
+const VERSION_HANDLER: { [version: string]: (storage: any) => PlugStateStorage } = {
   '0.14.1': (storage: any) => {
     return storage;
   },
@@ -70,7 +70,7 @@ const getVersionIndex = (version: string | undefined): number => {
 export const handleStorageUpdate = (
   storageVersion: string | undefined,
   storage: any
-): PlugState & { mnemonic: string, networkModule?: NetworkModuleParams } => {
+): PlugStateStorage & { mnemonic: string, networkModule?: NetworkModuleParams } => {
   const index = getVersionIndex(storageVersion);
   if (index === VERSION_PATH.length) return storage;
 

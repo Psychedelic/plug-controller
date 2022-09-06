@@ -10,7 +10,7 @@ import {
 import JsonBigInt from 'json-bigint';
 
 import { KeyringStorage, StorageData } from '../interfaces/storage';
-import { PlugState, PlugStateInstance } from '../interfaces/plug_keyring';
+import { PlugStateStorage, PlugStateInstance } from '../interfaces/plug_keyring';
 import { TokenBalance, StandardToken } from '../interfaces/token';
 import { GetTransactionsResponse } from '../interfaces/transactions';
 import { ERRORS } from '../errors';
@@ -216,7 +216,7 @@ class PlugKeyRing {
       walletNumber,
       fetch: this.fetch,
       network: this.networkModule.network,
-      type: Types.fromMnemonic,
+      type: Types.mnemonic,
       identity,
     });
     const wallets = [...this.state.wallets, wallet];
@@ -234,7 +234,7 @@ class PlugKeyRing {
   };
 
   // General
-  public getState = async (): Promise<PlugState> => {
+  public getState = async (): Promise<PlugStateStorage> => {
     await this.checkInitialized();
     this.checkUnlocked();
     return recursiveParseBigint({
@@ -322,7 +322,7 @@ class PlugKeyRing {
       fetch: this.fetch,
       network: this.networkModule.network,
       identity: identity,
-      type: Types.fromMnemonic,
+      type: Types.mnemonic,
     });
 
     const data = {
@@ -366,7 +366,7 @@ class PlugKeyRing {
   };
 
   // Storage
-  private decryptState = (state, password): PlugState & { mnemonic: string, networkModule?: NetworkModuleParams } =>
+  private decryptState = (state, password): PlugStateStorage & { mnemonic: string, networkModule?: NetworkModuleParams } =>
     JSON.parse(
       this.crypto.AES.decrypt(state, password).toString(this.crypto.enc.Utf8)
     );

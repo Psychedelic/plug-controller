@@ -149,7 +149,7 @@ describe('Plug KeyRing', () => {
     walletNumber: 0,
     fetch,
     network: new Mainnet({}, fetch),
-    type: Types.fromMnemonic,
+    type: Types.mnemonic,
     identity,
   });
   let keyRing: PlugKeyRing;

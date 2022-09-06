@@ -13,11 +13,9 @@ export default (storage: any) => {
                 );
                 return ({
                     ...wallet,
-                    type: Types.fromMnemonic,
+                    type: Types.mnemonic,
                     keyPair: identity.toJSON(),
                 })
             })
     }
 };
-
-

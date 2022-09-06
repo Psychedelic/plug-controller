@@ -3,7 +3,7 @@ import { Network, NetworkModuleParams } from '../PlugKeyRing/modules/NetworkModu
 import { ConnectedApp } from './account';
 import { TokenBalance } from './token';
 import { Types } from '../utils/account/constants';
-import {GenericSignIdentity} from '../utils/identity/genericSignIdentity'
+import { GenericSignIdentity } from '../utils/identity/genericSignIdentity'
 
 
 export interface ICNSData {

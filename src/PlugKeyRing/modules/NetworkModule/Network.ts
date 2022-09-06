@@ -1,6 +1,6 @@
 import { v4 as uuid } from "uuid";
-import { BinaryBlob } from "@dfinity/candid";
 import { getTokenActor, standards } from "@psychedelic/dab-js";
+import { SignIdentity } from '@dfinity/agent';
 
 import { ERRORS } from "../../../errors";
 import { validateCanisterId } from "../../utils";
@@ -9,7 +9,6 @@ import { DEFAULT_MAINNET_TOKENS, TOKENS } from "../../../constants/tokens";
 import { StandardToken } from "../../../interfaces/token";
 import { recursiveParseBigint } from "../../../utils/object";
 import { createAgent } from "../../../utils/dfx";
-import { SignIdentity } from '@dfinity/agent';
 
 export type NetworkParams = {
   name: string;
