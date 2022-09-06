@@ -485,6 +485,27 @@ class PlugWallet {
       return false;
     }
   };
+
+  public removeToken = async (args: {
+    canisterId: string;
+  }): Promise<RegisteredToken[]> => {
+
+    // Register token in network
+    const tokens = await this.network.removeToken({
+      args.canisterId,
+    });
+
+    const assets = Object.keys(this.assets)
+      .filter(key => key !== args.canisterId)
+      .reduce((obj, key) => {
+        obj[key] = this.assets[key];
+        return obj;
+      },{});
+
+    this.assets = assets;
+
+    return tokens;
+  };
 }
 
 export default PlugWallet;
