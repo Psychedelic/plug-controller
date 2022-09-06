@@ -490,6 +490,9 @@ class PlugWallet {
     canisterId: string;
   }): Promise<TokenBalance[]> => {
     const { canisterId } = args || {};
+    const isDefaultAsset = Object.keys(DEFAULT_MAINNET_ASSETS).includes(canisterId);
+
+    if (isDefaultAsset) return Object.values(this.assets);
 
     // Register token in network
     const tokens = await this.network.removeToken({
