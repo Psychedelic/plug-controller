@@ -10,7 +10,7 @@ import {
 import JsonBigInt from 'json-bigint';
 
 import { KeyringStorage, StorageData } from '../interfaces/storage';
-import { PlugState } from '../interfaces/plug_keyring';
+import { PlugStateStorage, PlugStateInstance } from '../interfaces/plug_keyring';
 import { TokenBalance, StandardToken } from '../interfaces/token';
 import { GetTransactionsResponse } from '../interfaces/transactions';
 import { ERRORS } from '../errors';
@@ -21,6 +21,7 @@ import { recursiveParseBigint } from '../utils/object';
 import { handleStorageUpdate } from '../utils/storage/utils';
 import { getVersion } from '../utils/version';
 import { Address } from '../interfaces/contact_registry';
+import { Types } from '../utils/account/constants';
 
 import NetworkModule, { NetworkModuleParams } from './modules/NetworkModule';
 import {
@@ -31,10 +32,12 @@ import {
   ImportMnemonicOptions,
 } from './interfaces';
 import { WALLET_METHODS } from './constants';
+import { createAccountFromMnemonic } from '../utils/account';
+import { IdentityFactory } from './../utils/identity/identityFactory'
 
 class PlugKeyRing {
   // state
-  private state: PlugState;
+  private state: PlugStateInstance;
   public isUnlocked = false;
   public isInitialized = false;
   public currentWalletId?: number;
@@ -154,9 +157,9 @@ class PlugKeyRing {
         wallet =>
           new PlugWallet({
             ...wallet,
-            mnemonic: mnemonic as string,
             fetch: this.fetch,
-            network: this.networkModule.network ,
+            network: this.networkModule.network,
+            identity: IdentityFactory.createIdentity(wallet.type, wallet.keyPair)
           })
       );
       this.state = { ...decrypted, wallets };
@@ -203,12 +206,18 @@ class PlugKeyRing {
     await this.checkInitialized();
     this.checkUnlocked();
     const mnemonic = await this.getMnemonic(this.state.password as string);
+    const walletNumber = this.state.wallets.length;
+    const { identity } = createAccountFromMnemonic(
+      mnemonic,
+      walletNumber
+    );
     const wallet = new PlugWallet({
       ...opts,
-      mnemonic,
-      walletNumber: this.state.wallets.length,
+      walletNumber,
       fetch: this.fetch,
       network: this.networkModule.network,
+      type: Types.mnemonic,
+      identity,
     });
     const wallets = [...this.state.wallets, wallet];
     await this.saveEncryptedState({ wallets }, this.state.password);
@@ -225,7 +234,7 @@ class PlugKeyRing {
   };
 
   // General
-  public getState = async (): Promise<PlugState> => {
+  public getState = async (): Promise<PlugStateStorage> => {
     await this.checkInitialized();
     this.checkUnlocked();
     return recursiveParseBigint({
@@ -301,13 +310,19 @@ class PlugKeyRing {
     name,
   }: CreateAndPersistKeyRingOptions): Promise<PlugWallet> => {
     if (!password) throw new Error(ERRORS.PASSWORD_REQUIRED);
+    const { identity } = createAccountFromMnemonic(
+      mnemonic,
+      0
+    );
+ 
     const wallet = new PlugWallet({
       icon,
       name,
-      mnemonic,
       walletNumber: 0,
       fetch: this.fetch,
       network: this.networkModule.network,
+      identity: identity,
+      type: Types.mnemonic,
     });
 
     const data = {
@@ -351,7 +366,7 @@ class PlugKeyRing {
   };
 
   // Storage
-  private decryptState = (state, password): PlugState & { mnemonic: string, networkModule?: NetworkModuleParams } =>
+  private decryptState = (state, password): PlugStateStorage & { mnemonic: string, networkModule?: NetworkModuleParams } =>
     JSON.parse(
       this.crypto.AES.decrypt(state, password).toString(this.crypto.enc.Utf8)
     );
