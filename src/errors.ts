@@ -22,4 +22,6 @@ export const ERRORS = {
   ICNS_REGISTRY_ERROR: 'Error while interacting with ICNS registry',
   ICNS_RESOLVER_ERROR: 'Error while interacting with ICNS resolver',
   INVALID_NETWORK_ID: 'Invalid network id',
+  EMPTY_IDENTITY_ERROR: 'Identity or SecretKey missing',
+  INVALID_TYPE_ERROR: 'No such type allowed',
 };

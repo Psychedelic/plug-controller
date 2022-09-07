@@ -1,8 +1,8 @@
 import { NetworkModuleParams } from '../PlugKeyRing/modules/NetworkModule';
-import { PlugState } from './plug_keyring'
+import { PlugStateStorage } from './plug_keyring'
 
 export interface StorageData {
-    vault: PlugState;
+    vault: PlugStateStorage;
     isInitialized: boolean;
     isUnlocked: boolean;
     currentWalletId: number;

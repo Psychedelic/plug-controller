@@ -17,8 +17,6 @@ import randomColor from 'random-color';
 
 import { ERRORS } from '../errors';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
-import { createAccountFromMnemonic } from '../utils/account';
-import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
 import { createAgent } from '../utils/dfx';
 import { getICPTransactions } from '../utils/dfx/history/rosetta';
 import { TOKENS, DEFAULT_MAINNET_ASSETS } from '../constants/tokens';
@@ -46,6 +44,9 @@ import {
 import { Address } from '../interfaces/contact_registry';
 import { Network } from '../PlugKeyRing/modules/NetworkModule';
 import { RegisteredToken } from '../PlugKeyRing/modules/NetworkModule/Network';
+import { getAccountId } from '../utils/account';
+import { Types } from '../utils/account/constants';
+import { GenericSignIdentity } from '../utils/identity/genericSignIdentity'
 
 class PlugWallet {
   name: string;
@@ -70,42 +71,43 @@ class PlugWallet {
 
   assets: Assets;
 
-  private identity: Secp256k1KeyIdentity;
+  type: Types;
+
+  private identity: GenericSignIdentity;
 
   private agent: HttpAgent;
 
   private network: Network;
 
+
   constructor({
     name,
     icon,
     walletNumber,
-    mnemonic,
     connectedApps = [],
     assets = DEFAULT_MAINNET_ASSETS,
     collections = [],
     fetch,
     icnsData = {},
     network,
+    identity,
+    type,
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
     this.walletNumber = walletNumber;
     this.assets = assets;
     this.icnsData = icnsData;
-    const { identity, accountId } = createAccountFromMnemonic(
-      mnemonic,
-      walletNumber
-    );
     this.identity = identity;
-    this.accountId = accountId;
+    this.accountId = getAccountId(identity.getPrincipal());;
     this.principal = identity.getPrincipal().toText();
     this.connectedApps = [...connectedApps];
     this.collections = [...collections];
     this.fetch = fetch;
     this.network = network;
+    this.type = type;
     this.agent = createAgent({
-      secretKey: this.identity.getKeyPair().secretKey,
+      defaultIdentity: this.identity,
       fetch: this.fetch,
     });
 
@@ -113,7 +115,7 @@ class PlugWallet {
 
   public async setNetwork(network: Network) {
     this.network = network;
-    this.agent = network.createAgent({ secretKey: this.identity.getKeyPair().secretKey});
+    this.agent = network.createAgent({ defaultIdentity: this.identity });
   }
 
   public setName(val: string): void {
@@ -202,7 +204,7 @@ class PlugWallet {
   };
 
   public getTokenInfo = async ({ canisterId, standard }) => {
-    const token = await this.network.getTokenInfo({ canisterId, standard, secretKey: this.identity.getKeyPair().secretKey });
+    const token = await this.network.getTokenInfo({ canisterId, standard, defaultIdentity: this.identity });
     const balance = await this.getTokenBalance({ token });
     return balance;
   }
@@ -219,7 +221,7 @@ class PlugWallet {
       canisterId,
       standard,
       walletId: this.walletNumber,
-      secretKey: this.identity.getKeyPair().secretKey,
+      defaultIdentity: this.identity,
       logo,
     });
 
@@ -264,6 +266,8 @@ class PlugWallet {
     assets: this.assets,
     nftCollections: recursiveParseBigint(this.collections),
     icnsData: this.icnsData,
+    type: this.type,
+    keyPair: this.identity.toJSON()
   });
 
   public burnXTC = async (args: { to: string; amount: string }) => {
@@ -406,7 +410,7 @@ class PlugWallet {
   public getAgent({ host }: { host?: string }): HttpAgent {
     if (host) {
       return createAgent({
-        secretKey: this.identity.getKeyPair().secretKey,
+        defaultIdentity: this.identity,
         host,
         wrapped: false,
         fetch: this.fetch,
@@ -416,7 +420,7 @@ class PlugWallet {
   }
 
   public get publicKey(): PublicKey {
-    return this.identity.getKeyPair().publicKey;
+    return this.identity.getPublicKey();
   }
 
   public get pemFile(): string {
