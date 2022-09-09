@@ -500,10 +500,12 @@ class PlugWallet {
 
   public removeToken = async (args: {
     canisterId: string;
-  }): Promise<RegisteredToken[]> => {
+  }): Promise<TokenBalance[]> => {
     const { canisterId } = args || {};
+    const isDefaultAsset = Object.keys(DEFAULT_MAINNET_ASSETS).includes(canisterId);
 
-    // Register token in network
+    if (isDefaultAsset) return Object.values(this.assets);
+
     const tokens = await this.network.removeToken({
       canisterId,
     });
@@ -517,7 +519,7 @@ class PlugWallet {
 
     this.assets = assets;
 
-    return tokens;
+    return Object.values(this.assets);
   };
 }
 
