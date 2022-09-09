@@ -6,11 +6,13 @@ import {
 export interface PlugState {
   password?: string;
   currentWalletId?: number;
+  mnemonicWalletCount: number;
+  walletIds?: Array<string>
 }
 export interface PlugStateStorage extends PlugState {
-  wallets: Array<JSONWallet>;
+  wallets: { [key : string]: JSONWallet };
 }
 
 export interface PlugStateInstance extends PlugState {
-  wallets: Array<PlugWallet>;
+  wallets: { [key : string]: PlugWallet };
 }

@@ -55,6 +55,10 @@ class PlugWallet {
 
   walletNumber: number;
 
+  walletId: string;
+
+  orderNumber: number;
+
   accountId: string;
 
   principal: string;
@@ -83,7 +87,8 @@ class PlugWallet {
   constructor({
     name,
     icon,
-    walletNumber,
+    walletId,
+    orderNumber,
     connectedApps = [],
     assets = DEFAULT_MAINNET_ASSETS,
     collections = [],
@@ -95,7 +100,8 @@ class PlugWallet {
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
-    this.walletNumber = walletNumber;
+    this.walletId = walletId;
+    this.orderNumber = orderNumber;
     this.assets = assets;
     this.icnsData = icnsData;
     this.identity = identity;
@@ -259,6 +265,8 @@ class PlugWallet {
   public toJSON = (): JSONWallet => ({
     name: this.name,
     walletNumber: this.walletNumber,
+    walletId: this.walletId,
+    orderNumber: this.orderNumber,
     principal: this.identity.getPrincipal().toText(),
     accountId: this.accountId,
     icon: this.icon,

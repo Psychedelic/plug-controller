@@ -13,7 +13,8 @@ export interface ICNSData {
   
 export interface PlugWalletArgs {
     name?: string;
-    walletNumber: number;
+    walletId: string;
+    orderNumber: number;
     icon?: string;
     connectedApps?: Array<ConnectedApp>;
     assets?: Assets;
@@ -32,6 +33,8 @@ export interface Assets {
 export interface JSONWallet {
     name: string;
     walletNumber: number;
+    walletId: string;
+    orderNumber: number;
     principal: string;
     accountId: string;
     icon?: string;
