@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-underscore-dangle */
-import { TokenInterfaces } from '@psychedelic/dab-js-test';
+import { TokenInterfaces } from '@psychedelic/dab-js';
 import axios from 'axios';
 import { TOKENS } from '../../../constants/tokens';
 

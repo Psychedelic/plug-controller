@@ -6,7 +6,7 @@ import {
   NFTDetails,
   NFTCollection,
   TokenInterfaces,
-} from '@psychedelic/dab-js-test';
+} from '@psychedelic/dab-js';
 import JsonBigInt from 'json-bigint';
 
 import { KeyringStorage, StorageData } from '../interfaces/storage';

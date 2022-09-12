@@ -1,6 +1,6 @@
 import { v4 as uuid } from "uuid";
 import { BinaryBlob } from "@dfinity/candid";
-import { getNFTActor,getNFTInfo, getTokenActor, NFTCollection, standards } from "@psychedelic/dab-js-test";
+import { getNFTActor,getNFTInfo, getTokenActor, NFTCollection, standards } from "@psychedelic/dab-js";
 
 import { ERRORS } from "../../../errors";
 import { validateCanisterId } from "../../utils";

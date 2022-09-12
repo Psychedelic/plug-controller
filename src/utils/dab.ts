@@ -1,7 +1,7 @@
 import {
   getCanisterInfo as getCanisterInfoFromDab,
   getMultipleCanisterInfo as getMultipleCanisterInfoFromDab,
-} from '@psychedelic/dab-js-test';
+} from '@psychedelic/dab-js';
 import { HttpAgent } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
 import crossFetch from 'cross-fetch';

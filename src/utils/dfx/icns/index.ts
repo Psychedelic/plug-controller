@@ -8,7 +8,7 @@ import Resolver, { DefaultInfoExt } from '../../../interfaces/icns_resolver';
 import Registry, { RecordExt } from '../../../interfaces/icns_registry';
 import ReverseRegistrar from '../../../interfaces/icns_reverse_registrar';
 import { Principal } from "@dfinity/principal";
-import { NFTCollection, standards } from "@psychedelic/dab-js-test";
+import { NFTCollection, standards } from "@psychedelic/dab-js";
 import { ERRORS } from "../../../errors";
 
 const ICNS_REGISTRY_ID = 'e5kvl-zyaaa-aaaan-qabaq-cai';

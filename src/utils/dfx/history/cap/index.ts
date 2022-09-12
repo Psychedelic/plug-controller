@@ -6,7 +6,7 @@ import {
   prettifyCapTransactions,
   TransactionPrettified,
 } from '@psychedelic/cap-js';
-import { getTokens, getAllNFTS, TokenRegistry } from '@psychedelic/dab-js-test';
+import { getTokens, getAllNFTS, TokenRegistry } from '@psychedelic/dab-js';
 import crossFetch from 'cross-fetch';
 
 import { getCanisterInfo } from '../../../dab';

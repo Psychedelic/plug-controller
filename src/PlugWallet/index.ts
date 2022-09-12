@@ -14,7 +14,7 @@ import {
   getAllUserNFTs,
   getUserCollectionTokens,
   DABCollection
-} from '@psychedelic/dab-js-test';
+} from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
 import { ERRORS } from '../errors';
@@ -149,13 +149,14 @@ class PlugWallet {
 
       const collectionWithTokens = destructuredCustomNft.map(async (c) => {
         const cDABCollection: DABCollection = {
+          ...c,
+          principal_id: Principal.fromText(c.principal_id),
           icon: c.icon || '',
-          principal_id: c.principal_id as unknown as Principal,
           name: c.name,
           description: c.description || '',
           standard: c.standard,
         }
-        const tokens = getUserCollectionTokens(cDABCollection, this.principal as unknown as Principal, this.agent);
+        const tokens = getUserCollectionTokens(cDABCollection, Principal.fromText(this.principal), this.agent);
         return tokens
       });
       const resultCollectionWithTokens = await Promise.all(collectionWithTokens);
