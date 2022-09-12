@@ -8,7 +8,8 @@ import {
   blobToHex,
   BinaryBlob,
 } from '@dfinity/candid';
-import { PublicKey, SignIdentity } from '@dfinity/agent';
+import { PublicKey } from '@dfinity/agent';
+import { GenericSignIdentity } from '../../identity/genericSignIdentity'
 import Secp256k1PublicKey from './publicKey';
 
 declare type PublicKeyHex = string;
@@ -26,7 +27,7 @@ const PRIV_KEY_INIT = '30740201010420';
 
 const KEY_SEPARATOR = 'a00706052b8104000aa144034200';
 
-class Secp256k1KeyIdentity extends SignIdentity {
+class Secp256k1KeyIdentity extends GenericSignIdentity {
   public static fromParsedJson(obj: [string, string]): Secp256k1KeyIdentity {
     const [publicKeyRaw, privateKeyRaw] = obj;
     return new Secp256k1KeyIdentity(
@@ -110,8 +111,8 @@ class Secp256k1KeyIdentity extends SignIdentity {
   /**
    * Serialize this key to JSON.
    */
-  public toJSON(): JsonableSecp256k1Identity {
-    return [blobToHex(this._publicKey.toRaw()), blobToHex(this._privateKey)];
+  public toJSON(): string {
+    return JSON.stringify([blobToHex(this._publicKey.toRaw()), blobToHex(this._privateKey)]);
   }
 
   /**

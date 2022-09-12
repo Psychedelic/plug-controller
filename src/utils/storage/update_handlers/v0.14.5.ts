@@ -1,7 +1,7 @@
 import { TOKENS } from '../../../constants/tokens';
-import { PlugState } from '../../../interfaces/plug_keyring';
+import { PlugStateStorage } from '../../../interfaces/plug_keyring';
 
-export default (storage: any): PlugState => ({
+export default (storage: any): PlugStateStorage => ({
   ...storage,
   wallets: storage.wallets.map(wallet => ({
     ...wallet,
