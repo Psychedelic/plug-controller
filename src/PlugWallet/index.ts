@@ -12,8 +12,6 @@ import {
   addAddress,
   removeAddress,
   getAllUserNFTs,
-  getUserCollectionTokens,
-  DABCollection
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
@@ -45,7 +43,7 @@ import {
 } from '../utils/dfx/icns/utils';
 import { Address } from '../interfaces/contact_registry';
 import { Network } from '../PlugKeyRing/modules/NetworkModule';
-import { RegisteredNFT, RegisteredToken, uniqueTokens } from '../PlugKeyRing/modules/NetworkModule/Network';
+import { RegisteredToken, uniqueTokens } from '../PlugKeyRing/modules/NetworkModule/Network';
 import { getAccountId } from '../utils/account';
 import { Types } from '../utils/account/constants';
 import { GenericSignIdentity } from '../utils/identity/genericSignIdentity'

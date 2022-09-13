@@ -43,13 +43,14 @@ export interface JSONWallet {
         canisterId: string;
         standard: string;
         tokens: Array<{
-            index: number;
+            index: string;
             canister: string;
             id?: string;
             name?: string;
             url: string;
             metadata: any;
             collection?: string;
+            standard: string;
         }>;
     }>;
     icnsData: ICNSData;
