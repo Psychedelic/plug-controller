@@ -105,7 +105,7 @@ export class Network {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const agent = this.createAgent({ secretKey });
+    const agent = this.createAgent( secretKey );
     const nftActor = getNFTActor({ canisterId, agent, standard });
     const metadata = await nftActor.getMetadata();
     const nft = {...metadata, registeredBy: []};

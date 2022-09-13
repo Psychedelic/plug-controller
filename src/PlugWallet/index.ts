@@ -49,6 +49,7 @@ import { RegisteredNFT, RegisteredToken, uniqueTokens } from '../PlugKeyRing/mod
 import { getAccountId } from '../utils/account';
 import { Types } from '../utils/account/constants';
 import { GenericSignIdentity } from '../utils/identity/genericSignIdentity'
+import { getTokensFromCollections } from '../utils/getTokensFromCollection';
 
 class PlugWallet {
   name: string;
@@ -145,26 +146,11 @@ class PlugWallet {
       });
       const customNfts = this.network.registeredNFTS;
       
-      const destructuredCustomNft = customNfts.map(c => {
-        return {...c, principal_id: c.canisterId};
-      });
-
-      const collectionWithTokens = destructuredCustomNft.map(async (c) => {
-        const cDABCollection: DABCollection = {
-          ...c,
-          principal_id: Principal.fromText(c.principal_id),
-          icon: c.icon || '',
-          name: c.name,
-          description: c.description || '',
-          standard: c.standard,
-        }
-        const tokens = getUserCollectionTokens(cDABCollection, Principal.fromText(this.principal), this.agent);
-        return tokens
-      });
-      const resultCollectionWithTokens = await Promise.all(collectionWithTokens);
+      const collectionWithTokens = await getTokensFromCollections(customNfts, this.principal, this.agent);
+      
       const icnsCollection = await icnsAdapter.getICNSCollection();
 
-      this.collections = uniqueTokens([...this.collections, icnsCollection, ...resultCollectionWithTokens]);
+      this.collections = uniqueTokens([...this.collections, icnsCollection, ...collectionWithTokens]);
 
       return this.collections;
     } catch (e) {
@@ -172,6 +158,7 @@ class PlugWallet {
       return null;
     }
   };
+
 
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
   public getNFTs = async (args?: {
@@ -187,28 +174,12 @@ class PlugWallet {
 
       const customNfts = this.network.registeredNFTS;
       
-      const destructuredCustomNft = customNfts.map(c => {
-        return {...c, principal_id: c.canisterId};
-      });
+      const collectionWithTokens = await getTokensFromCollections(customNfts, this.principal, this.agent);
 
-      const collectionWithTokens = destructuredCustomNft.map(async (c) => {
-        const cDABCollection: DABCollection = {
-          icon: c.icon || '',
-          principal_id: Principal.fromText(c.principal_id),
-          name: c.name,
-          description: c.description || '',
-          standard: c.standard,
-        }
-
-        const tokens = getUserCollectionTokens(cDABCollection, Principal.fromText(this.principal), this.agent);
-        return tokens
-      });
-
-      const resultCollectionWithTokens = await Promise.all(collectionWithTokens);
       const icnsCollection = await icnsAdapter.getICNSCollection();
       
 
-      this.collections = uniqueTokens([...this.collections, icnsCollection, ...resultCollectionWithTokens]);
+      this.collections = uniqueTokens([...this.collections, icnsCollection, ...collectionWithTokens]);
 
 
       return this.collections;
