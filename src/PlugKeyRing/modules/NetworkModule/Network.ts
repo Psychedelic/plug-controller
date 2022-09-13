@@ -101,11 +101,11 @@ export class Network {
     return token;
   }
 
-  public getNftInfo = async ({ canisterId, secretKey, standard }) => {
+  public getNftInfo = async ({ canisterId, identity, standard }) => {
     if (!validateCanisterId(canisterId)) {
       throw new Error(ERRORS.INVALID_CANISTER_ID);
     }
-    const agent = this.createAgent( secretKey );
+    const agent = this.createAgent( identity );
     const nftActor = getNFTActor({ canisterId, agent, standard });
     const metadata = await nftActor.getMetadata();
     const nft = {...metadata, registeredBy: []};
@@ -114,11 +114,11 @@ export class Network {
   }
 
   public registerNFT = async ({
-    canisterId, standard, walletId, secretKey,
+    canisterId, standard, walletId, identity,
   }) => {
     const nft = this.registeredNFTS.find(({ canisterId: id }) => id === canisterId);
     if (!nft) {
-      await this.getNftInfo({canisterId, secretKey, standard});
+      await this.getNftInfo({canisterId, identity, standard});
     }
     this.registeredNFTS = this.registeredNFTS.map(n => n.canisterId === canisterId ? {...n, registeredBy: [...n?.registeredBy, walletId]} : n);
     await this.onChange?.();

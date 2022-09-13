@@ -235,12 +235,12 @@ class PlugWallet {
   }
 
   public getNFTInfo = async ({ canisterId, standard }) => {
-    const nft = await this.network.getNftInfo({ canisterId, secretKey: this.identity.getKeyPair().secretKey, standard });
+    const nft = await this.network.getNftInfo({ canisterId, identity: this.identity, standard });
     return nft;
   }
 
   public registerNFT = async ({canisterId, standard}) => {
-    const nfts = await this.network.registerNFT({canisterId, standard, walletId: this.walletNumber, secretKey: this.identity.getKeyPair().secretKey});
+    const nfts = await this.network.registerNFT({canisterId, standard, walletId: this.walletNumber, identity: this.identity});
     if (nfts) {
       this.collections = [...this.collections, nfts[0]];
     }
