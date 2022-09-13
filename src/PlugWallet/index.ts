@@ -12,6 +12,7 @@ import {
   addAddress,
   removeAddress,
   getAllUserNFTs,
+  FungibleMetadata,
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
@@ -307,9 +308,13 @@ class PlugWallet {
       });
 
       const balance = await tokenActor.getBalance(this.identity.getPrincipal());
+      const tokenMetadata = await tokenActor.getMetadata() as FungibleMetadata;
       return {
         amount: balance.value,
-        token,
+        token: {
+          ...token,
+          ...(tokenMetadata?.fungible || {}),
+        },
       };
     } catch (e) {
       console.warn('Get Balance error:', e);
