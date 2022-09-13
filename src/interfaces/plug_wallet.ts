@@ -32,7 +32,6 @@ export interface Assets {
 
 export interface JSONWallet {
     name: string;
-    walletNumber: number;
     walletId: string;
     orderNumber: number;
     principal: string;

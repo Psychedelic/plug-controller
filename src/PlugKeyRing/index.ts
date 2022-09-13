@@ -158,11 +158,11 @@ class PlugKeyRing {
       const newVersion = getVersion();
       const _decrypted =
         newVersion !== version
-          ? handleStorageUpdate(version, this.decryptState(vault, password))
+          ? handleStorageUpdate(version, { ...this.decryptState(vault, password), networkModule } )
           : this.decryptState(vault, password);
       const { mnemonic, mnemonicWalletCount, ...decrypted } = _decrypted;
       this.networkModule = new NetworkModule({
-        ...(networkModule || _decrypted.networkModule || {}),
+        ...(newVersion !== version ?  (_decrypted.networkModule || {}) : networkModule),
         fetch: this.fetch,
         storage: this.storage,
         onNetworkChange: this.exposeWalletMethods.bind(this),

@@ -146,7 +146,8 @@ describe('Plug KeyRing', () => {
   const { identity } = createAccountFromMnemonic(TEST_MNEMONIC,0);
   const testWallet = new PlugWallet({
     name: 'test',
-    walletNumber: 0,
+    walletId: '0',
+    orderNumber: 0,
     fetch,
     network: new Mainnet({}, fetch),
     type: Types.mnemonic,
@@ -165,7 +166,7 @@ describe('Plug KeyRing', () => {
   describe('initialization', () => {
     it('should be empty and locked if not initialized', async () => {
       await expect(() =>
-        keyRing.setCurrentPrincipal(testWallet.walletNumber)
+        keyRing.setCurrentPrincipal(testWallet.walletId)
       ).rejects.toEqual(Error(ERRORS.NOT_INITIALIZED));
       await expect(() => keyRing.unlock(TEST_PASSWORD)).rejects.toEqual(
         Error(ERRORS.NOT_INITIALIZED)
@@ -430,19 +431,19 @@ describe('Plug KeyRing', () => {
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.createPrincipal();
       const wallet = await keyRing.createPrincipal();
-      await keyRing.setCurrentPrincipal(wallet.walletNumber);
-      expect(keyRing.currentWalletId).toEqual(wallet.walletNumber);
+      await keyRing.setCurrentPrincipal(wallet.walletId);
+      expect(keyRing.currentWalletId).toEqual(wallet.walletId);
     });
     it('should fail to set invalid current principal ', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      await expect(() => keyRing.setCurrentPrincipal(1)).rejects.toEqual(
+      await expect(() => keyRing.setCurrentPrincipal('1')).rejects.toEqual(
         new Error(ERRORS.INVALID_WALLET_NUMBER)
       );
-      await expect(() => keyRing.setCurrentPrincipal(-2)).rejects.toEqual(
+      await expect(() => keyRing.setCurrentPrincipal('-2')).rejects.toEqual(
         new Error(ERRORS.INVALID_WALLET_NUMBER)
       );
-      await expect(() => keyRing.setCurrentPrincipal(1.2)).rejects.toEqual(
+      await expect(() => keyRing.setCurrentPrincipal('1.2')).rejects.toEqual(
         new Error(ERRORS.INVALID_WALLET_NUMBER)
       );
     });
@@ -480,9 +481,9 @@ describe('Plug KeyRing', () => {
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.createPrincipal();
       await keyRing.createPrincipal();
-      await keyRing.editPrincipal(0, { name: 'New name1' });
-      await keyRing.editPrincipal(1, { name: 'New name2' });
-      await keyRing.editPrincipal(2, { name: 'New name3' });
+      await keyRing.editPrincipal('0', { name: 'New name1' });
+      await keyRing.editPrincipal('1', { name: 'New name2' });
+      await keyRing.editPrincipal('2', { name: 'New name3' });
 
       const { wallets } = await keyRing.getState();
       expect(wallets[0].name).toEqual('New name1');
@@ -493,13 +494,13 @@ describe('Plug KeyRing', () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       await expect(() =>
-        keyRing.editPrincipal(10, { name: 'New name', emoji: 'test' })
+        keyRing.editPrincipal('10', { name: 'New name', emoji: 'test' })
       ).rejects.toEqual(Error(ERRORS.INVALID_WALLET_NUMBER));
       await expect(() =>
-        keyRing.editPrincipal(-1, { name: 'New name', emoji: 'test' })
+        keyRing.editPrincipal('-1', { name: 'New name', emoji: 'test' })
       ).rejects.toEqual(Error(ERRORS.INVALID_WALLET_NUMBER));
       await expect(() =>
-        keyRing.editPrincipal(1.231, { name: 'New name', emoji: 'test' })
+        keyRing.editPrincipal('1.231', { name: 'New name', emoji: 'test' })
       ).rejects.toEqual(Error(ERRORS.INVALID_WALLET_NUMBER));
     });
     it('should change the wallet icon correctly', async () => {
@@ -507,9 +508,9 @@ describe('Plug KeyRing', () => {
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.createPrincipal();
       await keyRing.createPrincipal();
-      await keyRing.editPrincipal(0, { emoji: '123' });
-      await keyRing.editPrincipal(1, { emoji: 'New emoji2' });
-      await keyRing.editPrincipal(2, { emoji: 'New name3' });
+      await keyRing.editPrincipal('0', { emoji: '123' });
+      await keyRing.editPrincipal('1', { emoji: 'New emoji2' });
+      await keyRing.editPrincipal('2', { emoji: 'New name3' });
 
       const { wallets } = await keyRing.getState();
       expect(wallets[0].icon).toEqual('123');
