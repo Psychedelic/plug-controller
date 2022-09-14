@@ -15,5 +15,6 @@ export const WALLET_METHODS = [
 'addContact',
 'getContacts',
 'deleteContact',
-'getAgent'
+'getAgent',
+'delegateIdentity'
 ];

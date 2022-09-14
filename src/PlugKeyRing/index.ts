@@ -66,6 +66,7 @@ class PlugKeyRing {
   public getBalance: (args: { token: StandardToken, subaccount?: number }) => Promise<TokenBalance>;
   public getTransactions: (args: { subaccount?: number }) => Promise<GetTransactionsResponse>;
   public send: (args: { to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
+  public delegateIdentity: (args: { to: Buffer }) => Promise<string>;
 
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
