@@ -4,7 +4,7 @@ import { Network } from '../../../PlugKeyRing/modules/NetworkModule/Network'
 export default (storage: any) => {
     const walletIds = storage.wallets.map(()=> uuid())
     const networkModule = storage.networkModuleBis || storage.networkModule; 
-    const networks: { [networkId: string]: Network } = networkModule.networks;
+    const networks: { [networkId: string]: Network } = networkModule && networkModule.networks;
 
     const editedNetworks = ((networks && Object.values(networks)) || []).map((network) => ({
       ...network,
@@ -21,7 +21,7 @@ export default (storage: any) => {
       ...accum,
       [network.id]: network,
     }), {})
-
+    
     return {
         ...storage, 
         wallets: storage.wallets.reduce(
@@ -34,9 +34,9 @@ export default (storage: any) => {
           }, {}),
         walletIds,
         mnemonicWalletCount: walletIds.length,
-        networkModule: {
+        ...(networks &&  { networkModule: {
           ...storage.networkModule,
           networks: finalNetwork
-        },
+        } } ),
     }
 };
