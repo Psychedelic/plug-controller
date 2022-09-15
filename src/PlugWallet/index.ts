@@ -57,6 +57,8 @@ class PlugWallet {
 
   orderNumber: number;
 
+  walletNumber?: number;
+
   accountId: string;
 
   principal: string;
@@ -87,6 +89,7 @@ class PlugWallet {
     icon,
     walletId,
     orderNumber,
+    walletNumber,
     connectedApps = [],
     assets = DEFAULT_MAINNET_ASSETS,
     collections = [],
@@ -100,6 +103,7 @@ class PlugWallet {
     this.icon = icon;
     this.walletId = walletId;
     this.orderNumber = orderNumber;
+    this.walletNumber = walletNumber;
     this.assets = assets;
     this.icnsData = icnsData;
     this.identity = identity;
@@ -264,6 +268,7 @@ class PlugWallet {
     name: this.name,
     walletId: this.walletId,
     orderNumber: this.orderNumber,
+    walletNumber: this.walletNumber,
     principal: this.identity.getPrincipal().toText(),
     accountId: this.accountId,
     icon: this.icon,

@@ -51,22 +51,22 @@ class PlugKeyRing {
   private networkModule: NetworkModule;
 
   // wallet methods
-  public getBalances: (args?: { subaccount?: number }) => Promise<Array<TokenBalance>>;
-  public getNFTs: (args?: { subaccount?: number, refresh?: boolean }) => Promise<NFTCollection[] | null>;
-  public transferNFT: (args: { subaccount?: number; token: NFTDetails; to: string; standard: string; }) => Promise<NFTCollection[]>;
-  public burnXTC: (args?: { to: string; amount: string; subaccount: number; }) => Promise<TokenInterfaces.BurnResult>;
-  public registerToken: (args: { canisterId: string; standard?: string; subaccount?: number; logo?: string; }) => Promise<Array<TokenBalance>>;
-  public removeToken: (args: { canisterId: string; subaccount?: number; }) => Promise<Array<TokenBalance>>;
-  public getTokenInfo: (args: { canisterId: string, standard?: string, subaccount?: number }) => Promise<TokenBalance>;
-  public getICNSData: (args: { subaccount?: number  }) => Promise<{ names: string[]; reverseResolvedName: string | undefined }>;
-  public setReverseResolvedName: (args: { name: string, subaccount?: number }) => Promise<string>;
-  public sign: (args: { payload: BinaryBlob, subaccount?: number }) => Promise<BinaryBlob>;
-  public getContacts: (args: { subaccount?: number }) => Promise<Array<Address>>;
-  public addContact: (args: { contact: Address, subaccount?: number }) => Promise<boolean>;
-  public deleteContact: (args: { addressName: string, subaccount?: number }) => Promise<boolean>;
-  public getAgent: (args?: { subaccount ?: number, host?: string }) => HttpAgent;
-  public getBalance: (args: { token: StandardToken, subaccount?: number }) => Promise<TokenBalance>;
-  public getTransactions: (args: { subaccount?: number }) => Promise<GetTransactionsResponse>;
+  public getBalances: (args?: { subaccount?: string }) => Promise<Array<TokenBalance>>;
+  public getNFTs: (args?: { subaccount?: string, refresh?: boolean }) => Promise<NFTCollection[] | null>;
+  public transferNFT: (args: { subaccount?: string; token: NFTDetails; to: string; standard: string; }) => Promise<NFTCollection[]>;
+  public burnXTC: (args?: { to: string; amount: string; subaccount: string; }) => Promise<TokenInterfaces.BurnResult>;
+  public registerToken: (args: { canisterId: string; standard?: string; subaccount?: string; logo?: string; }) => Promise<Array<TokenBalance>>;
+  public removeToken: (args: { canisterId: string; subaccount?: string; }) => Promise<Array<TokenBalance>>;
+  public getTokenInfo: (args: { canisterId: string, standard?: string, subaccount?: string }) => Promise<TokenBalance>;
+  public getICNSData: (args: { subaccount?: string  }) => Promise<{ names: string[]; reverseResolvedName: string | undefined }>;
+  public setReverseResolvedName: (args: { name: string, subaccount?: string }) => Promise<string>;
+  public sign: (args: { payload: BinaryBlob, subaccount?: string }) => Promise<BinaryBlob>;
+  public getContacts: (args: { subaccount?: string }) => Promise<Array<Address>>;
+  public addContact: (args: { contact: Address, subaccount?: string }) => Promise<boolean>;
+  public deleteContact: (args: { addressName: string, subaccount?: string }) => Promise<boolean>;
+  public getAgent: (args?: { subaccount ?: string, host?: string }) => HttpAgent;
+  public getBalance: (args: { token: StandardToken, subaccount?: string }) => Promise<TokenBalance>;
+  public getTransactions: (args: { subaccount?: string }) => Promise<GetTransactionsResponse>;
   public send: (args: { to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
 
   public constructor(
@@ -154,11 +154,12 @@ class PlugKeyRing {
   private loadFromPersistance = async (password: string): Promise<void> => {
     const storage = ((await this.storage.get()) || {}) as StorageData;
     const { vault, isInitialized, currentWalletId, version, networkModule } = storage;
+    const networkModuleBis = networkModule;
     if (isInitialized && vault) {
       const newVersion = getVersion();
       const _decrypted =
         newVersion !== version
-          ? handleStorageUpdate(version, { ...this.decryptState(vault, password), networkModule } )
+          ? handleStorageUpdate(version, { ...this.decryptState(vault, password), networkModuleBis } )
           : this.decryptState(vault, password);
       const { mnemonic, mnemonicWalletCount, ...decrypted } = _decrypted;
       this.networkModule = new NetworkModule({

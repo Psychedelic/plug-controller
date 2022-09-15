@@ -526,17 +526,17 @@ describe('Plug KeyRing', () => {
       await keyRing.registerToken({
         canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai',
         standard: 'xtc',
-        subaccount: 1,
+        subaccount: '1',
       }); // register WTC to other subaccounts
       await keyRing.registerToken({
         canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai',
         standard: 'xtc',
-        subaccount: 2,
+        subaccount: '2',
       }); // register WTC
       await keyRing.registerToken({
         canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai',
         standard: 'xtc',
-        subaccount: 2,
+        subaccount: '2',
       }); // register WTC twice
 
       const { wallets } = await keyRing.getState();
@@ -620,17 +620,17 @@ describe('Plug KeyRing', () => {
       let ind = Math.round(Math.random() * (walletsCreated - 1));
       if (ind === 0) ind++;
 
-      expect(await keyRing.getBalances({ subaccount: ind })).toBe(
+      expect(await keyRing.getBalances({ subaccount: 'ind' })).toBe(
         balances[ind]
       );
     });
 
     test('get error with invalid wallet numbers', async () => {
-      await expect(keyRing.getBalances({ subaccount: -2 })).rejects.toThrow(
+      await expect(keyRing.getBalances({ subaccount: '-2' })).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
       await expect(
-        keyRing.getBalances({ subaccount: walletsCreated + 2 })
+        keyRing.getBalances({ subaccount: 'walletsCreated + 2' })
       ).rejects.toThrow(ERRORS.INVALID_WALLET_NUMBER);
     });
   });
@@ -660,17 +660,17 @@ describe('Plug KeyRing', () => {
     test('get specific transactions', async () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
 
-      expect(await keyRing.getTransactions({ subaccount: ind })).toBe(
+      expect(await keyRing.getTransactions({ subaccount: 'ind' })).toBe(
         transactions[ind]
       );
     });
 
     test('get error with invalid wallet numbers', async () => {
-      await expect(keyRing.getTransactions({ subaccount: -2 })).rejects.toThrow(
+      await expect(keyRing.getTransactions({ subaccount: '-2' })).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
       await expect(
-        keyRing.getTransactions({ subaccount: walletsCreated + 2 })
+        keyRing.getTransactions({ subaccount: 'walletsCreated + 2' })
       ).rejects.toThrow(ERRORS.INVALID_WALLET_NUMBER);
     });
   });
@@ -726,7 +726,7 @@ describe('Plug KeyRing', () => {
         expect(nfts).toEqual([mockdeNFTCollection]);
       });
       it('should fail to fetch NFTs on inexistant account', async () => {
-        await expect(keyRing.getNFTs({ subaccount: 1 })).rejects.toThrow(
+        await expect(keyRing.getNFTs({ subaccount: '1' })).rejects.toThrow(
           ERRORS.INVALID_WALLET_NUMBER
         );
       });

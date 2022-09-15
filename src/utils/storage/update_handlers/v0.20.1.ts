@@ -3,9 +3,10 @@ import { Network } from '../../../PlugKeyRing/modules/NetworkModule/Network'
 
 export default (storage: any) => {
     const walletIds = storage.wallets.map(()=> uuid())
-    const networks: { [networkId: string]: Network } = storage.networkModule?.networks;
+    const networkModule = storage.networkModuleBis || storage.networkModule; 
+    const networks: { [networkId: string]: Network } = networkModule.networks;
 
-    const editedNetworks = (Object.values(networks) || []).map((network) => ({
+    const editedNetworks = ((networks && Object.values(networks)) || []).map((network) => ({
       ...network,
       registeredTokens: network.registeredTokens.map((token)=> {
         const registeredBy = token.registeredBy.map((walletNumber) => walletIds[walletNumber]);

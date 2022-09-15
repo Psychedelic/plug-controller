@@ -15,6 +15,7 @@ export interface PlugWalletArgs {
     name?: string;
     walletId: string;
     orderNumber: number;
+    walletNumber?: number;
     icon?: string;
     connectedApps?: Array<ConnectedApp>;
     assets?: Assets;
@@ -34,6 +35,7 @@ export interface JSONWallet {
     name: string;
     walletId: string;
     orderNumber: number;
+    walletNumber?: number;
     principal: string;
     accountId: string;
     icon?: string;
