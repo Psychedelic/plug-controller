@@ -313,7 +313,7 @@ class PlugWallet {
         amount: balance.value,
         token: {
           ...token,
-          ...(tokenMetadata?.fungible || {}),
+          fee: tokenMetadata?.fungible?.fee,
         },
       };
     } catch (e) {
