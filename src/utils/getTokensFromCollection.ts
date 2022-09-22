@@ -22,3 +22,4 @@ export const getTokensFromCollections = async (customNfts, principal, agent) => 
 
     return resultCollectionWithTokens;
   }
+  
