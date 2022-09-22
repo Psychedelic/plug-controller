@@ -4,11 +4,10 @@ import handler14_5 from './update_handlers/v0.14.5';
 import handler16_8 from './update_handlers/v0.16.8';
 import handler19_3 from './update_handlers/v0.19.3';
 import handler20_0 from './update_handlers/v0.20.0';
-import handler20_1 from './update_handlers/v0.20.1';
+import handler21_0 from './update_handlers/v0.21.0';
 
 import { PlugStateStorage } from '../../interfaces/plug_keyring';
 import { NetworkModuleParams } from '../../PlugKeyRing/modules/NetworkModule';
-
 
 export const isEmpty = (obj): boolean => Object.keys(obj).length === 0;
 
@@ -30,9 +29,18 @@ export const checkForError = (): Error | undefined => {
   return new Error(lastError.message);
 };
 
-const VERSION_PATH: Array<string> = ['0.14.1', '0.14.5', '0.16.8', '0.19.3', '0.20.0', '0.20.1'];
+const VERSION_PATH: Array<string> = [
+  '0.14.1',
+  '0.14.5',
+  '0.16.8',
+  '0.19.3',
+  '0.20.0',
+  '0.21.0',
+];
 
-const VERSION_HANDLER: { [version: string]: (storage: any) => PlugStateStorage } = {
+const VERSION_HANDLER: {
+  [version: string]: (storage: any) => PlugStateStorage;
+} = {
   '0.14.1': (storage: any) => {
     return storage;
   },
@@ -40,7 +48,7 @@ const VERSION_HANDLER: { [version: string]: (storage: any) => PlugStateStorage }
   '0.16.8': handler16_8,
   '0.19.3': handler19_3,
   '0.20.0': handler20_0,
-  '0.20.1': handler20_1,
+  '0.21.0': handler21_0,
 };
 
 const compareVersion = (a: string, b: string): number => {
@@ -72,7 +80,10 @@ const getVersionIndex = (version: string | undefined): number => {
 export const handleStorageUpdate = (
   storageVersion: string | undefined,
   storage: any
-): PlugStateStorage & { mnemonic: string, networkModule?: NetworkModuleParams } => {
+): PlugStateStorage & {
+  mnemonic: string;
+  networkModule?: NetworkModuleParams;
+} => {
   const index = getVersionIndex(storageVersion);
   if (index === VERSION_PATH.length) return storage;
 
