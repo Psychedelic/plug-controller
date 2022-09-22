@@ -34,6 +34,7 @@ export default (storage: any) => {
           }, {}),
         walletIds,
         mnemonicWalletCount: walletIds.length,
+        currentWalletId: walletIds[0],
         ...(networks &&  { networkModule: {
           ...storage.networkModule,
           networks: finalNetwork

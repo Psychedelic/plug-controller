@@ -5,7 +5,7 @@ import {
 
 export interface PlugState {
   password?: string;
-  currentWalletId?: number;
+  currentWalletId?: string;
   mnemonicWalletCount: number;
   walletIds?: Array<string>
 }

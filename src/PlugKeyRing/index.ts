@@ -184,7 +184,7 @@ class PlugKeyRing {
 
       this.state = { ...decrypted, wallets, mnemonicWalletCount };
       this.isInitialized = isInitialized;
-      this.currentWalletId = currentWalletId;
+      this.currentWalletId = newVersion !== version ? (decrypted.currentWalletId || this.currentWalletId) : currentWalletId;
       this.exposeWalletMethods();
       if (newVersion !== version) {
         await this.saveEncryptedState({ wallets, mnemonicWalletCount }, password, mnemonic);
