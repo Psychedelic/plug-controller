@@ -93,6 +93,7 @@ export class Network {
     }
     const token:RegisteredToken = { ...metadata.fungible, canisterId, standard, registeredBy: []};
 
+    // TODO: Remove when issue solved
     if(canisterId === TOKENS.DUST) {
       token.logo = undefined;
     }
