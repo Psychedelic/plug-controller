@@ -91,7 +91,13 @@ export class Network {
     if (!('fungible' in metadata)) {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
     }
-    const token = { ...metadata.fungible, canisterId, standard, registeredBy: [] };
+    const token:RegisteredToken = { ...metadata.fungible, canisterId, standard, registeredBy: []};
+
+    // TODO: Remove when issue solved
+    if(canisterId === TOKENS.DUST) {
+      token.logo = undefined;
+    }
+
     this.registeredTokens = uniqueTokens([...this.registeredTokens, token]);
     return token;
   }
