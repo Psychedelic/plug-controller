@@ -27,9 +27,9 @@ export type EditNetworkParams = {
   ledgerCanisterId?: string;
 }
 
-export type RegisteredToken = StandardToken & { registeredBy: Array<number> };
+export type RegisteredToken = StandardToken & { registeredBy: Array<string> };
 
-export type RegisteredNFT = NFTCollection &  { registeredBy: Array<number> };
+export type RegisteredNFT = NFTCollection &  { registeredBy: Array<string> };
 // Function that takes in an array of tokens and returns an array without duplicates
 export const uniqueTokens = (tokens) => {
   const uniqueTokens = tokens.filter((token, index) => {
