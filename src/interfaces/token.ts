@@ -6,6 +6,7 @@ export interface StandardToken {
     decimals: number;
     color?: string;
     logo?: string;
+    fee?: bigint | number;
 }
 
 export interface TokenBalance {

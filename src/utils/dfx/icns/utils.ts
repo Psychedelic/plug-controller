@@ -7,7 +7,8 @@ export const getMappingValue = (pid: string, mappings: ICNSMapping) => ({ princi
 
 export const replacePrincipalsForICNS = (tx: InferredTransaction, mappings: ICNSMapping): InferredTransaction => {
   const parsedTx = { ...tx };
-  const { from, to } = parsedTx?.details || {};
+  const { from: detailFrom, to } = parsedTx?.details || {};
+  const from = detailFrom || parsedTx?.caller;
   parsedTx.details = {
     ...parsedTx.details,
     from: getMappingValue(from, mappings),
