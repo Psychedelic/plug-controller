@@ -54,7 +54,11 @@ class PlugWallet {
 
   icon?: string;
 
-  walletNumber: number;
+  walletId: string;
+
+  orderNumber: number;
+
+  walletNumber?: number;
 
   accountId: string;
 
@@ -84,6 +88,8 @@ class PlugWallet {
   constructor({
     name,
     icon,
+    walletId,
+    orderNumber,
     walletNumber,
     connectedApps = [],
     assets = DEFAULT_MAINNET_ASSETS,
@@ -96,6 +102,8 @@ class PlugWallet {
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
+    this.walletId = walletId;
+    this.orderNumber = orderNumber;
     this.walletNumber = walletNumber;
     this.assets = assets;
     this.icnsData = icnsData;
@@ -221,7 +229,7 @@ class PlugWallet {
     const tokens = await this.network.registerToken({
       canisterId,
       standard,
-      walletId: this.walletNumber,
+      walletId: this.walletId,
       defaultIdentity: this.identity,
       logo,
     });
@@ -259,6 +267,8 @@ class PlugWallet {
 
   public toJSON = (): JSONWallet => ({
     name: this.name,
+    walletId: this.walletId,
+    orderNumber: this.orderNumber,
     walletNumber: this.walletNumber,
     principal: this.identity.getPrincipal().toText(),
     accountId: this.accountId,
@@ -332,7 +342,7 @@ class PlugWallet {
    */
   public getBalances = async (): Promise<Array<TokenBalance>> => {
     // Get Custom Token Balances
-    const walletTokens = this.network.getTokens(this.walletNumber);
+    const walletTokens = this.network.getTokens(this.walletId);
     const tokenBalances = await Promise.all(walletTokens.map(token => this.getTokenBalance({ token })));
     const assets = tokenBalances.reduce((acc, token) => ({ ...acc, [token.token.canisterId]: token }), {});
     this.assets = assets;

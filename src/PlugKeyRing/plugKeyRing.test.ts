@@ -146,7 +146,8 @@ describe('Plug KeyRing', () => {
   const { identity } = createAccountFromMnemonic(TEST_MNEMONIC,0);
   const testWallet = new PlugWallet({
     name: 'test',
-    walletNumber: 0,
+    walletId: '0',
+    orderNumber: 0,
     fetch,
     network: new Mainnet({}, fetch),
     type: Types.mnemonic,
@@ -165,7 +166,7 @@ describe('Plug KeyRing', () => {
   describe('initialization', () => {
     it('should be empty and locked if not initialized', async () => {
       await expect(() =>
-        keyRing.setCurrentPrincipal(testWallet.walletNumber)
+        keyRing.setCurrentPrincipal(testWallet.walletId)
       ).rejects.toEqual(Error(ERRORS.NOT_INITIALIZED));
       await expect(() => keyRing.unlock(TEST_PASSWORD)).rejects.toEqual(
         Error(ERRORS.NOT_INITIALIZED)
@@ -430,19 +431,19 @@ describe('Plug KeyRing', () => {
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.createPrincipal();
       const wallet = await keyRing.createPrincipal();
-      await keyRing.setCurrentPrincipal(wallet.walletNumber);
-      expect(keyRing.currentWalletId).toEqual(wallet.walletNumber);
+      await keyRing.setCurrentPrincipal(wallet.walletId);
+      expect(keyRing.currentWalletId).toEqual(wallet.walletId);
     });
     it('should fail to set invalid current principal ', async () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
-      await expect(() => keyRing.setCurrentPrincipal(1)).rejects.toEqual(
+      await expect(() => keyRing.setCurrentPrincipal('1')).rejects.toEqual(
         new Error(ERRORS.INVALID_WALLET_NUMBER)
       );
-      await expect(() => keyRing.setCurrentPrincipal(-2)).rejects.toEqual(
+      await expect(() => keyRing.setCurrentPrincipal('-2')).rejects.toEqual(
         new Error(ERRORS.INVALID_WALLET_NUMBER)
       );
-      await expect(() => keyRing.setCurrentPrincipal(1.2)).rejects.toEqual(
+      await expect(() => keyRing.setCurrentPrincipal('1.2')).rejects.toEqual(
         new Error(ERRORS.INVALID_WALLET_NUMBER)
       );
     });
@@ -480,9 +481,9 @@ describe('Plug KeyRing', () => {
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.createPrincipal();
       await keyRing.createPrincipal();
-      await keyRing.editPrincipal(0, { name: 'New name1' });
-      await keyRing.editPrincipal(1, { name: 'New name2' });
-      await keyRing.editPrincipal(2, { name: 'New name3' });
+      await keyRing.editPrincipal('0', { name: 'New name1' });
+      await keyRing.editPrincipal('1', { name: 'New name2' });
+      await keyRing.editPrincipal('2', { name: 'New name3' });
 
       const { wallets } = await keyRing.getState();
       expect(wallets[0].name).toEqual('New name1');
@@ -493,13 +494,13 @@ describe('Plug KeyRing', () => {
       await keyRing.create({ password: TEST_PASSWORD });
       await keyRing.unlock(TEST_PASSWORD);
       await expect(() =>
-        keyRing.editPrincipal(10, { name: 'New name', emoji: 'test' })
+        keyRing.editPrincipal('10', { name: 'New name', emoji: 'test' })
       ).rejects.toEqual(Error(ERRORS.INVALID_WALLET_NUMBER));
       await expect(() =>
-        keyRing.editPrincipal(-1, { name: 'New name', emoji: 'test' })
+        keyRing.editPrincipal('-1', { name: 'New name', emoji: 'test' })
       ).rejects.toEqual(Error(ERRORS.INVALID_WALLET_NUMBER));
       await expect(() =>
-        keyRing.editPrincipal(1.231, { name: 'New name', emoji: 'test' })
+        keyRing.editPrincipal('1.231', { name: 'New name', emoji: 'test' })
       ).rejects.toEqual(Error(ERRORS.INVALID_WALLET_NUMBER));
     });
     it('should change the wallet icon correctly', async () => {
@@ -507,9 +508,9 @@ describe('Plug KeyRing', () => {
       await keyRing.unlock(TEST_PASSWORD);
       await keyRing.createPrincipal();
       await keyRing.createPrincipal();
-      await keyRing.editPrincipal(0, { emoji: '123' });
-      await keyRing.editPrincipal(1, { emoji: 'New emoji2' });
-      await keyRing.editPrincipal(2, { emoji: 'New name3' });
+      await keyRing.editPrincipal('0', { emoji: '123' });
+      await keyRing.editPrincipal('1', { emoji: 'New emoji2' });
+      await keyRing.editPrincipal('2', { emoji: 'New name3' });
 
       const { wallets } = await keyRing.getState();
       expect(wallets[0].icon).toEqual('123');
@@ -525,17 +526,17 @@ describe('Plug KeyRing', () => {
       await keyRing.registerToken({
         canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai',
         standard: 'xtc',
-        subaccount: 1,
+        subaccount: '1',
       }); // register WTC to other subaccounts
       await keyRing.registerToken({
         canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai',
         standard: 'xtc',
-        subaccount: 2,
+        subaccount: '2',
       }); // register WTC
       await keyRing.registerToken({
         canisterId: '5ymop-yyaaa-aaaah-qaa4q-cai',
         standard: 'xtc',
-        subaccount: 2,
+        subaccount: '2',
       }); // register WTC twice
 
       const { wallets } = await keyRing.getState();
@@ -619,17 +620,17 @@ describe('Plug KeyRing', () => {
       let ind = Math.round(Math.random() * (walletsCreated - 1));
       if (ind === 0) ind++;
 
-      expect(await keyRing.getBalances({ subaccount: ind })).toBe(
+      expect(await keyRing.getBalances({ subaccount: 'ind' })).toBe(
         balances[ind]
       );
     });
 
     test('get error with invalid wallet numbers', async () => {
-      await expect(keyRing.getBalances({ subaccount: -2 })).rejects.toThrow(
+      await expect(keyRing.getBalances({ subaccount: '-2' })).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
       await expect(
-        keyRing.getBalances({ subaccount: walletsCreated + 2 })
+        keyRing.getBalances({ subaccount: 'walletsCreated + 2' })
       ).rejects.toThrow(ERRORS.INVALID_WALLET_NUMBER);
     });
   });
@@ -659,17 +660,17 @@ describe('Plug KeyRing', () => {
     test('get specific transactions', async () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
 
-      expect(await keyRing.getTransactions({ subaccount: ind })).toBe(
+      expect(await keyRing.getTransactions({ subaccount: 'ind' })).toBe(
         transactions[ind]
       );
     });
 
     test('get error with invalid wallet numbers', async () => {
-      await expect(keyRing.getTransactions({ subaccount: -2 })).rejects.toThrow(
+      await expect(keyRing.getTransactions({ subaccount: '-2' })).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
       await expect(
-        keyRing.getTransactions({ subaccount: walletsCreated + 2 })
+        keyRing.getTransactions({ subaccount: 'walletsCreated + 2' })
       ).rejects.toThrow(ERRORS.INVALID_WALLET_NUMBER);
     });
   });
@@ -725,7 +726,7 @@ describe('Plug KeyRing', () => {
         expect(nfts).toEqual([mockdeNFTCollection]);
       });
       it('should fail to fetch NFTs on inexistant account', async () => {
-        await expect(keyRing.getNFTs({ subaccount: 1 })).rejects.toThrow(
+        await expect(keyRing.getNFTs({ subaccount: '1' })).rejects.toThrow(
           ERRORS.INVALID_WALLET_NUMBER
         );
       });

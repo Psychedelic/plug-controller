@@ -5,7 +5,7 @@ export interface StorageData {
     vault: PlugStateStorage;
     isInitialized: boolean;
     isUnlocked: boolean;
-    currentWalletId: number;
+    currentWalletId: string;
     version: string;
     networkModule: NetworkModuleParams;
 }

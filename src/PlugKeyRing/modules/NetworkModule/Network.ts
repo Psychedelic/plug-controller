@@ -25,7 +25,7 @@ export type EditNetworkParams = {
   ledgerCanisterId?: string;
 }
 
-export type RegisteredToken = StandardToken & { registeredBy: Array<number> };
+export type RegisteredToken = StandardToken & { registeredBy: Array<string> };
 
 // Function that takes in an array of tokens and returns an array without duplicates
 export const uniqueTokens = (tokens: RegisteredToken[]) => {
@@ -102,7 +102,7 @@ export class Network {
     return token;
   }
 
-  public registerToken = async ({ canisterId, standard, walletId, defaultIdentity, logo }: { canisterId: string, standard: string, walletId: number, defaultIdentity: SignIdentity, logo?: string }) => {
+  public registerToken = async ({ canisterId, standard, walletId, defaultIdentity, logo }: { canisterId: string, standard: string, walletId: string, defaultIdentity: SignIdentity, logo?: string }) => {
     const token = this.registeredTokens.find(({ canisterId: id }) => id === canisterId);
     const defaultToken = this.defaultTokens.find(({ canisterId: id }) => id === canisterId);
     if (defaultToken) {

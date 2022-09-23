@@ -1,10 +1,12 @@
 import { DEFAULT_MAINNET_TOKENS } from '../../../constants/tokens';
 import { JSONWallet } from '../../../interfaces/plug_wallet';
-import { Mainnet, RegisteredToken } from '../../../PlugKeyRing/modules/NetworkModule/Network';
+import { Mainnet } from '../../../PlugKeyRing/modules/NetworkModule/Network';
+
+type JSONWalletLegacy = JSONWallet & { walletNumber: number }
 
 export default (storage: any) => {
   const defaultTokenIds = DEFAULT_MAINNET_TOKENS.map((t) => t.canisterId);
-  const wallets: JSONWallet[] = storage.wallets;
+  const wallets: JSONWalletLegacy[] = storage.wallets;
 
   // For each wallet, get its tokens and add the wallet id to the list of registered by
   const nestedTokens = wallets?.map((wallet) => (Object.values(wallet?.assets) || []).map(
@@ -37,7 +39,7 @@ export default (storage: any) => {
     }
     // Else just add the token (first time we find it)
     return [...acum, token];
-  }, [] as RegisteredToken[]);
+  }, [] as any);
 
   const newStorage = { 
     ...storage,
