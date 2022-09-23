@@ -157,7 +157,7 @@ class PlugWallet {
       
       const icnsCollection = await icnsAdapter.getICNSCollection();
 
-      this.collections = uniqueTokens([...this.collections, icnsCollection, ...collectionWithTokens]);
+      this.collections = uniqueTokens([...this.collections, icnsCollection, ...collectionWithTokens]) as NFTCollection[];
 
       return this.collections;
     } catch (e) {
@@ -186,7 +186,7 @@ class PlugWallet {
       const icnsCollection = await icnsAdapter.getICNSCollection();
       
 
-      this.collections = uniqueTokens([...this.collections, icnsCollection, ...collectionWithTokens]);
+      this.collections = uniqueTokens([...this.collections, icnsCollection, ...collectionWithTokens]) as NFTCollection[]
 
 
       return this.collections;

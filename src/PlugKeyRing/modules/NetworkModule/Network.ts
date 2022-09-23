@@ -31,7 +31,10 @@ export type RegisteredToken = StandardToken & { registeredBy: Array<string> };
 
 export type RegisteredNFT = NFTCollection &  { registeredBy: Array<string> };
 // Function that takes in an array of tokens and returns an array without duplicates
-export const uniqueTokens = (tokens) => {
+
+type uniqueTokensType = Array<RegisteredToken | RegisteredNFT>;
+
+export const uniqueTokens = (tokens:uniqueTokensType) => {
   const uniqueTokens = tokens.filter((token, index) => {
     return tokens.findIndex(t => t.canisterId === token.canisterId) === index;
   });
@@ -103,7 +106,7 @@ export class Network {
       token.logo = undefined;
     }
 
-    this.registeredTokens = uniqueTokens([...this.registeredTokens, token]);
+    this.registeredTokens = uniqueTokens([...this.registeredTokens, token]) as RegisteredToken[];
     return token;
   }
 
@@ -115,7 +118,7 @@ export class Network {
     const nftActor = getNFTActor({ canisterId, agent, standard });
     const metadata = await nftActor.getMetadata();
     const nft = {...metadata, registeredBy: []};
-    this.registeredNFTS = uniqueTokens([...this.registeredNFTS, nft]);
+    this.registeredNFTS = uniqueTokens([...this.registeredNFTS, nft]) as RegisteredNFT[];
     return nft
   }
 
@@ -131,7 +134,7 @@ export class Network {
     return this.registeredNFTS;
   };
 
-  public registerToken = async ({ canisterId, standard, walletId, defaultIdentity, logo }: { canisterId: string, standard: string, walletId: number, defaultIdentity: SignIdentity, logo?: string }) => {
+  public registerToken = async ({ canisterId, standard, walletId, defaultIdentity, logo }: { canisterId: string, standard: string, walletId: string, defaultIdentity: SignIdentity, logo?: string }) => {
     const token = this.registeredTokens.find(({ canisterId: id }) => id === canisterId);
     const defaultToken = this.defaultTokens.find(({ canisterId: id }) => id === canisterId);
     if (defaultToken) {
