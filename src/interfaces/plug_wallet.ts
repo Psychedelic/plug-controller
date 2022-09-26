@@ -20,6 +20,7 @@ export interface PlugWalletArgs {
     connectedApps?: Array<ConnectedApp>;
     assets?: Assets;
     collections?: Array<NFTCollection>;
+    customCollections?: Array<NFTCollection>;
     fetch: any;
     icnsData?: { names?: string[]; reverseResolvedName?: string };
     network: Network,
@@ -41,18 +42,19 @@ export interface JSONWallet {
     icon?: string;
     connectedApps: Array<ConnectedApp>;
     assets: Assets;
-    nftCollections?: Array<{
+    collections?: Array<{
         name: string;
         canisterId: string;
         standard: string;
         tokens: Array<{
-            index: number;
+            index: string;
             canister: string;
             id?: string;
             name?: string;
             url: string;
             metadata: any;
             collection?: string;
+            standard: string;
         }>;
     }>;
     icnsData: ICNSData;
