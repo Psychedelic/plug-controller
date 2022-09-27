@@ -55,8 +55,8 @@ class PlugKeyRing {
   public getNFTs: (args?: { subaccount?: string, refresh?: boolean }) => Promise<WalletNFTCollection[] | null>;
   public transferNFT: (args: { subaccount?: string; token: NFTDetails; to: string; standard: string; }) => Promise<WalletNFTCollection[]>;
   public burnXTC: (args?: { to: string; amount: string; subaccount: string; }) => Promise<TokenInterfaces.BurnResult>;
-  public registerToken: (args: { canisterId: string; standard?: string; subaccount?: string; logo?: string; }) => Promise<Array<TokenBalance>>;
-  public removeToken: (args: { canisterId: string; subaccount?: string; }) => Promise<Array<TokenBalance>>;
+  public registerToken: (args: { canisterId: string; standard?: string; subaccount?: string; logo?: string; }) => Promise<TokenBalance>;
+  public removeToken: (args: { canisterId: string; subaccount?: string; }) => Promise<Array<StandardToken>>;
   public getTokenInfo: (args: { canisterId: string, standard?: string, subaccount?: string }) => Promise<TokenBalance>;
   public getICNSData: (args: { subaccount?: string  }) => Promise<{ names: string[]; reverseResolvedName: string | undefined }>;
   public setReverseResolvedName: (args: { name: string, subaccount?: string }) => Promise<string>;

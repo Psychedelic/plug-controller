@@ -17,7 +17,6 @@ export interface PlugWalletArgs {
     orderNumber: number;
     walletNumber?: number;
     icon?: string;
-    assets?: Assets;
     fetch: any;
     icnsData?: { names?: string[]; reverseResolvedName?: string };
     network: Network,
@@ -37,7 +36,6 @@ export interface JSONWallet {
     principal: string;
     accountId: string;
     icon?: string;
-    assets: Assets;
     icnsData: ICNSData;
     networkModule?: NetworkModuleParams;
     type: Types;

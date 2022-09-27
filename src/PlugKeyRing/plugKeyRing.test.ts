@@ -205,7 +205,6 @@ describe('Plug KeyRing', () => {
       expect(state.password).toEqual(TEST_PASSWORD);
       const mnemonic = await keyRing.getMnemonic(state.password as string);
       expect(bip39.validateMnemonic(mnemonic as string)).toEqual(true);
-      expect(stateWallet.assets).toEqual(DEFAULT_MAINNET_ASSETS);
     });
     it('should fail if not password was provided', async () => {
       await expect(() => keyRing.create({ password: '' })).rejects.toEqual(
@@ -234,7 +233,6 @@ describe('Plug KeyRing', () => {
       expect(mnemonic).toEqual(TEST_MNEMONIC);
       expect(state.password).toEqual(TEST_PASSWORD);
       expect(bip39.validateMnemonic(mnemonic!)).toEqual(true);
-      expect(stateWallet.assets).toEqual(DEFAULT_MAINNET_ASSETS);
     });
     it('should fail if not password or mnemonic were provided', async () => {
       await expect(() =>
@@ -537,11 +535,6 @@ describe('Plug KeyRing', () => {
         standard: 'xtc',
         subaccount: '2',
       }); // register WTC twice
-
-      const { wallets } = await keyRing.getState();
-      expect(wallets[0].assets).toMatchObject(DEFAULT_MAINNET_ASSETS);
-      expect(wallets[1].assets).toMatchObject(DEFAULT_MAINNET_ASSETS);
-      expect(wallets[2].assets).toMatchObject(DEFAULT_MAINNET_ASSETS);
     });
     test('should fail to register an invalid canister id', async () => {
       await keyRing.create({ password: TEST_PASSWORD });

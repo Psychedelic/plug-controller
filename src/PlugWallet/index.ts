@@ -31,7 +31,6 @@ import { getCapTransactions } from '../utils/dfx/history/cap';
 import { ConnectedApp } from '../interfaces/account';
 import {
   JSONWallet,
-  Assets,
   ICNSData,
   PlugWalletArgs,
   WalletNFTCollection,
@@ -62,7 +61,6 @@ class PlugWallet {
   fetch: any;
   icnsData: ICNSData;
   contacts: Array<Address>;
-  assets: Assets;
   type: Types;
   private identity: GenericSignIdentity;
   private agent: HttpAgent;
@@ -75,7 +73,6 @@ class PlugWallet {
     walletId,
     orderNumber,
     walletNumber,
-    assets = DEFAULT_MAINNET_ASSETS,
     fetch,
     icnsData = {},
     network,
@@ -87,7 +84,6 @@ class PlugWallet {
     this.walletId = walletId;
     this.orderNumber = orderNumber;
     this.walletNumber = walletNumber;
-    this.assets = assets;
     this.icnsData = icnsData;
     this.identity = identity;
     this.principal = identity.getPrincipal().toText();
@@ -226,7 +222,7 @@ class PlugWallet {
     canisterId: string;
     standard: string;
     logo?: string;
-  }): Promise<TokenBalance[]> => {
+  }): Promise<TokenBalance> => {
     const { canisterId, standard = 'ext', logo } = args || {};
 
     // Register token in network
@@ -262,11 +258,7 @@ class PlugWallet {
         logo,
       },
     };
-    this.assets = {
-      ...this.assets,
-      [canisterId]: tokenDescriptor,
-    };
-    return Object.values(this.assets);
+    return tokenDescriptor;
   };
 
   public toJSON = (): JSONWallet => ({
@@ -277,7 +269,6 @@ class PlugWallet {
     principal: this.identity.getPrincipal().toText(),
     accountId: this.accountId,
     icon: this.icon,
-    assets: this.assets,
     icnsData: this.icnsData,
     type: this.type,
     keyPair: this.identity.toJSON()
@@ -347,7 +338,6 @@ class PlugWallet {
     const walletTokens = this.network.getTokens(this.walletId);
     const tokenBalances = await Promise.all(walletTokens.map(token => this.getTokenBalance({ token })));
     const assets = tokenBalances.reduce((acc, token) => ({ ...acc, [token.token.canisterId]: token }), {});
-    this.assets = assets;
     return tokenBalances;
   };
 
@@ -376,7 +366,7 @@ class PlugWallet {
       details: {
         ...tx.details,
         token:
-          tx.details?.canisterId && this.assets[tx.details?.canisterId]?.token,
+          tx.details?.canisterId && this.network.tokens.find((token) => token.canisterId === tx.details?.canisterId),
       },
     }));
 
@@ -398,7 +388,8 @@ class PlugWallet {
     opts?: TokenInterfaces.SendOpts;
   }): Promise<TokenInterfaces.SendResponse> => {
     const { to, amount, canisterId, opts } = args || {};
-    const savedToken = this.assets[canisterId].token;
+    const savedToken = this.network.tokenByCanisterId(canisterId);
+    if (!savedToken) throw new Error(ERRORS.TOKEN_NOT_REGISTERED);
     const tokenActor = await getTokenActor({
       canisterId,
       agent: this.agent,
@@ -510,26 +501,17 @@ class PlugWallet {
 
   public removeToken = async (args: {
     canisterId: string;
-  }): Promise<TokenBalance[]> => {
+  }): Promise<StandardToken[]> => {
     const { canisterId } = args || {};
     const isDefaultAsset = Object.keys(DEFAULT_MAINNET_ASSETS).includes(canisterId);
-
-    if (isDefaultAsset) return Object.values(this.assets);
-
+    
+    // If it's a default asset, early return
+    if (isDefaultAsset) return this.network.tokens;
+    
     const tokens = await this.network.removeToken({
       canisterId,
     });
-
-    const assets = Object.keys(this.assets)
-      .filter(key => key !== canisterId)
-      .reduce((obj, key) => {
-        obj[key] = this.assets[key];
-        return obj;
-      },{});
-
-    this.assets = assets;
-
-    return Object.values(this.assets);
+    return tokens;
   };
 }
 
