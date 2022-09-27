@@ -235,7 +235,6 @@ describe('Plug KeyRing', () => {
       expect(state.password).toEqual(TEST_PASSWORD);
       expect(bip39.validateMnemonic(mnemonic!)).toEqual(true);
       expect(stateWallet.assets).toEqual(DEFAULT_MAINNET_ASSETS);
-      expect(stateWallet.connectedApps).toEqual([]);
     });
     it('should fail if not password or mnemonic were provided', async () => {
       await expect(() =>

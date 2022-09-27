@@ -54,39 +54,19 @@ import { getTokensFromCollections } from '../utils/getTokensFromCollection';
 
 class PlugWallet {
   name: string;
-
   icon?: string;
-
   walletId: string;
-
   orderNumber: number;
-
   walletNumber?: number;
-
-  accountId: string;
-
   principal: string;
-
   fetch: any;
-
-  connectedApps: Array<ConnectedApp>;
-
   icnsData: ICNSData;
-
   collections: Array<WalletNFTCollection>;
-  
-  customCollections: Array<WalletNFTCollection>;
-
   contacts: Array<Address>;
-
   assets: Assets;
-
   type: Types;
-
   private identity: GenericSignIdentity;
-
   private agent: HttpAgent;
-
   private network: Network;
 
 
@@ -96,10 +76,8 @@ class PlugWallet {
     walletId,
     orderNumber,
     walletNumber,
-    connectedApps = [],
     assets = DEFAULT_MAINNET_ASSETS,
     collections = [],
-    customCollections = [],
     fetch,
     icnsData = {},
     network,
@@ -114,11 +92,8 @@ class PlugWallet {
     this.assets = assets;
     this.icnsData = icnsData;
     this.identity = identity;
-    this.accountId = getAccountId(identity.getPrincipal());;
     this.principal = identity.getPrincipal().toText();
-    this.connectedApps = [...connectedApps];
     this.collections = [...collections];
-    this.customCollections = customCollections;
     this.fetch = fetch;
     this.network = network;
     this.type = type;
@@ -127,6 +102,10 @@ class PlugWallet {
       fetch: this.fetch,
     });
 
+  }
+
+  get accountId(): string {
+    return getAccountId(this.identity.getPrincipal());
   }
 
   public async setNetwork(network: Network) {
@@ -310,7 +289,6 @@ class PlugWallet {
     principal: this.identity.getPrincipal().toText(),
     accountId: this.accountId,
     icon: this.icon,
-    connectedApps: this.connectedApps,
     assets: this.assets,
     collections: recursiveParseBigint(this.collections),
     icnsData: this.icnsData,
