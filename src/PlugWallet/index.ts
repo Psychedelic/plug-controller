@@ -46,7 +46,7 @@ import {
 } from '../utils/dfx/icns/utils';
 import { Address } from '../interfaces/contact_registry';
 import { Network } from '../PlugKeyRing/modules/NetworkModule';
-import { RegisteredToken, uniqueTokens } from '../PlugKeyRing/modules/NetworkModule/Network';
+import { RegisteredNFT, RegisteredToken, uniqueTokens } from '../PlugKeyRing/modules/NetworkModule/Network';
 import { getAccountId } from '../utils/account';
 import { Types } from '../utils/account/constants';
 import { GenericSignIdentity } from '../utils/identity/genericSignIdentity'
@@ -61,7 +61,6 @@ class PlugWallet {
   principal: string;
   fetch: any;
   icnsData: ICNSData;
-  collections: Array<WalletNFTCollection>;
   contacts: Array<Address>;
   assets: Assets;
   type: Types;
@@ -77,7 +76,6 @@ class PlugWallet {
     orderNumber,
     walletNumber,
     assets = DEFAULT_MAINNET_ASSETS,
-    collections = [],
     fetch,
     icnsData = {},
     network,
@@ -93,7 +91,6 @@ class PlugWallet {
     this.icnsData = icnsData;
     this.identity = identity;
     this.principal = identity.getPrincipal().toText();
-    this.collections = [...collections];
     this.fetch = fetch;
     this.network = network;
     this.type = type;
@@ -149,8 +146,8 @@ class PlugWallet {
         user: this.principal,
         agent: this.agent,
       });
-      this.collections = await this.populateAndTrimNFTs(collections)
-      return this.collections;
+      const populatedCollections = await this.populateAndTrimNFTs(collections)
+      return populatedCollections;
     } catch (e) {
       console.warn('Error when trying to fetch NFTs natively from the IC', e);
       return null;
@@ -168,8 +165,8 @@ class PlugWallet {
         userPID: this.principal,
         refresh: args?.refresh,
       });
-      this.collections = await this.populateAndTrimNFTs(collections);
-      return this.collections;
+      const populatedCollections = await this.populateAndTrimNFTs(collections);
+      return populatedCollections;
     } catch (e) {
       console.warn(
         'Error when trying to fetch NFTs from Kyasshu. Fetching natively...',
@@ -183,7 +180,7 @@ class PlugWallet {
   public transferNFT = async (args: {
     token: NFTDetails;
     to: string;
-  }): Promise<WalletNFTCollection[]> => {
+  }): Promise<boolean> => {
     const { token, to } = args;
     if (!validatePrincipalId(to)) {
       throw new Error(ERRORS.INVALID_PRINCIPAL_ID);
@@ -199,16 +196,10 @@ class PlugWallet {
         Principal.fromText(to),
         parseInt(token.index.toString(), 10)
       );
-      // Optimistically update the state
-      const collections = this.collections.map(col => ({
-        ...col,
-        tokens: col.tokens.filter(tok => tok.index !== token.index),
-      }));
-      this.collections = collections.filter(col => col.tokens.length);
       getCachedUserNFTs({ userPID: this.principal, refresh: true }).catch(
         console.warn
       );
-      return this.collections;
+      return true;
     } catch (e) {
       console.warn('NFT transfer error: ', e);
       throw new Error(ERRORS.TRANSFER_NFT_ERROR);
@@ -226,11 +217,8 @@ class PlugWallet {
     return nft;
   }
 
-  public registerNFT = async ({canisterId, standard}) => {
+  public registerNFT = async ({canisterId, standard}): Promise<RegisteredNFT[]> => {
     const nfts = await this.network.registerNFT({canisterId, standard, walletId: this.walletNumber, identity: this.identity});
-    if (nfts) {
-      this.collections = [...this.collections, nfts[0]];
-    }
     return nfts;
   }
 
@@ -290,7 +278,6 @@ class PlugWallet {
     accountId: this.accountId,
     icon: this.icon,
     assets: this.assets,
-    collections: recursiveParseBigint(this.collections),
     icnsData: this.icnsData,
     type: this.type,
     keyPair: this.identity.toJSON()
