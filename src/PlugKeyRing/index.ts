@@ -53,7 +53,7 @@ class PlugKeyRing {
   // wallet methods
   public getBalances: (args?: { subaccount?: string }) => Promise<Array<TokenBalance>>;
   public getNFTs: (args?: { subaccount?: string, refresh?: boolean }) => Promise<WalletNFTCollection[] | null>;
-  public transferNFT: (args: { subaccount?: string; token: NFTDetails; to: string; standard: string; }) => Promise<WalletNFTCollection[]>;
+  public transferNFT: (args: { subaccount?: string; token: NFTDetails; to: string; standard: string; }) => Promise<boolean>;
   public burnXTC: (args?: { to: string; amount: string; subaccount: string; }) => Promise<TokenInterfaces.BurnResult>;
   public registerToken: (args: { canisterId: string; standard?: string; subaccount?: string; logo?: string; }) => Promise<TokenBalance>;
   public removeToken: (args: { canisterId: string; subaccount?: string; }) => Promise<Array<StandardToken>>;
