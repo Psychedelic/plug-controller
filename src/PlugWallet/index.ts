@@ -533,12 +533,15 @@ class PlugWallet {
     return Object.values(this.assets);
   };
 
-  public delegateIdentity = async (args: { to: Buffer }): Promise<string> => {
-    const { to } = args;
+  public delegateIdentity = async (args: { to: Buffer, targets: string[] }): Promise<string> => {
+    const { to, targets } = args;
+    const pidTargets = targets.map((target) => Principal.fromText(target));
     const publicKey = Ed25519PublicKey.fromDer(blobFromBuffer(to));
     const delagationChain = await DelegationChain.create(
       this.identity,
-      publicKey
+      publicKey,
+      undefined,
+      { targets: pidTargets }
     );
     return JSON.stringify(delagationChain.toJSON());
   };
