@@ -337,7 +337,6 @@ class PlugWallet {
     // Get Custom Token Balances
     const walletTokens = this.network.getTokens(this.walletId);
     const tokenBalances = await Promise.all(walletTokens.map(token => this.getTokenBalance({ token })));
-    const assets = tokenBalances.reduce((acc, token) => ({ ...acc, [token.token.canisterId]: token }), {});
     return tokenBalances;
   };
 
