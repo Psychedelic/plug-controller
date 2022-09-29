@@ -158,6 +158,7 @@ class PlugWallet {
           url: token.url,
           canister: token.canister,
           standard: token.standard,
+          name: token.name,
       })),
     }));
     const completeCollections = simplifiedCollections.filter((collection) => collection.tokens.length > 0);
