@@ -16,6 +16,7 @@ import {
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
+
 import { ERRORS } from '../errors';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAgent } from '../utils/dfx';
@@ -33,6 +34,7 @@ import {
   Assets,
   ICNSData,
   PlugWalletArgs,
+  WalletNFTCollection,
 } from '../interfaces/plug_wallet';
 import { StandardToken, TokenBalance } from '../interfaces/token';
 import { GetTransactionsResponse } from '../interfaces/transactions';
@@ -71,9 +73,9 @@ class PlugWallet {
 
   icnsData: ICNSData;
 
-  collections: Array<NFTCollection>;
+  collections: Array<WalletNFTCollection>;
   
-  customCollections: Array<NFTCollection>;
+  customCollections: Array<WalletNFTCollection>;
 
   contacts: Array<Address>;
 
@@ -144,21 +146,32 @@ class PlugWallet {
     this.icon = val;
   }
 
-  private nativeGetNFTs = async () => {
+  private populateAndTrimNFTs = async (collections: NFTCollection[]): Promise<WalletNFTCollection[]> => {
     const icnsAdapter = new ICNSAdapter(this.agent);
+    const collectionWithTokens = await getTokensFromCollections(this.network.registeredNFTS, this.principal, this.agent);
+    const icnsCollection = await icnsAdapter.getICNSCollection();
+    const unique = uniqueTokens([...collections, icnsCollection, ...collectionWithTokens]) as WalletNFTCollection[]
+    const simplifiedCollections = unique.map((collection: NFTCollection): WalletNFTCollection => ({
+      ...collection,
+      tokens: collection.tokens.map((token) => ({
+          index: token.index,
+          url: token.url,
+          canister: token.canister,
+          standard: token.standard,
+          name: token.name,
+      })),
+    }));
+    const completeCollections = simplifiedCollections.filter((collection) => collection.tokens.length > 0);
+    return completeCollections;
+  }
+
+  private nativeGetNFTs = async () => {
     try {
-      this.collections = await getAllUserNFTs({
+      const collections = await getAllUserNFTs({
         user: this.principal,
         agent: this.agent,
       });
-      const customNfts = this.network.registeredNFTS;
-      
-      const collectionWithTokens = await getTokensFromCollections(customNfts, this.principal, this.agent);
-      
-      const icnsCollection = await icnsAdapter.getICNSCollection();
-
-      this.collections = uniqueTokens([...this.collections, icnsCollection, ...collectionWithTokens]) as NFTCollection[];
-
+      this.collections = await this.populateAndTrimNFTs(collections)
       return this.collections;
     } catch (e) {
       console.warn('Error when trying to fetch NFTs natively from the IC', e);
@@ -170,25 +183,14 @@ class PlugWallet {
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
   public getNFTs = async (args?: {
     refresh?: boolean;
-  }): Promise<NFTCollection[] | null> => {
+  }): Promise<WalletNFTCollection[] | null> => {
     if (this.network.isCustom) return [];
     try {
-      const icnsAdapter = new ICNSAdapter(this.agent);
-      this.collections = await getCachedUserNFTs({
+      const collections = await getCachedUserNFTs({
         userPID: this.principal,
         refresh: args?.refresh,
       });
-
-      const customNfts = this.network.registeredNFTS;
-      
-      const collectionWithTokens = await getTokensFromCollections(customNfts, this.principal, this.agent);
-
-      const icnsCollection = await icnsAdapter.getICNSCollection();
-      
-
-      this.collections = uniqueTokens([...this.collections, icnsCollection, ...collectionWithTokens]) as NFTCollection[]
-
-
+      this.collections = await this.populateAndTrimNFTs(collections);
       return this.collections;
     } catch (e) {
       console.warn(
@@ -203,7 +205,7 @@ class PlugWallet {
   public transferNFT = async (args: {
     token: NFTDetails;
     to: string;
-  }): Promise<NFTCollection[]> => {
+  }): Promise<WalletNFTCollection[]> => {
     const { token, to } = args;
     if (!validatePrincipalId(to)) {
       throw new Error(ERRORS.INVALID_PRINCIPAL_ID);

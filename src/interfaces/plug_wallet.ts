@@ -62,3 +62,14 @@ export interface JSONWallet {
     type: Types;
     keyPair: string;
 }
+
+export interface NFTDetailsBase<idT = bigint> {
+    index: idT;
+    canister: string;
+    url: string;
+    standard: string;
+}
+  
+export interface WalletNFTCollection extends Omit<NFTCollection, 'tokens'> {
+    tokens: NFTDetailsBase<bigint | string>[];
+}

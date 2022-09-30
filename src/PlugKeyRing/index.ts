@@ -4,25 +4,27 @@ import { BinaryBlob } from '@dfinity/candid';
 
 import {
   NFTDetails,
-  NFTCollection,
   TokenInterfaces,
 } from '@psychedelic/dab-js';
 import JsonBigInt from 'json-bigint';
 import { v4 as uuid } from "uuid";
 
-import { KeyringStorage, StorageData } from '../interfaces/storage';
-import { PlugStateStorage, PlugStateInstance } from '../interfaces/plug_keyring';
-import { TokenBalance, StandardToken } from '../interfaces/token';
-import { GetTransactionsResponse } from '../interfaces/transactions';
-import { ERRORS } from '../errors';
 import PlugWallet from '../PlugWallet';
-import { createAccount } from '../utils/account';
-import Storage from '../utils/storage';
-import { recursiveParseBigint } from '../utils/object';
-import { handleStorageUpdate } from '../utils/storage/utils';
-import { getVersion } from '../utils/version';
+import { PlugStateStorage, PlugStateInstance } from '../interfaces/plug_keyring';
+import { GetTransactionsResponse } from '../interfaces/transactions';
+import { KeyringStorage, StorageData } from '../interfaces/storage';
+import { TokenBalance, StandardToken } from '../interfaces/token';
+import { WalletNFTCollection } from '../interfaces/plug_wallet';
 import { Address } from '../interfaces/contact_registry';
+import { ERRORS } from '../errors';
+import { IdentityFactory } from './../utils/identity/identityFactory'
+import { handleStorageUpdate } from '../utils/storage/utils';
+import { createAccountFromMnemonic } from '../utils/account';
+import { recursiveParseBigint } from '../utils/object';
 import { Types } from '../utils/account/constants';
+import { createAccount } from '../utils/account';
+import { getVersion } from '../utils/version';
+import Storage from '../utils/storage';
 
 import NetworkModule, { NetworkModuleParams } from './modules/NetworkModule';
 import {
@@ -52,8 +54,8 @@ class PlugKeyRing {
 
   // wallet methods
   public getBalances: (args?: { subaccount?: string }) => Promise<Array<TokenBalance>>;
-  public getNFTs: (args?: { subaccount?: string, refresh?: boolean }) => Promise<NFTCollection[] | null>;
-  public transferNFT: (args: { subaccount?: string; token: NFTDetails; to: string; standard: string; }) => Promise<NFTCollection[]>;
+  public getNFTs: (args?: { subaccount?: string, refresh?: boolean }) => Promise<WalletNFTCollection[] | null>;
+  public transferNFT: (args: { subaccount?: string; token: NFTDetails; to: string; standard: string; }) => Promise<WalletNFTCollection[]>;
   public burnXTC: (args?: { to: string; amount: string; subaccount: string; }) => Promise<TokenInterfaces.BurnResult>;
   public registerToken: (args: { canisterId: string; standard?: string; subaccount?: string; logo?: string; }) => Promise<Array<TokenBalance>>;
   public removeToken: (args: { canisterId: string; subaccount?: string; }) => Promise<Array<TokenBalance>>;
