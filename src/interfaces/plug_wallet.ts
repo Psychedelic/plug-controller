@@ -13,11 +13,14 @@ export interface ICNSData {
   
 export interface PlugWalletArgs {
     name?: string;
-    walletNumber: number;
+    walletId: string;
+    orderNumber: number;
+    walletNumber?: number;
     icon?: string;
     connectedApps?: Array<ConnectedApp>;
     assets?: Assets;
     collections?: Array<NFTCollection>;
+    customCollections?: Array<NFTCollection>;
     fetch: any;
     icnsData?: { names?: string[]; reverseResolvedName?: string };
     network: Network,
@@ -31,28 +34,42 @@ export interface Assets {
 
 export interface JSONWallet {
     name: string;
-    walletNumber: number;
+    walletId: string;
+    orderNumber: number;
+    walletNumber?: number;
     principal: string;
     accountId: string;
     icon?: string;
     connectedApps: Array<ConnectedApp>;
     assets: Assets;
-    nftCollections?: Array<{
+    collections?: Array<{
         name: string;
         canisterId: string;
         standard: string;
         tokens: Array<{
-            index: number;
+            index: string;
             canister: string;
             id?: string;
             name?: string;
             url: string;
             metadata: any;
             collection?: string;
+            standard: string;
         }>;
     }>;
     icnsData: ICNSData;
     networkModule?: NetworkModuleParams;
     type: Types;
     keyPair: string;
+}
+
+export interface NFTDetailsBase<idT = bigint> {
+    index: idT;
+    canister: string;
+    url: string;
+    standard: string;
+}
+  
+export interface WalletNFTCollection extends Omit<NFTCollection, 'tokens'> {
+    tokens: NFTDetailsBase<bigint | string>[];
 }

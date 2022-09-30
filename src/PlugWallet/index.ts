@@ -17,6 +17,7 @@ import {
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
+
 import { ERRORS } from '../errors';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAgent } from '../utils/dfx';
@@ -34,6 +35,7 @@ import {
   Assets,
   ICNSData,
   PlugWalletArgs,
+  WalletNFTCollection,
 } from '../interfaces/plug_wallet';
 import { StandardToken, TokenBalance } from '../interfaces/token';
 import { GetTransactionsResponse } from '../interfaces/transactions';
@@ -45,10 +47,11 @@ import {
 } from '../utils/dfx/icns/utils';
 import { Address } from '../interfaces/contact_registry';
 import { Network } from '../PlugKeyRing/modules/NetworkModule';
-import { RegisteredToken } from '../PlugKeyRing/modules/NetworkModule/Network';
+import { RegisteredToken, uniqueTokens } from '../PlugKeyRing/modules/NetworkModule/Network';
 import { getAccountId } from '../utils/account';
 import { Types } from '../utils/account/constants';
 import { GenericSignIdentity } from '../utils/identity/genericSignIdentity';
+import { getTokensFromCollections } from '../utils/getTokensFromCollection';
 import { Buffer } from '../../node_modules/buffer';
 
 class PlugWallet {
@@ -56,7 +59,11 @@ class PlugWallet {
 
   icon?: string;
 
-  walletNumber: number;
+  walletId: string;
+
+  orderNumber: number;
+
+  walletNumber?: number;
 
   accountId: string;
 
@@ -68,7 +75,9 @@ class PlugWallet {
 
   icnsData: ICNSData;
 
-  collections: Array<NFTCollection>;
+  collections: Array<WalletNFTCollection>;
+  
+  customCollections: Array<WalletNFTCollection>;
 
   contacts: Array<Address>;
 
@@ -85,10 +94,13 @@ class PlugWallet {
   constructor({
     name,
     icon,
+    walletId,
+    orderNumber,
     walletNumber,
     connectedApps = [],
     assets = DEFAULT_MAINNET_ASSETS,
     collections = [],
+    customCollections = [],
     fetch,
     icnsData = {},
     network,
@@ -97,6 +109,8 @@ class PlugWallet {
   }: PlugWalletArgs) {
     this.name = name || 'Account 1';
     this.icon = icon;
+    this.walletId = walletId;
+    this.orderNumber = orderNumber;
     this.walletNumber = walletNumber;
     this.assets = assets;
     this.icnsData = icnsData;
@@ -105,6 +119,7 @@ class PlugWallet {
     this.principal = identity.getPrincipal().toText();
     this.connectedApps = [...connectedApps];
     this.collections = [...collections];
+    this.customCollections = customCollections;
     this.fetch = fetch;
     this.network = network;
     this.type = type;
@@ -131,34 +146,52 @@ class PlugWallet {
     this.icon = val;
   }
 
-  private nativeGetNFTs = async () => {
+  private populateAndTrimNFTs = async (collections: NFTCollection[]): Promise<WalletNFTCollection[]> => {
     const icnsAdapter = new ICNSAdapter(this.agent);
+    const collectionWithTokens = await getTokensFromCollections(this.network.registeredNFTS, this.principal, this.agent);
+    const icnsCollection = await icnsAdapter.getICNSCollection();
+    const unique = uniqueTokens([...collections, icnsCollection, ...collectionWithTokens]) as WalletNFTCollection[]
+    const simplifiedCollections = unique.map((collection: NFTCollection): WalletNFTCollection => ({
+      ...collection,
+      tokens: collection.tokens.map((token) => ({
+          index: token.index,
+          url: token.url,
+          canister: token.canister,
+          standard: token.standard,
+          name: token.name,
+      })),
+    }));
+    const completeCollections = simplifiedCollections.filter((collection) => collection.tokens.length > 0);
+    return completeCollections;
+  }
+
+  private nativeGetNFTs = async () => {
     try {
-      this.collections = await getAllUserNFTs({
+      const collections = await getAllUserNFTs({
         user: this.principal,
         agent: this.agent,
       });
-      const icnsCollection = await icnsAdapter.getICNSCollection();
-      return [...this.collections, icnsCollection];
+      this.collections = await this.populateAndTrimNFTs(collections)
+      return this.collections;
     } catch (e) {
       console.warn('Error when trying to fetch NFTs natively from the IC', e);
       return null;
     }
   };
 
+
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
   public getNFTs = async (args?: {
     refresh?: boolean;
-  }): Promise<NFTCollection[] | null> => {
+  }): Promise<WalletNFTCollection[] | null> => {
     if (this.network.isCustom) return [];
     try {
-      const icnsAdapter = new ICNSAdapter(this.agent);
-      this.collections = await getCachedUserNFTs({
+      const collections = await getCachedUserNFTs({
         userPID: this.principal,
         refresh: args?.refresh,
       });
-      const icnsCollection = await icnsAdapter.getICNSCollection();
-      return [...this.collections, icnsCollection];
+      this.collections = await this.populateAndTrimNFTs(collections);
+      return this.collections;
     } catch (e) {
       console.warn(
         'Error when trying to fetch NFTs from Kyasshu. Fetching natively...',
@@ -172,7 +205,7 @@ class PlugWallet {
   public transferNFT = async (args: {
     token: NFTDetails;
     to: string;
-  }): Promise<NFTCollection[]> => {
+  }): Promise<WalletNFTCollection[]> => {
     const { token, to } = args;
     if (!validatePrincipalId(to)) {
       throw new Error(ERRORS.INVALID_PRINCIPAL_ID);
@@ -214,6 +247,19 @@ class PlugWallet {
     return balance;
   };
 
+  public getNFTInfo = async ({ canisterId, standard }) => {
+    const nft = await this.network.getNftInfo({ canisterId, identity: this.identity, standard });
+    return nft;
+  }
+
+  public registerNFT = async ({canisterId, standard}) => {
+    const nfts = await this.network.registerNFT({canisterId, standard, walletId: this.walletNumber, identity: this.identity});
+    if (nfts) {
+      this.collections = [...this.collections, nfts[0]];
+    }
+    return nfts;
+  }
+
   public registerToken = async (args: {
     canisterId: string;
     standard: string;
@@ -225,7 +271,7 @@ class PlugWallet {
     const tokens = await this.network.registerToken({
       canisterId,
       standard,
-      walletId: this.walletNumber,
+      walletId: this.walletId,
       defaultIdentity: this.identity,
       logo,
     });
@@ -265,13 +311,15 @@ class PlugWallet {
 
   public toJSON = (): JSONWallet => ({
     name: this.name,
+    walletId: this.walletId,
+    orderNumber: this.orderNumber,
     walletNumber: this.walletNumber,
     principal: this.identity.getPrincipal().toText(),
     accountId: this.accountId,
     icon: this.icon,
     connectedApps: this.connectedApps,
     assets: this.assets,
-    nftCollections: recursiveParseBigint(this.collections),
+    collections: recursiveParseBigint(this.collections),
     icnsData: this.icnsData,
     type: this.type,
     keyPair: this.identity.toJSON(),
@@ -338,17 +386,13 @@ class PlugWallet {
    */
   public getBalances = async (): Promise<Array<TokenBalance>> => {
     // Get Custom Token Balances
-    const walletTokens = this.network.getTokens(this.walletNumber);
-    const tokenBalances = await Promise.all(
-      walletTokens.map(token => this.getTokenBalance({ token }))
-    );
-    const assets = tokenBalances.reduce(
-      (acc, token) => ({ ...acc, [token.token.canisterId]: token }),
-      {}
-    );
+    const walletTokens = this.network.getTokens(this.walletId);
+    const tokenBalances = await Promise.all(walletTokens.map(token => this.getTokenBalance({ token })));
+    const assets = tokenBalances.reduce((acc, token) => ({ ...acc, [token.token.canisterId]: token }), {});
     this.assets = assets;
     return tokenBalances;
   };
+
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
     if (this.network.isCustom) return { total: 0, transactions: [] };
