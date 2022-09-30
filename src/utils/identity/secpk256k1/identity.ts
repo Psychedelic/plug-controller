@@ -9,7 +9,7 @@ import {
   BinaryBlob,
 } from '@dfinity/candid';
 import { PublicKey } from '@dfinity/agent';
-import { GenericSignIdentity } from '../../identity/genericSignIdentity'
+import { GenericSignIdentity } from '../genericSignIdentity'
 import Secp256k1PublicKey from './publicKey';
 
 declare type PublicKeyHex = string;
@@ -111,8 +111,8 @@ class Secp256k1KeyIdentity extends GenericSignIdentity {
   /**
    * Serialize this key to JSON.
    */
-  public toJSON(): string {
-    return JSON.stringify([blobToHex(this._publicKey.toRaw()), blobToHex(this._privateKey)]);
+  public toJSON(): [string, string] {
+    return [blobToHex(this._publicKey.toRaw()), blobToHex(this._privateKey)];
   }
 
   /**

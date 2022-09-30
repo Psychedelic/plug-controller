@@ -24,4 +24,5 @@ export const ERRORS = {
   INVALID_NETWORK_ID: 'Invalid network id',
   EMPTY_IDENTITY_ERROR: 'Identity or SecretKey missing',
   INVALID_TYPE_ERROR: 'No such type allowed',
+  DELETE_ACCOUNT_ERROR: 'ACCOUNT CANT BE DELETED',
 };

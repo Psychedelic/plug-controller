@@ -20,3 +20,7 @@ export interface ImportMnemonicOptions {
   mnemonic: string;
   password: string;
 }
+
+export interface ImportFromPemOptions extends CreatePrincipalOptions {
+  pem: string;
+}
