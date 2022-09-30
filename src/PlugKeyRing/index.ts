@@ -35,8 +35,6 @@ import {
   ImportMnemonicOptions,
 } from './interfaces';
 import { WALLET_METHODS, MAIN_WALLET_METHODS } from './constants';
-import { createAccountFromMnemonic } from '../utils/account';
-import { IdentityFactory } from './../utils/identity/identityFactory'
 
 class PlugKeyRing {
   // state
