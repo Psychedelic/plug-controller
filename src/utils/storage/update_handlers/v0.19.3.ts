@@ -1,8 +1,8 @@
 import { DEFAULT_MAINNET_TOKENS } from '../../../constants/tokens';
-import { JSONWallet } from '../../../interfaces/plug_wallet';
+import { Assets, JSONWallet } from '../../../interfaces/plug_wallet';
 import { Mainnet } from '../../../PlugKeyRing/modules/NetworkModule/Network';
 
-type JSONWalletLegacy = JSONWallet & { walletNumber: number }
+type JSONWalletLegacy = JSONWallet & { walletNumber: number, assets: Assets }
 
 export default (storage: any) => {
   const defaultTokenIds = DEFAULT_MAINNET_TOKENS.map((t) => t.canisterId);

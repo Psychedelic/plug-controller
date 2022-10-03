@@ -4,25 +4,27 @@ import { BinaryBlob } from '@dfinity/candid';
 
 import {
   NFTDetails,
-  NFTCollection,
   TokenInterfaces,
 } from '@psychedelic/dab-js';
 import JsonBigInt from 'json-bigint';
 import { v4 as uuid } from "uuid";
 
-import { KeyringStorage, StorageData } from '../interfaces/storage';
-import { PlugStateStorage, PlugStateInstance } from '../interfaces/plug_keyring';
-import { TokenBalance, StandardToken } from '../interfaces/token';
-import { GetTransactionsResponse } from '../interfaces/transactions';
-import { ERRORS } from '../errors';
 import PlugWallet from '../PlugWallet';
-import { createAccount } from '../utils/account';
-import Storage from '../utils/storage';
-import { recursiveParseBigint } from '../utils/object';
-import { handleStorageUpdate } from '../utils/storage/utils';
-import { getVersion } from '../utils/version';
+import { PlugStateStorage, PlugStateInstance } from '../interfaces/plug_keyring';
+import { GetTransactionsResponse } from '../interfaces/transactions';
+import { KeyringStorage, StorageData } from '../interfaces/storage';
+import { TokenBalance, StandardToken } from '../interfaces/token';
+import { WalletNFTCollection } from '../interfaces/plug_wallet';
 import { Address } from '../interfaces/contact_registry';
+import { ERRORS } from '../errors';
+import { IdentityFactory } from './../utils/identity/identityFactory'
+import { handleStorageUpdate } from '../utils/storage/utils';
+import { createAccountFromMnemonic } from '../utils/account';
+import { recursiveParseBigint } from '../utils/object';
 import { Types } from '../utils/account/constants';
+import { createAccount } from '../utils/account';
+import { getVersion } from '../utils/version';
+import Storage from '../utils/storage';
 
 import NetworkModule, { NetworkModuleParams } from './modules/NetworkModule';
 import {
@@ -33,9 +35,7 @@ import {
   ImportMnemonicOptions,
   ImportFromPemOptions,
 } from './interfaces';
-import { WALLET_METHODS } from './constants';
-import { createAccountFromMnemonic } from '../utils/account';
-import { IdentityFactory } from './../utils/identity/identityFactory'
+import { WALLET_METHODS, MAIN_WALLET_METHODS } from './constants';
 import { getIdentityFromPem } from './../utils/identity/parsePem'
 
 class PlugKeyRing {
@@ -54,11 +54,11 @@ class PlugKeyRing {
 
   // wallet methods
   public getBalances: (args?: { subaccount?: string }) => Promise<Array<TokenBalance>>;
-  public getNFTs: (args?: { subaccount?: string, refresh?: boolean }) => Promise<NFTCollection[] | null>;
-  public transferNFT: (args: { subaccount?: string; token: NFTDetails; to: string; standard: string; }) => Promise<NFTCollection[]>;
+  public getNFTs: (args?: { subaccount?: string, refresh?: boolean }) => Promise<WalletNFTCollection[] | null>;
+  public transferNFT: (args: { subaccount?: string; token: NFTDetails; to: string; standard: string; }) => Promise<boolean>;
   public burnXTC: (args?: { to: string; amount: string; subaccount: string; }) => Promise<TokenInterfaces.BurnResult>;
-  public registerToken: (args: { canisterId: string; standard?: string; subaccount?: string; logo?: string; }) => Promise<Array<TokenBalance>>;
-  public removeToken: (args: { canisterId: string; subaccount?: string; }) => Promise<Array<TokenBalance>>;
+  public registerToken: (args: { canisterId: string; standard?: string; subaccount?: string; logo?: string; }) => Promise<TokenBalance>;
+  public removeToken: (args: { canisterId: string; subaccount?: string; }) => Promise<Array<StandardToken>>;
   public getTokenInfo: (args: { canisterId: string, standard?: string, subaccount?: string }) => Promise<TokenBalance>;
   public getICNSData: (args: { subaccount?: string  }) => Promise<{ names: string[]; reverseResolvedName: string | undefined }>;
   public setReverseResolvedName: (args: { name: string, subaccount?: string }) => Promise<string>;
@@ -69,7 +69,8 @@ class PlugKeyRing {
   public getAgent: (args?: { subaccount ?: string, host?: string }) => HttpAgent;
   public getBalance: (args: { token: StandardToken, subaccount?: string }) => Promise<TokenBalance>;
   public getTransactions: (args: { subaccount?: string }) => Promise<GetTransactionsResponse>;
-  public send: (args: { to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
+  public send: (args: { subaccount?: string, to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
+  public delegateIdentity: (args: { to: Buffer, targets: string[], subaccount?: string }) => Promise<string>;
 
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
@@ -89,6 +90,7 @@ class PlugKeyRing {
       onNetworkChange: this.exposeWalletMethods.bind(this),
     });
     this.exposeWalletMethods();
+    this.exposeMainWalletMethods();
   }
 
   // Wallet proxy methods
@@ -97,6 +99,20 @@ class PlugKeyRing {
       this[method] = async args => {
         const { subaccount, ...params } = args || {};
         const wallet = await this.getWallet(subaccount);
+        await wallet.setNetwork(this.networkModule?.network);
+        const response = await wallet[method](params);
+        await this.updateWallet(wallet);
+        return response;
+      };
+    });
+  }
+
+  private exposeMainWalletMethods(): void {
+    MAIN_WALLET_METHODS.forEach(method => {
+      this[method] = async args => {
+        const { ...params } = args || {};
+        const mainAccountId = this.getMainAccountId();
+        const wallet = await this.getWallet(mainAccountId);
         await wallet.setNetwork(this.networkModule?.network);
         const response = await wallet[method](params);
         await this.updateWallet(wallet);
@@ -457,6 +473,15 @@ class PlugKeyRing {
     } catch (e) {
       return false;
     }
+  }
+
+  // Utils
+  private getMainAccountId = (): string => {
+    const  { wallets } = this.state;
+    const mainAccount = Object.values(wallets).find(
+      (wallet) => wallet.orderNumber === 0);
+
+    return mainAccount?.walletId || this.currentWalletId;
   }
 }
 

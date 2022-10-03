@@ -25,4 +25,5 @@ export const ERRORS = {
   EMPTY_IDENTITY_ERROR: 'Identity or SecretKey missing',
   INVALID_TYPE_ERROR: 'No such type allowed',
   DELETE_ACCOUNT_ERROR: 'Only imported accounts could be deleted',
+  TOKEN_NOT_REGISTERED: 'Token not registered',
 };

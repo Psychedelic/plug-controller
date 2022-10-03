@@ -1,6 +1,7 @@
-import { HttpAgent, PublicKey } from '@dfinity/agent';
-import { BinaryBlob } from '@dfinity/candid';
+import { HttpAgent, PublicKey, SignIdentity } from '@dfinity/agent';
+import { BinaryBlob, blobFromBuffer } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
+import { DelegationChain, Ed25519PublicKey } from '@dfinity/identity';
 import {
   getCachedUserNFTs,
   getNFTActor,
@@ -16,6 +17,7 @@ import {
 } from '@psychedelic/dab-js';
 import randomColor from 'random-color';
 
+
 import { ERRORS } from '../errors';
 import { validateCanisterId, validatePrincipalId } from '../PlugKeyRing/utils';
 import { createAgent } from '../utils/dfx';
@@ -30,9 +32,9 @@ import { getCapTransactions } from '../utils/dfx/history/cap';
 import { ConnectedApp } from '../interfaces/account';
 import {
   JSONWallet,
-  Assets,
   ICNSData,
   PlugWalletArgs,
+  WalletNFTCollection,
 } from '../interfaces/plug_wallet';
 import { StandardToken, TokenBalance } from '../interfaces/token';
 import { GetTransactionsResponse } from '../interfaces/transactions';
@@ -44,46 +46,27 @@ import {
 } from '../utils/dfx/icns/utils';
 import { Address } from '../interfaces/contact_registry';
 import { Network } from '../PlugKeyRing/modules/NetworkModule';
-import { RegisteredToken } from '../PlugKeyRing/modules/NetworkModule/Network';
+import { RegisteredNFT, RegisteredToken, uniqueTokens } from '../PlugKeyRing/modules/NetworkModule/Network';
 import { getAccountId } from '../utils/account';
 import { Types } from '../utils/account/constants';
-import { GenericSignIdentity } from '../utils/identity/genericSignIdentity'
+import { GenericSignIdentity } from '../utils/identity/genericSignIdentity';
+import { getTokensFromCollections } from '../utils/getTokensFromCollection';
+import { Buffer } from '../../node_modules/buffer';
 
 class PlugWallet {
   name: string;
-
   icon?: string;
-
   walletId: string;
-
   orderNumber: number;
-
   walletNumber?: number;
-
-  accountId: string;
-
   principal: string;
-
   fetch: any;
-
-  connectedApps: Array<ConnectedApp>;
-
   icnsData: ICNSData;
-
-  collections: Array<NFTCollection>;
-
   contacts: Array<Address>;
-
-  assets: Assets;
-
   type: Types;
-
   private identity: GenericSignIdentity;
-
   private agent: HttpAgent;
-
   private network: Network;
-
 
   constructor({
     name,
@@ -91,9 +74,6 @@ class PlugWallet {
     walletId,
     orderNumber,
     walletNumber,
-    connectedApps = [],
-    assets = DEFAULT_MAINNET_ASSETS,
-    collections = [],
     fetch,
     icnsData = {},
     network,
@@ -105,13 +85,9 @@ class PlugWallet {
     this.walletId = walletId;
     this.orderNumber = orderNumber;
     this.walletNumber = walletNumber;
-    this.assets = assets;
     this.icnsData = icnsData;
     this.identity = identity;
-    this.accountId = getAccountId(identity.getPrincipal());;
     this.principal = identity.getPrincipal().toText();
-    this.connectedApps = [...connectedApps];
-    this.collections = [...collections];
     this.fetch = fetch;
     this.network = network;
     this.type = type;
@@ -119,7 +95,10 @@ class PlugWallet {
       defaultIdentity: this.identity,
       fetch: this.fetch,
     });
+  }
 
+  get accountId(): string {
+    return getAccountId(this.identity.getPrincipal());
   }
 
   public async setNetwork(network: Network) {
@@ -139,34 +118,52 @@ class PlugWallet {
     this.icon = val;
   }
 
-  private nativeGetNFTs = async () => {
+  private populateAndTrimNFTs = async (collections: NFTCollection[]): Promise<WalletNFTCollection[]> => {
     const icnsAdapter = new ICNSAdapter(this.agent);
+    const collectionWithTokens = await getTokensFromCollections(this.network.registeredNFTS, this.principal, this.agent);
+    const icnsCollection = await icnsAdapter.getICNSCollection();
+    const unique = uniqueTokens([...collections, icnsCollection, ...collectionWithTokens]) as WalletNFTCollection[]
+    const simplifiedCollections = unique.map((collection: NFTCollection): WalletNFTCollection => ({
+      ...collection,
+      tokens: collection.tokens.map((token) => ({
+          index: token.index,
+          url: token.url,
+          canister: token.canister,
+          standard: token.standard,
+          name: token.name,
+      })),
+    }));
+    const completeCollections = simplifiedCollections.filter((collection) => collection.tokens.length > 0);
+    return completeCollections;
+  }
+
+  private nativeGetNFTs = async () => {
     try {
-      this.collections = await getAllUserNFTs({
+      const collections = await getAllUserNFTs({
         user: this.principal,
         agent: this.agent,
       });
-      const icnsCollection = await icnsAdapter.getICNSCollection();
-      return [...this.collections, icnsCollection];
+      const populatedCollections = await this.populateAndTrimNFTs(collections)
+      return populatedCollections;
     } catch (e) {
       console.warn('Error when trying to fetch NFTs natively from the IC', e);
       return null;
     }
   };
 
+
   // TODO: Make generic when standard is adopted. Just supports ICPunks rn.
   public getNFTs = async (args?: {
     refresh?: boolean;
-  }): Promise<NFTCollection[] | null> => {
+  }): Promise<WalletNFTCollection[] | null> => {
     if (this.network.isCustom) return [];
     try {
-      const icnsAdapter = new ICNSAdapter(this.agent);
-      this.collections = await getCachedUserNFTs({
+      const collections = await getCachedUserNFTs({
         userPID: this.principal,
         refresh: args?.refresh,
       });
-      const icnsCollection = await icnsAdapter.getICNSCollection();
-      return [...this.collections, icnsCollection];
+      const populatedCollections = await this.populateAndTrimNFTs(collections);
+      return populatedCollections;
     } catch (e) {
       console.warn(
         'Error when trying to fetch NFTs from Kyasshu. Fetching natively...',
@@ -180,7 +177,7 @@ class PlugWallet {
   public transferNFT = async (args: {
     token: NFTDetails;
     to: string;
-  }): Promise<NFTCollection[]> => {
+  }): Promise<boolean> => {
     const { token, to } = args;
     if (!validatePrincipalId(to)) {
       throw new Error(ERRORS.INVALID_PRINCIPAL_ID);
@@ -196,16 +193,10 @@ class PlugWallet {
         Principal.fromText(to),
         parseInt(token.index.toString(), 10)
       );
-      // Optimistically update the state
-      const collections = this.collections.map(col => ({
-        ...col,
-        tokens: col.tokens.filter(tok => tok.index !== token.index),
-      }));
-      this.collections = collections.filter(col => col.tokens.length);
       getCachedUserNFTs({ userPID: this.principal, refresh: true }).catch(
         console.warn
       );
-      return this.collections;
+      return true;
     } catch (e) {
       console.warn('NFT transfer error: ', e);
       throw new Error(ERRORS.TRANSFER_NFT_ERROR);
@@ -213,16 +204,30 @@ class PlugWallet {
   };
 
   public getTokenInfo = async ({ canisterId, standard }) => {
-    const token = await this.network.getTokenInfo({ canisterId, standard, defaultIdentity: this.identity });
+    const token = await this.network.getTokenInfo({
+      canisterId,
+      standard,
+      defaultIdentity: this.identity,
+    });
     const balance = await this.getTokenBalance({ token });
     return balance;
+  };
+
+  public getNFTInfo = async ({ canisterId, standard }) => {
+    const nft = await this.network.getNftInfo({ canisterId, identity: this.identity, standard });
+    return nft;
+  }
+
+  public registerNFT = async ({canisterId, standard}): Promise<RegisteredNFT[]> => {
+    const nfts = await this.network.registerNFT({canisterId, standard, walletId: this.walletNumber, identity: this.identity});
+    return nfts;
   }
 
   public registerToken = async (args: {
     canisterId: string;
     standard: string;
     logo?: string;
-  }): Promise<TokenBalance[]> => {
+  }): Promise<TokenBalance> => {
     const { canisterId, standard = 'ext', logo } = args || {};
 
     // Register token in network
@@ -246,7 +251,9 @@ class PlugWallet {
 
     // Format token and add asset to wallet state
     const color = randomColor({ luminosity: 'light' });
-    const registeredToken = tokens.find(t => t.canisterId === canisterId) as RegisteredToken;
+    const registeredToken = tokens.find(
+      t => t.canisterId === canisterId
+    ) as RegisteredToken;
     const tokenDescriptor = {
       amount: balance.value,
       token: {
@@ -258,11 +265,7 @@ class PlugWallet {
         logo,
       },
     };
-    this.assets = {
-      ...this.assets,
-      [canisterId]: tokenDescriptor,
-    };
-    return Object.values(this.assets);
+    return tokenDescriptor;
   };
 
   public toJSON = (): JSONWallet => ({
@@ -273,9 +276,6 @@ class PlugWallet {
     principal: this.identity.getPrincipal().toText(),
     accountId: this.accountId,
     icon: this.icon,
-    connectedApps: this.connectedApps,
-    assets: this.assets,
-    nftCollections: recursiveParseBigint(this.collections),
     icnsData: this.icnsData,
     type: this.type,
     keyPair: JSON.stringify(this.identity.toJSON())
@@ -344,10 +344,9 @@ class PlugWallet {
     // Get Custom Token Balances
     const walletTokens = this.network.getTokens(this.walletId);
     const tokenBalances = await Promise.all(walletTokens.map(token => this.getTokenBalance({ token })));
-    const assets = tokenBalances.reduce((acc, token) => ({ ...acc, [token.token.canisterId]: token }), {});
-    this.assets = assets;
     return tokenBalances;
   };
+
 
   public getTransactions = async (): Promise<GetTransactionsResponse> => {
     if (this.network.isCustom) return { total: 0, transactions: [] };
@@ -373,7 +372,7 @@ class PlugWallet {
       details: {
         ...tx.details,
         token:
-          tx.details?.canisterId && this.assets[tx.details?.canisterId]?.token,
+          tx.details?.canisterId && this.network.tokens.find((token) => token.canisterId === tx.details?.canisterId),
       },
     }));
 
@@ -395,7 +394,8 @@ class PlugWallet {
     opts?: TokenInterfaces.SendOpts;
   }): Promise<TokenInterfaces.SendResponse> => {
     const { to, amount, canisterId, opts } = args || {};
-    const savedToken = this.assets[canisterId].token;
+    const savedToken = this.network.tokenByCanisterId(canisterId);
+    if (!savedToken) throw new Error(ERRORS.TOKEN_NOT_REGISTERED);
     const tokenActor = await getTokenActor({
       canisterId,
       agent: this.agent,
@@ -429,7 +429,7 @@ class PlugWallet {
         host,
         wrapped: false,
         fetch: this.fetch,
-      })
+      });
     }
     return this.agent;
   }
@@ -446,7 +446,8 @@ class PlugWallet {
     names: string[];
     reverseResolvedName: string | undefined;
   }> => {
-    if (this.network.isCustom) return { names: [], reverseResolvedName: undefined };
+    if (this.network.isCustom)
+      return { names: [], reverseResolvedName: undefined };
     const icnsAdapter = new ICNSAdapter(this.agent);
     const names = await icnsAdapter.getICNSNames();
     const reverseResolvedName = await icnsAdapter.getICNSReverseResolvedName();
@@ -507,26 +508,30 @@ class PlugWallet {
 
   public removeToken = async (args: {
     canisterId: string;
-  }): Promise<TokenBalance[]> => {
+  }): Promise<StandardToken[]> => {
     const { canisterId } = args || {};
     const isDefaultAsset = Object.keys(DEFAULT_MAINNET_ASSETS).includes(canisterId);
-
-    if (isDefaultAsset) return Object.values(this.assets);
-
+    
+    // If it's a default asset, early return
+    if (isDefaultAsset) return this.network.tokens;
+    
     const tokens = await this.network.removeToken({
       canisterId,
     });
+    return tokens;
+  };
 
-    const assets = Object.keys(this.assets)
-      .filter(key => key !== canisterId)
-      .reduce((obj, key) => {
-        obj[key] = this.assets[key];
-        return obj;
-      },{});
-
-    this.assets = assets;
-
-    return Object.values(this.assets);
+  public delegateIdentity = async (args: { to: Buffer, targets: string[] }): Promise<string> => {
+    const { to, targets } = args;
+    const pidTargets = targets.map((target) => Principal.fromText(target));
+    const publicKey = Ed25519PublicKey.fromDer(blobFromBuffer(to));
+    const delagationChain = await DelegationChain.create(
+      this.identity,
+      publicKey,
+      undefined, // Expiration arg, default to 15 mins
+      { targets: pidTargets }
+    );
+    return JSON.stringify(delagationChain.toJSON());
   };
 }
 
