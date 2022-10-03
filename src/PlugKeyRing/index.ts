@@ -34,7 +34,7 @@ import {
   CreatePrincipalOptions,
   ImportMnemonicOptions,
 } from './interfaces';
-import { WALLET_METHODS } from './constants';
+import { WALLET_METHODS, MAIN_WALLET_METHODS } from './constants';
 
 class PlugKeyRing {
   // state
@@ -67,7 +67,8 @@ class PlugKeyRing {
   public getAgent: (args?: { subaccount ?: string, host?: string }) => HttpAgent;
   public getBalance: (args: { token: StandardToken, subaccount?: string }) => Promise<TokenBalance>;
   public getTransactions: (args: { subaccount?: string }) => Promise<GetTransactionsResponse>;
-  public send: (args: { to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
+  public send: (args: { subaccount?: string, to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
+  public delegateIdentity: (args: { to: Buffer, targets: string[], subaccount?: string }) => Promise<string>;
 
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
@@ -87,6 +88,7 @@ class PlugKeyRing {
       onNetworkChange: this.exposeWalletMethods.bind(this),
     });
     this.exposeWalletMethods();
+    this.exposeMainWalletMethods();
   }
 
   // Wallet proxy methods
@@ -95,6 +97,20 @@ class PlugKeyRing {
       this[method] = async args => {
         const { subaccount, ...params } = args || {};
         const wallet = await this.getWallet(subaccount);
+        await wallet.setNetwork(this.networkModule?.network);
+        const response = await wallet[method](params);
+        await this.updateWallet(wallet);
+        return response;
+      };
+    });
+  }
+
+  private exposeMainWalletMethods(): void {
+    MAIN_WALLET_METHODS.forEach(method => {
+      this[method] = async args => {
+        const { ...params } = args || {};
+        const mainAccountId = this.getMainAccountId();
+        const wallet = await this.getWallet(mainAccountId);
         await wallet.setNetwork(this.networkModule?.network);
         const response = await wallet[method](params);
         await this.updateWallet(wallet);
@@ -411,6 +427,15 @@ class PlugKeyRing {
     } catch (e) {
       return false;
     }
+  }
+
+  // Utils
+  private getMainAccountId = (): string => {
+    const  { wallets } = this.state;
+    const mainAccount = Object.values(wallets).find(
+      (wallet) => wallet.orderNumber === 0);
+
+    return mainAccount?.walletId || this.currentWalletId;
   }
 }
 
