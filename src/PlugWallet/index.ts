@@ -584,7 +584,7 @@ class PlugWallet {
     const delagationChain = await DelegationChain.create(
       this.identity,
       publicKey,
-      undefined,
+      undefined, // Expiration arg, default to 15 mins
       { targets: pidTargets }
     );
     return JSON.stringify(delagationChain.toJSON());
