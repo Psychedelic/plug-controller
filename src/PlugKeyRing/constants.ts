@@ -14,7 +14,8 @@ export const WALLET_METHODS = [
   'getICNSData',
   'setReverseResolvedName',
   'sign',
-  'getAgent'
+  'getAgent',
+  'delegateIdentity',
 ];
 
 export const MAIN_WALLET_METHODS = [

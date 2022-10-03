@@ -1,6 +1,7 @@
-import { HttpAgent, PublicKey } from '@dfinity/agent';
-import { BinaryBlob } from '@dfinity/candid';
+import { HttpAgent, PublicKey, SignIdentity } from '@dfinity/agent';
+import { BinaryBlob, blobFromBuffer } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
+import { DelegationChain, Ed25519PublicKey } from '@dfinity/identity';
 import {
   getCachedUserNFTs,
   getNFTActor,
@@ -49,8 +50,9 @@ import { Network } from '../PlugKeyRing/modules/NetworkModule';
 import { RegisteredToken, uniqueTokens } from '../PlugKeyRing/modules/NetworkModule/Network';
 import { getAccountId } from '../utils/account';
 import { Types } from '../utils/account/constants';
-import { GenericSignIdentity } from '../utils/identity/genericSignIdentity'
+import { GenericSignIdentity } from '../utils/identity/genericSignIdentity';
 import { getTokensFromCollections } from '../utils/getTokensFromCollection';
+import { Buffer } from '../../node_modules/buffer';
 
 class PlugWallet {
   name: string;
@@ -89,7 +91,6 @@ class PlugWallet {
 
   private network: Network;
 
-
   constructor({
     name,
     icon,
@@ -114,7 +115,7 @@ class PlugWallet {
     this.assets = assets;
     this.icnsData = icnsData;
     this.identity = identity;
-    this.accountId = getAccountId(identity.getPrincipal());;
+    this.accountId = getAccountId(identity.getPrincipal());
     this.principal = identity.getPrincipal().toText();
     this.connectedApps = [...connectedApps];
     this.collections = [...collections];
@@ -126,7 +127,6 @@ class PlugWallet {
       defaultIdentity: this.identity,
       fetch: this.fetch,
     });
-
   }
 
   public async setNetwork(network: Network) {
@@ -238,10 +238,14 @@ class PlugWallet {
   };
 
   public getTokenInfo = async ({ canisterId, standard }) => {
-    const token = await this.network.getTokenInfo({ canisterId, standard, defaultIdentity: this.identity });
+    const token = await this.network.getTokenInfo({
+      canisterId,
+      standard,
+      defaultIdentity: this.identity,
+    });
     const balance = await this.getTokenBalance({ token });
     return balance;
-  }
+  };
 
   public getNFTInfo = async ({ canisterId, standard }) => {
     const nft = await this.network.getNftInfo({ canisterId, identity: this.identity, standard });
@@ -284,7 +288,9 @@ class PlugWallet {
 
     // Format token and add asset to wallet state
     const color = randomColor({ luminosity: 'light' });
-    const registeredToken = tokens.find(t => t.canisterId === canisterId) as RegisteredToken;
+    const registeredToken = tokens.find(
+      t => t.canisterId === canisterId
+    ) as RegisteredToken;
     const tokenDescriptor = {
       amount: balance.value,
       token: {
@@ -316,7 +322,7 @@ class PlugWallet {
     collections: recursiveParseBigint(this.collections),
     icnsData: this.icnsData,
     type: this.type,
-    keyPair: this.identity.toJSON()
+    keyPair: this.identity.toJSON(),
   });
 
   public burnXTC = async (args: { to: string; amount: string }) => {
@@ -468,7 +474,7 @@ class PlugWallet {
         host,
         wrapped: false,
         fetch: this.fetch,
-      })
+      });
     }
     return this.agent;
   }
@@ -485,7 +491,8 @@ class PlugWallet {
     names: string[];
     reverseResolvedName: string | undefined;
   }> => {
-    if (this.network.isCustom) return { names: [], reverseResolvedName: undefined };
+    if (this.network.isCustom)
+      return { names: [], reverseResolvedName: undefined };
     const icnsAdapter = new ICNSAdapter(this.agent);
     const names = await icnsAdapter.getICNSNames();
     const reverseResolvedName = await icnsAdapter.getICNSReverseResolvedName();
@@ -548,7 +555,9 @@ class PlugWallet {
     canisterId: string;
   }): Promise<TokenBalance[]> => {
     const { canisterId } = args || {};
-    const isDefaultAsset = Object.keys(DEFAULT_MAINNET_ASSETS).includes(canisterId);
+    const isDefaultAsset = Object.keys(DEFAULT_MAINNET_ASSETS).includes(
+      canisterId
+    );
 
     if (isDefaultAsset) return Object.values(this.assets);
 
@@ -561,11 +570,24 @@ class PlugWallet {
       .reduce((obj, key) => {
         obj[key] = this.assets[key];
         return obj;
-      },{});
+      }, {});
 
     this.assets = assets;
 
     return Object.values(this.assets);
+  };
+
+  public delegateIdentity = async (args: { to: Buffer, targets: string[] }): Promise<string> => {
+    const { to, targets } = args;
+    const pidTargets = targets.map((target) => Principal.fromText(target));
+    const publicKey = Ed25519PublicKey.fromDer(blobFromBuffer(to));
+    const delagationChain = await DelegationChain.create(
+      this.identity,
+      publicKey,
+      undefined, // Expiration arg, default to 15 mins
+      { targets: pidTargets }
+    );
+    return JSON.stringify(delagationChain.toJSON());
   };
 }
 
