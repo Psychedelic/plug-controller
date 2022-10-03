@@ -36,7 +36,7 @@ import {
 import { WALLET_METHODS } from './constants';
 import { createAccountFromMnemonic } from '../utils/account';
 import { IdentityFactory } from './../utils/identity/identityFactory'
-import { parsePem } from './../utils/identity/parsePem'
+import { getIdentityFromPem } from './../utils/identity/parsePem'
 
 class PlugKeyRing {
   // state
@@ -232,7 +232,7 @@ class PlugKeyRing {
     this.checkUnlocked();
     const walletId = uuid(); 
     const orderNumber = Object.keys(this.state.wallets).length;
-    const { identity, type } = parsePem.getIdentityFromPem(pem);
+    const { identity, type } = getIdentityFromPem(pem);
     const wallet = new PlugWallet({
       icon,
       name,
@@ -259,9 +259,10 @@ class PlugKeyRing {
       throw new Error(ERRORS.DELETE_ACCOUNT_ERROR);
     }
 
-    delete wallets[walletId]
-    await this.saveEncryptedState({ wallets }, this.state.password);
-    this.state.wallets = wallets;
+    const { [walletId]: deletedWallet, ...maintainedWallets } = wallets
+
+    await this.saveEncryptedState({ wallets: maintainedWallets }, this.state.password);
+    this.state.wallets = maintainedWallets;
   };
 
   // Key Management

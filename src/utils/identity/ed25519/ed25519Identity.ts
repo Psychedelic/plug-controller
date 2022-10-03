@@ -1,5 +1,5 @@
 import {
-  Ed25519KeyIdentity, Ed25519PublicKey
+  Ed25519KeyIdentity as baseEd25519Identity, Ed25519PublicKey
 } from '@dfinity/identity';
 import { GenericSignIdentity } from '../genericSignIdentity';
 import {
@@ -7,6 +7,7 @@ import {
   BinaryBlob,
 } from '@dfinity/candid';
 import { PublicKey } from '@dfinity/agent';
+import { JsonnableKeyPair } from './../../../interfaces/identity'
 
 const PEM_BEGIN = `-----BEGIN EC PARAMETERS-----
 BgUrgQQACg==
@@ -19,7 +20,7 @@ const PRIV_KEY_INIT = '3053020101300506032b657004220420';
 
 const KEY_SEPARATOR = 'a123032100';
 
-class Ed25519Identity extends Ed25519KeyIdentity implements GenericSignIdentity { 
+class Ed25519KeyIdentity extends baseEd25519Identity implements GenericSignIdentity { 
 
   protected constructor(
     publicKey: PublicKey,
@@ -42,16 +43,16 @@ class Ed25519Identity extends Ed25519KeyIdentity implements GenericSignIdentity 
   /**
    * Serialize this key to JSON.
    */
-   public toJSON(): [string, string] {
+   public toJSON(): JsonnableKeyPair {
     return [blobToHex(this._publicKey.toRaw()), blobToHex(this._privateKey)];
   }
 
-  public static fromJSON(json: string): Ed25519Identity {
-    const identity = Ed25519KeyIdentity.fromJSON(json);
+  public static fromJSON(json: string): Ed25519KeyIdentity {
+    const identity = super.fromJSON(json);
     const keyPair = identity.getKeyPair();
-    return new Ed25519Identity(keyPair.publicKey, keyPair.secretKey);
+    return new Ed25519KeyIdentity(keyPair.publicKey, keyPair.secretKey);
   }
 
 }
 
-export default Ed25519Identity;
+export default Ed25519KeyIdentity;
