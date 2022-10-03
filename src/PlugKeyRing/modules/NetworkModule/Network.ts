@@ -72,6 +72,15 @@ export class Network {
     this.fetch = fetch;
   }
 
+  
+  get tokens(): StandardToken[] {
+    return [...this.defaultTokens, ...this.registeredTokens];
+  }
+  
+  public tokenByCanisterId(canisterId: string): StandardToken | undefined {
+    return this.tokens.find(token => token.canisterId === canisterId);
+  }
+  
   public edit({ name, host, ledgerCanisterId }: EditNetworkParams) {
     this.name = name || this.name;
     this.host = host || this.host;

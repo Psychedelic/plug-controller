@@ -17,10 +17,6 @@ export interface PlugWalletArgs {
     orderNumber: number;
     walletNumber?: number;
     icon?: string;
-    connectedApps?: Array<ConnectedApp>;
-    assets?: Assets;
-    collections?: Array<NFTCollection>;
-    customCollections?: Array<NFTCollection>;
     fetch: any;
     icnsData?: { names?: string[]; reverseResolvedName?: string };
     network: Network,
@@ -40,23 +36,6 @@ export interface JSONWallet {
     principal: string;
     accountId: string;
     icon?: string;
-    connectedApps: Array<ConnectedApp>;
-    assets: Assets;
-    collections?: Array<{
-        name: string;
-        canisterId: string;
-        standard: string;
-        tokens: Array<{
-            index: string;
-            canister: string;
-            id?: string;
-            name?: string;
-            url: string;
-            metadata: any;
-            collection?: string;
-            standard: string;
-        }>;
-    }>;
     icnsData: ICNSData;
     networkModule?: NetworkModuleParams;
     type: Types;
