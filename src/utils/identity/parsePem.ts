@@ -22,15 +22,17 @@ export const getIdentityFromPem = (pem) => {
     // ED25519 keys
     .replace("3053020101300506032b657004220420", "")
     .replace("a123032100", "");
-  const key = new Uint8Array(Buffer.from(raw.substring(0, 64), "hex"));
+  var key;
   var identity;
   var type;
 
   try {
+    key = new Uint8Array(Buffer.from(raw, "hex"));
     identity = Ed25519KeyIdentity.fromSecretKey(key);
     type = Types.pem25519;
   } catch {
     try {
+      key = new Uint8Array(Buffer.from(raw.substring(0, 64), "hex"))
       identity = Secp256k1KeyIdentity.fromSecretKey(key);
       type = Types.pem256k1;
     } catch (e) {
