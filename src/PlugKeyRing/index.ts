@@ -206,7 +206,7 @@ class PlugKeyRing {
       this.exposeWalletMethods();
       if (newVersion !== version) {
         await this.saveEncryptedState({ wallets, mnemonicWalletCount }, password, mnemonic);
-        await this.storage.set({ version: newVersion });
+        await this.storage.set({ version: newVersion, currentWalletId: this.currentWalletId });
       }
     }
   };
