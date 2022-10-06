@@ -26,4 +26,5 @@ export const ERRORS = {
   INVALID_TYPE_ERROR: 'No such type allowed',
   DELETE_ACCOUNT_ERROR: 'Only imported accounts could be deleted',
   TOKEN_NOT_REGISTERED: 'Token not registered',
+  INVALID_KEY: 'Invalid secretKey to create identity',
 };

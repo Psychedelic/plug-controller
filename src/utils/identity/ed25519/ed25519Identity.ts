@@ -43,12 +43,18 @@ class Ed25519KeyIdentity extends baseEd25519Identity implements GenericSignIdent
   /**
    * Serialize this key to JSON.
    */
-   public toJSON(): JsonnableKeyPair {
-    return [blobToHex(this._publicKey.toRaw()), blobToHex(this._privateKey)];
+  public toJSON(): JsonnableKeyPair {
+    return [blobToHex(this._publicKey.toDer()), blobToHex(this._privateKey)];
   }
 
   public static fromJSON(json: string): Ed25519KeyIdentity {
     const identity = super.fromJSON(json);
+    const keyPair = identity.getKeyPair();
+    return new Ed25519KeyIdentity(keyPair.publicKey, keyPair.secretKey);
+  }
+
+  public static fromSecretKey(key: ArrayBuffer): Ed25519KeyIdentity {
+    const identity = super.fromSecretKey(key);
     const keyPair = identity.getKeyPair();
     return new Ed25519KeyIdentity(keyPair.publicKey, keyPair.secretKey);
   }
