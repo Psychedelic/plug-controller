@@ -1,4 +1,4 @@
-import Secp256k1KeyIdentity from '../utils/crypto/secpk256k1/identity';
+import Secp256k1KeyIdentity from '../utils/identity/secpk256k1/identity';
 
 export interface AccountCredentials {
   mnemonic: string;

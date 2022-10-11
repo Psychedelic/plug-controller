@@ -278,7 +278,7 @@ class PlugWallet {
     icon: this.icon,
     icnsData: this.icnsData,
     type: this.type,
-    keyPair: this.identity.toJSON(),
+    keyPair: JSON.stringify(this.identity.toJSON())
   });
 
   public burnXTC = async (args: { to: string; amount: string }) => {

@@ -33,8 +33,10 @@ import {
   CreateOptions,
   CreatePrincipalOptions,
   ImportMnemonicOptions,
+  ImportFromPemOptions,
 } from './interfaces';
 import { WALLET_METHODS, MAIN_WALLET_METHODS } from './constants';
+import { getIdentityFromPem } from './../utils/identity/parsePem'
 
 class PlugKeyRing {
   // state
@@ -233,6 +235,50 @@ class PlugKeyRing {
   }: ImportMnemonicOptions): Promise<CreateImportResponse> => {
     const wallet = await this.createAndPersistKeyRing({ mnemonic, password });
     return { wallet, mnemonic };
+  };
+
+
+  public importAccountFromPem = async ({
+    icon,
+    name,
+    pem,
+  }: ImportFromPemOptions
+  ): Promise<PlugWallet> => {
+    await this.checkInitialized();
+    this.checkUnlocked();
+    const walletId = uuid(); 
+    const orderNumber = Object.keys(this.state.wallets).length;
+    const { identity, type } = getIdentityFromPem(pem);
+    const wallet = new PlugWallet({
+      icon,
+      name,
+      walletId,
+      orderNumber,
+      fetch: this.fetch,
+      network: this.networkModule.network,
+      type,
+      identity,
+    });
+
+    const wallets = { ...this.state.wallets, [walletId]: wallet };
+    await this.saveEncryptedState({ wallets }, this.state.password);
+    this.state.wallets = wallets;
+    return wallet;
+  };
+
+  public deleteImportedAccount = async (walletId: string): Promise<void> => {
+    await this.checkInitialized();
+    this.checkUnlocked();
+    const wallets = this.state.wallets
+
+    if (wallets[walletId] && wallets[walletId].type == Types.mnemonic) {
+      throw new Error(ERRORS.DELETE_ACCOUNT_ERROR);
+    }
+
+    const { [walletId]: deletedWallet, ...maintainedWallets } = wallets
+
+    await this.saveEncryptedState({ wallets: maintainedWallets }, this.state.password);
+    this.state.wallets = maintainedWallets;
   };
 
   // Key Management

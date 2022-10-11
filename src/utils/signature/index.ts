@@ -1,7 +1,7 @@
-import Secp256k1 from 'secp256k1';
 import { BinaryBlob } from '@dfinity/candid';
 import { TextEncoder } from 'text-encoding-shim';
-import Secp256k1PublicKey from '../crypto/secpk256k1/publicKey';
+import Secp256k1 from 'secp256k1';
+import Secp256k1PublicKey from '../identity/secpk256k1/publicKey';
 
 const encoder = new TextEncoder('utf-8');
 
