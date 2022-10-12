@@ -6,7 +6,7 @@ import Secp256k1 from 'secp256k1';
 import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
 
 import { DERIVATION_PATH } from '../account/constants';
-import Secp256k1PublicKey from './secpk256k1/publicKey';
+import Secp256k1PublicKey from '../identity/secpk256k1/publicKey';
 
 export interface Secp256k1KeyPair {
   publicKey: Secp256k1PublicKey;

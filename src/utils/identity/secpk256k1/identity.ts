@@ -9,12 +9,9 @@ import {
   BinaryBlob,
 } from '@dfinity/candid';
 import { PublicKey } from '@dfinity/agent';
-import { GenericSignIdentity } from '../../identity/genericSignIdentity'
+import { GenericSignIdentity } from '../genericSignIdentity'
 import Secp256k1PublicKey from './publicKey';
-
-declare type PublicKeyHex = string;
-declare type SecretKeyHex = string;
-export declare type JsonableSecp256k1Identity = [PublicKeyHex, SecretKeyHex];
+import { JsonnableKeyPair } from './../../../interfaces/identity'
 
 const PEM_BEGIN = `-----BEGIN EC PARAMETERS-----
 BgUrgQQACg==
@@ -28,7 +25,7 @@ const PRIV_KEY_INIT = '30740201010420';
 const KEY_SEPARATOR = 'a00706052b8104000aa144034200';
 
 class Secp256k1KeyIdentity extends GenericSignIdentity {
-  public static fromParsedJson(obj: [string, string]): Secp256k1KeyIdentity {
+  public static fromParsedJson(obj: JsonnableKeyPair): Secp256k1KeyIdentity {
     const [publicKeyRaw, privateKeyRaw] = obj;
     return new Secp256k1KeyIdentity(
       Secp256k1PublicKey.fromRaw(blobFromHex(publicKeyRaw)),
@@ -111,8 +108,8 @@ class Secp256k1KeyIdentity extends GenericSignIdentity {
   /**
    * Serialize this key to JSON.
    */
-  public toJSON(): string {
-    return JSON.stringify([blobToHex(this._publicKey.toRaw()), blobToHex(this._privateKey)]);
+  public toJSON(): JsonnableKeyPair {
+    return [blobToHex(this._publicKey.toRaw()), blobToHex(this._privateKey)];
   }
 
   /**

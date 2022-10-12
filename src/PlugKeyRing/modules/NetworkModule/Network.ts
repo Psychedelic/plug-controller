@@ -1,6 +1,5 @@
 import { v4 as uuid } from "uuid";
-import { BinaryBlob } from "@dfinity/candid";
-import { getNFTActor,getNFTInfo, getTokenActor, NFTCollection, standards } from "@psychedelic/dab-js";
+import { getNFTActor, getTokenActor, NFTCollection, standards } from "@psychedelic/dab-js";
 import { SignIdentity } from '@dfinity/agent';
 
 import { ERRORS } from "../../../errors";
@@ -72,6 +71,15 @@ export class Network {
     this.fetch = fetch;
   }
 
+  
+  get tokens(): StandardToken[] {
+    return [...this.defaultTokens, ...this.registeredTokens];
+  }
+  
+  public tokenByCanisterId(canisterId: string): StandardToken | undefined {
+    return this.tokens.find(token => token.canisterId === canisterId);
+  }
+  
   public edit({ name, host, ledgerCanisterId }: EditNetworkParams) {
     this.name = name || this.name;
     this.host = host || this.host;
@@ -100,11 +108,6 @@ export class Network {
       throw new Error(ERRORS.NON_FUNGIBLE_TOKEN_NOT_SUPPORTED);
     }
     const token:RegisteredToken = { ...metadata.fungible, canisterId, standard, registeredBy: []};
-
-    // TODO: Remove when issue solved
-    if(canisterId === TOKENS.DUST.canisterId) {
-      token.logo = undefined;
-    }
 
     this.registeredTokens = uniqueTokens([...this.registeredTokens, token]) as RegisteredToken[];
     return token;

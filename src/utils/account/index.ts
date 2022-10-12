@@ -3,7 +3,7 @@ import CryptoJS from 'crypto-js';
 import { Principal } from '@dfinity/principal';
 
 import { ERRORS } from '../../errors';
-import Secp256k1KeyIdentity from '../crypto/secpk256k1/identity';
+import Secp256k1KeyIdentity from '../identity/secpk256k1/identity';
 import { AccountCredentials } from '../../interfaces/account';
 import { ACCOUNT_DOMAIN_SEPERATOR, SUB_ACCOUNT_ZERO } from './constants';
 import {

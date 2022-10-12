@@ -32,7 +32,6 @@ import { getCapTransactions } from '../utils/dfx/history/cap';
 import { ConnectedApp } from '../interfaces/account';
 import {
   JSONWallet,
-  Assets,
   ICNSData,
   PlugWalletArgs,
   WalletNFTCollection,
@@ -47,7 +46,7 @@ import {
 } from '../utils/dfx/icns/utils';
 import { Address } from '../interfaces/contact_registry';
 import { Network } from '../PlugKeyRing/modules/NetworkModule';
-import { RegisteredToken, uniqueTokens } from '../PlugKeyRing/modules/NetworkModule/Network';
+import { RegisteredNFT, RegisteredToken, uniqueTokens } from '../PlugKeyRing/modules/NetworkModule/Network';
 import { getAccountId } from '../utils/account';
 import { Types } from '../utils/account/constants';
 import { GenericSignIdentity } from '../utils/identity/genericSignIdentity';
@@ -56,39 +55,17 @@ import { Buffer } from '../../node_modules/buffer';
 
 class PlugWallet {
   name: string;
-
   icon?: string;
-
   walletId: string;
-
   orderNumber: number;
-
   walletNumber?: number;
-
-  accountId: string;
-
   principal: string;
-
   fetch: any;
-
-  connectedApps: Array<ConnectedApp>;
-
   icnsData: ICNSData;
-
-  collections: Array<WalletNFTCollection>;
-  
-  customCollections: Array<WalletNFTCollection>;
-
   contacts: Array<Address>;
-
-  assets: Assets;
-
   type: Types;
-
   private identity: GenericSignIdentity;
-
   private agent: HttpAgent;
-
   private network: Network;
 
   constructor({
@@ -97,10 +74,6 @@ class PlugWallet {
     walletId,
     orderNumber,
     walletNumber,
-    connectedApps = [],
-    assets = DEFAULT_MAINNET_ASSETS,
-    collections = [],
-    customCollections = [],
     fetch,
     icnsData = {},
     network,
@@ -112,14 +85,9 @@ class PlugWallet {
     this.walletId = walletId;
     this.orderNumber = orderNumber;
     this.walletNumber = walletNumber;
-    this.assets = assets;
     this.icnsData = icnsData;
     this.identity = identity;
-    this.accountId = getAccountId(identity.getPrincipal());
     this.principal = identity.getPrincipal().toText();
-    this.connectedApps = [...connectedApps];
-    this.collections = [...collections];
-    this.customCollections = customCollections;
     this.fetch = fetch;
     this.network = network;
     this.type = type;
@@ -127,6 +95,10 @@ class PlugWallet {
       defaultIdentity: this.identity,
       fetch: this.fetch,
     });
+  }
+
+  get accountId(): string {
+    return getAccountId(this.identity.getPrincipal());
   }
 
   public async setNetwork(network: Network) {
@@ -171,8 +143,8 @@ class PlugWallet {
         user: this.principal,
         agent: this.agent,
       });
-      this.collections = await this.populateAndTrimNFTs(collections)
-      return this.collections;
+      const populatedCollections = await this.populateAndTrimNFTs(collections)
+      return populatedCollections;
     } catch (e) {
       console.warn('Error when trying to fetch NFTs natively from the IC', e);
       return null;
@@ -190,8 +162,8 @@ class PlugWallet {
         userPID: this.principal,
         refresh: args?.refresh,
       });
-      this.collections = await this.populateAndTrimNFTs(collections);
-      return this.collections;
+      const populatedCollections = await this.populateAndTrimNFTs(collections);
+      return populatedCollections;
     } catch (e) {
       console.warn(
         'Error when trying to fetch NFTs from Kyasshu. Fetching natively...',
@@ -205,7 +177,7 @@ class PlugWallet {
   public transferNFT = async (args: {
     token: NFTDetails;
     to: string;
-  }): Promise<WalletNFTCollection[]> => {
+  }): Promise<boolean> => {
     const { token, to } = args;
     if (!validatePrincipalId(to)) {
       throw new Error(ERRORS.INVALID_PRINCIPAL_ID);
@@ -221,16 +193,10 @@ class PlugWallet {
         Principal.fromText(to),
         parseInt(token.index.toString(), 10)
       );
-      // Optimistically update the state
-      const collections = this.collections.map(col => ({
-        ...col,
-        tokens: col.tokens.filter(tok => tok.index !== token.index),
-      }));
-      this.collections = collections.filter(col => col.tokens.length);
       getCachedUserNFTs({ userPID: this.principal, refresh: true }).catch(
         console.warn
       );
-      return this.collections;
+      return true;
     } catch (e) {
       console.warn('NFT transfer error: ', e);
       throw new Error(ERRORS.TRANSFER_NFT_ERROR);
@@ -252,11 +218,8 @@ class PlugWallet {
     return nft;
   }
 
-  public registerNFT = async ({canisterId, standard}) => {
+  public registerNFT = async ({canisterId, standard}): Promise<RegisteredNFT[]> => {
     const nfts = await this.network.registerNFT({canisterId, standard, walletId: this.walletNumber, identity: this.identity});
-    if (nfts) {
-      this.collections = [...this.collections, nfts[0]];
-    }
     return nfts;
   }
 
@@ -264,7 +227,7 @@ class PlugWallet {
     canisterId: string;
     standard: string;
     logo?: string;
-  }): Promise<TokenBalance[]> => {
+  }): Promise<TokenBalance> => {
     const { canisterId, standard = 'ext', logo } = args || {};
 
     // Register token in network
@@ -302,11 +265,7 @@ class PlugWallet {
         logo,
       },
     };
-    this.assets = {
-      ...this.assets,
-      [canisterId]: tokenDescriptor,
-    };
-    return Object.values(this.assets);
+    return tokenDescriptor;
   };
 
   public toJSON = (): JSONWallet => ({
@@ -317,12 +276,9 @@ class PlugWallet {
     principal: this.identity.getPrincipal().toText(),
     accountId: this.accountId,
     icon: this.icon,
-    connectedApps: this.connectedApps,
-    assets: this.assets,
-    collections: recursiveParseBigint(this.collections),
     icnsData: this.icnsData,
     type: this.type,
-    keyPair: this.identity.toJSON(),
+    keyPair: JSON.stringify(this.identity.toJSON())
   });
 
   public burnXTC = async (args: { to: string; amount: string }) => {
@@ -388,8 +344,6 @@ class PlugWallet {
     // Get Custom Token Balances
     const walletTokens = this.network.getTokens(this.walletId);
     const tokenBalances = await Promise.all(walletTokens.map(token => this.getTokenBalance({ token })));
-    const assets = tokenBalances.reduce((acc, token) => ({ ...acc, [token.token.canisterId]: token }), {});
-    this.assets = assets;
     return tokenBalances;
   };
 
@@ -418,7 +372,7 @@ class PlugWallet {
       details: {
         ...tx.details,
         token:
-          tx.details?.canisterId && this.assets[tx.details?.canisterId]?.token,
+          tx.details?.canisterId && this.network.tokens.find((token) => token.canisterId === tx.details?.canisterId),
       },
     }));
 
@@ -440,7 +394,8 @@ class PlugWallet {
     opts?: TokenInterfaces.SendOpts;
   }): Promise<TokenInterfaces.SendResponse> => {
     const { to, amount, canisterId, opts } = args || {};
-    const savedToken = this.assets[canisterId].token;
+    const savedToken = this.network.tokenByCanisterId(canisterId);
+    if (!savedToken) throw new Error(ERRORS.TOKEN_NOT_REGISTERED);
     const tokenActor = await getTokenActor({
       canisterId,
       agent: this.agent,
@@ -556,28 +511,17 @@ class PlugWallet {
 
   public removeToken = async (args: {
     canisterId: string;
-  }): Promise<TokenBalance[]> => {
+  }): Promise<StandardToken[]> => {
     const { canisterId } = args || {};
-    const isDefaultAsset = Object.keys(DEFAULT_MAINNET_ASSETS).includes(
-      canisterId
-    );
-
-    if (isDefaultAsset) return Object.values(this.assets);
-
+    const isDefaultAsset = Object.keys(DEFAULT_MAINNET_ASSETS).includes(canisterId);
+    
+    // If it's a default asset, early return
+    if (isDefaultAsset) return this.network.tokens;
+    
     const tokens = await this.network.removeToken({
       canisterId,
     });
-
-    const assets = Object.keys(this.assets)
-      .filter(key => key !== canisterId)
-      .reduce((obj, key) => {
-        obj[key] = this.assets[key];
-        return obj;
-      }, {});
-
-    this.assets = assets;
-
-    return Object.values(this.assets);
+    return tokens;
   };
 
   public delegateIdentity = async (args: { to: Buffer, targets: string[] }): Promise<string> => {
