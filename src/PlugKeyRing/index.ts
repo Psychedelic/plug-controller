@@ -260,6 +260,8 @@ class PlugKeyRing {
       identity,
     });
 
+    this.checkRepeatedAccount(wallet.principal);
+
     const wallets = { ...this.state.wallets, [walletId]: wallet };
     await this.saveEncryptedState({ wallets }, this.state.password);
     this.state.wallets = wallets;
@@ -295,6 +297,13 @@ class PlugKeyRing {
     } 
 
   };
+
+  private checkRepeatedAccount(principal: string): void {
+    const wallets = Object.values(this.state.wallets)
+    if (wallets.find((wallet)=> wallet.principal == principal)) {
+      throw new Error(ERRORS.INVALID_ACCOUNT);
+    }
+  }
 
   // Key Management
   public createPrincipal = async (
