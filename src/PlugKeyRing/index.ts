@@ -281,6 +281,21 @@ class PlugKeyRing {
     this.state.wallets = maintainedWallets;
   };
 
+  public validatePem = async ({
+    pem,
+  }: ImportFromPemOptions
+  ): Promise<boolean> => {
+    try {
+      const { identity } = getIdentityFromPem(pem);
+      const validIdentity = (identity) ? true : false;
+
+      return validIdentity;
+    } catch {
+      return false;
+    } 
+
+  };
+
   // Key Management
   public createPrincipal = async (
     opts?: CreatePrincipalOptions
