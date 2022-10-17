@@ -484,8 +484,11 @@ class PlugWallet {
     contact: Address;
   }): Promise<boolean> => {
     try {
+      if ('PrincipalId' in contact.value) {
+        const principal = contact.value.PrincipalId;
+        contact.value = { PrincipalId: Principal.fromText(principal.toString()) };
+      }
       const contactResponse = await addAddress(this.agent, contact);
-
       return contactResponse.hasOwnProperty('Ok') ? true : false;
     } catch (e) {
       return false;
