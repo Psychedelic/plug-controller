@@ -5,7 +5,7 @@
     "@dfinity/identity": "0.9.3",
     "@dfinity/principal": "0.9.3",
     "@psychedelic/cap-js": "0.0.7",
-    "@psychedelic/dab-js": "1.4.12",
+    "@psychedelic/dab-js": "1.5.0-beta.1",
     "@types/secp256k1": "^4.0.3",
     "axios": "^0.21.1",
     "babel-jest": "^25.5.1",

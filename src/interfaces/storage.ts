@@ -12,7 +12,7 @@ export interface StorageData {
 
 export interface KeyringStorage {
     isSupported: boolean;
-    get: (key:string) => Promise<unknown>;
+    get: (key?: string) => Promise<unknown>;
     set: (state: unknown) => Promise<void>;
     clear: () => Promise<void>;
 }
