@@ -263,8 +263,8 @@ class PlugKeyRing {
     this.checkRepeatedAccount(wallet.principal);
 
     const wallets = { ...this.state.wallets, [walletId]: wallet };
-    await this.saveEncryptedState({ wallets }, this.state.password);
     this.state.wallets = wallets;
+    await this.saveEncryptedState({ wallets }, this.state.password);
     return wallet;
   };
 
@@ -298,6 +298,8 @@ class PlugKeyRing {
 
   };
 
+  // This should only be used in import, not in derivation
+  // to avoid throwing when deriving an account that had been previously imported
   private checkRepeatedAccount(principal: string): void {
     const wallets = Object.values(this.state.wallets)
     if (wallets.find((wallet)=> wallet.principal == principal)) {
