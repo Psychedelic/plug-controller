@@ -1,8 +1,7 @@
 import { NFTCollection } from '@psychedelic/dab-js';
 import { Network, NetworkModuleParams } from '../PlugKeyRing/modules/NetworkModule';
-import { ConnectedApp } from './account';
 import { TokenBalance } from './token';
-import { Types } from '../utils/account/constants';
+import { IDENTITY_TYPES } from '../utils/account/constants';
 import { GenericSignIdentity } from '../utils/identity/genericSignIdentity'
 
 
@@ -21,7 +20,7 @@ export interface PlugWalletArgs {
     icnsData?: { names?: string[]; reverseResolvedName?: string };
     network: Network,
     identity: GenericSignIdentity,
-    type: Types,
+    type: IDENTITY_TYPES,
 }
 
 export interface Assets {
@@ -38,7 +37,7 @@ export interface JSONWallet {
     icon?: string;
     icnsData: ICNSData;
     networkModule?: NetworkModuleParams;
-    type: Types;
+    type: IDENTITY_TYPES;
     keyPair: string;
 }
 

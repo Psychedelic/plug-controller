@@ -1,4 +1,4 @@
-import type PlugWallet from '../PlugWallet'
+import PlugWallet from '../PlugWallet/base'
 import {
     JSONWallet
   } from '../interfaces/plug_wallet';

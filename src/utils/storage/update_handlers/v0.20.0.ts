@@ -1,5 +1,5 @@
 import { createAccountFromMnemonic } from '../../../utils/account';
-import { Types } from '../../../utils/account/constants';
+import { IDENTITY_TYPES } from '../../../utils/account/constants';
 
 
 export default (storage: any) => {
@@ -13,7 +13,7 @@ export default (storage: any) => {
                 );
                 return ({
                     ...wallet,
-                    type: Types.mnemonic,
+                    type: IDENTITY_TYPES.mnemonic,
                     keyPair: identity.toJSON(),
                 })
             })

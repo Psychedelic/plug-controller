@@ -1,6 +1,9 @@
-import PlugWallet from "../PlugWallet";
+import type PlugWallet from '../PlugWallet/base';
 
-export interface CreateImportResponse { wallet: PlugWallet; mnemonic: string; }
+export interface CreateImportResponse {
+  wallet: PlugWallet;
+  mnemonic: string;
+}
 
 export interface CreatePrincipalOptions {
   name?: string;
@@ -23,4 +26,8 @@ export interface ImportMnemonicOptions {
 
 export interface ImportFromPemOptions extends CreatePrincipalOptions {
   pem: string;
+}
+
+export interface ImportFromLedgerOptions extends CreatePrincipalOptions {
+  path: string;
 }

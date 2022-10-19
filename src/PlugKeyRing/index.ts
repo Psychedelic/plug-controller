@@ -9,7 +9,8 @@ import {
 import JsonBigInt from 'json-bigint';
 import { v4 as uuid } from "uuid";
 
-import PlugWallet from '../PlugWallet';
+import { createWallet } from '../PlugWallet';
+import PlugWallet from '../PlugWallet/base';
 import { PlugStateStorage, PlugStateInstance } from '../interfaces/plug_keyring';
 import { GetTransactionsResponse } from '../interfaces/transactions';
 import { KeyringStorage, StorageData } from '../interfaces/storage';
@@ -21,7 +22,7 @@ import { IdentityFactory } from './../utils/identity/identityFactory'
 import { handleStorageUpdate } from '../utils/storage/utils';
 import { createAccountFromMnemonic } from '../utils/account';
 import { recursiveParseBigint } from '../utils/object';
-import { Types } from '../utils/account/constants';
+import { IDENTITY_TYPES } from '../utils/account/constants';
 import { createAccount } from '../utils/account';
 import { getVersion } from '../utils/version';
 import Storage from '../utils/storage';
@@ -34,9 +35,11 @@ import {
   CreatePrincipalOptions,
   ImportMnemonicOptions,
   ImportFromPemOptions,
+  ImportFromLedgerOptions,
 } from './interfaces';
 import { WALLET_METHODS, MAIN_WALLET_METHODS } from './constants';
 import { getIdentityFromPem } from './../utils/identity/parsePem'
+import LedgerIdentity from '../utils/identity/ledger';
 
 class PlugKeyRing {
   // state
@@ -188,13 +191,13 @@ class PlugKeyRing {
       });
       const walletsArray = Object.values(_decrypted.wallets);
       const wallets = walletsArray.reduce(
-        (walletsAccum, wallet) => ({
+        async (walletsAccum, wallet) => ({
           ...walletsAccum,
-          [wallet.walletId]: new PlugWallet({
+          [wallet.walletId]: createWallet({
             ...wallet,
             fetch: this.fetch,
             network: this.networkModule.network,
-            identity: IdentityFactory.createIdentity(wallet.type, wallet.keyPair)
+            identity: await IdentityFactory.createIdentity(wallet.type, wallet.keyPair)
           })
         }),
         {}
@@ -249,7 +252,7 @@ class PlugKeyRing {
     const walletId = uuid(); 
     const orderNumber = Object.keys(this.state.wallets).length;
     const { identity, type } = getIdentityFromPem(pem);
-    const wallet = new PlugWallet({
+    const wallet = createWallet({
       icon,
       name,
       walletId,
@@ -271,7 +274,7 @@ class PlugKeyRing {
     this.checkUnlocked();
     const wallets = this.state.wallets
 
-    if (wallets[walletId] && wallets[walletId].type == Types.mnemonic) {
+    if (wallets[walletId] && wallets[walletId].type == IDENTITY_TYPES.mnemonic) {
       throw new Error(ERRORS.DELETE_ACCOUNT_ERROR);
     }
 
@@ -280,6 +283,30 @@ class PlugKeyRing {
     await this.saveEncryptedState({ wallets: maintainedWallets }, this.state.password);
     this.state.wallets = maintainedWallets;
   };
+
+  public importLedgerAccount = async ({icon, name, path}: ImportFromLedgerOptions): Promise<PlugWallet> => {
+    await this.checkInitialized();
+    this.checkUnlocked();
+    const walletId = uuid(); 
+    const orderNumber = Object.keys(this.state.wallets).length;
+    const identity = await LedgerIdentity.create(path);
+    const type = IDENTITY_TYPES.ledger;
+    const wallet = createWallet({
+      icon,
+      name,
+      walletId,
+      orderNumber,
+      fetch: this.fetch,
+      network: this.networkModule.network,
+      type,
+      identity,
+    });
+
+    const wallets = { ...this.state.wallets, [walletId]: wallet };
+    await this.saveEncryptedState({ wallets }, this.state.password);
+    this.state.wallets = wallets;
+    return wallet;
+  }
 
   // Key Management
   public createPrincipal = async (
@@ -295,13 +322,13 @@ class PlugKeyRing {
       mnemonic,
       walletNumber
     );
-    const wallet = new PlugWallet({
+    const wallet = createWallet({
       ...opts,
       walletId,
       orderNumber,
       fetch: this.fetch,
       network: this.networkModule.network,
-      type: Types.mnemonic,
+      type: IDENTITY_TYPES.mnemonic,
       identity,
     });
     const wallets = { ...this.state.wallets, [walletId]: wallet };
@@ -401,7 +428,7 @@ class PlugKeyRing {
       0
     );
  
-    const wallet = new PlugWallet({
+    const wallet = createWallet({
       icon,
       name,
       walletId,
@@ -409,7 +436,7 @@ class PlugKeyRing {
       fetch: this.fetch,
       network: this.networkModule.network,
       identity: identity,
-      type: Types.mnemonic,
+      type: IDENTITY_TYPES.mnemonic,
     });
 
     const data = {

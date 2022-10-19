@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import Secp256k1 from 'secp256k1';
 import { sha256 } from 'js-sha256';
-
+import { randomBytes } from 'tweetnacl';
 import {
   blobFromHex,
   blobFromUint8Array,
@@ -9,6 +9,7 @@ import {
   BinaryBlob,
 } from '@dfinity/candid';
 import { PublicKey } from '@dfinity/agent';
+
 import { GenericSignIdentity } from '../genericSignIdentity'
 import Secp256k1PublicKey from './publicKey';
 import { JsonnableKeyPair } from './../../../interfaces/identity'
@@ -25,6 +26,20 @@ const PRIV_KEY_INIT = '30740201010420';
 const KEY_SEPARATOR = 'a00706052b8104000aa144034200';
 
 class Secp256k1KeyIdentity extends GenericSignIdentity {
+  public static ephimeral(): Secp256k1KeyIdentity {
+    let privateKey = new Uint8Array(randomBytes(32));
+    while (!Secp256k1.privateKeyVerify(privateKey)) {
+      privateKey = new Uint8Array(randomBytes(32));
+    }
+
+    const publicKeyRaw = Secp256k1.publicKeyCreate(privateKey, false);
+
+    const publicKey = Secp256k1PublicKey.fromRaw(blobFromUint8Array(publicKeyRaw));
+    return new this(publicKey, blobFromUint8Array(privateKey));
+  }
+
+
+
   public static fromParsedJson(obj: JsonnableKeyPair): Secp256k1KeyIdentity {
     const [publicKeyRaw, privateKeyRaw] = obj;
     return new Secp256k1KeyIdentity(

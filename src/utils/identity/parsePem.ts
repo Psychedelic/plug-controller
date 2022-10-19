@@ -1,7 +1,7 @@
 
 import Secp256k1KeyIdentity from './secpk256k1/identity';
 import Ed25519KeyIdentity from './ed25519/ed25519Identity';
-import { Types } from '../account/constants';
+import { IDENTITY_TYPES } from '../account/constants';
 import { ERRORS } from '../../errors';
 
 export const parseEd25519 = (pem: string) => {
@@ -14,7 +14,7 @@ export const parseEd25519 = (pem: string) => {
   try {
     const key = new Uint8Array(Buffer.from(raw, "hex"));
     const identity = Ed25519KeyIdentity.fromSecretKey(key);
-    const type = Types.pem25519;
+    const type = IDENTITY_TYPES.pem25519;
     return { identity, type };
   } catch {
     return undefined
@@ -31,7 +31,7 @@ export const parseSec256K1 = (pem: string) => {
   try {
     const key = new Uint8Array(Buffer.from(raw.substring(0, 64), "hex"));
     const identity = Secp256k1KeyIdentity.fromSecretKey(key);
-    const type = Types.pem256k1;
+    const type = IDENTITY_TYPES.pem256k1;
     return { identity, type };
   } catch {
     return undefined;
