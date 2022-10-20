@@ -24,3 +24,7 @@ export interface ImportMnemonicOptions {
 export interface ImportFromPemOptions extends CreatePrincipalOptions {
   pem: string;
 }
+
+export interface GetPrincipalFromPem {
+  pem: string;
+}
