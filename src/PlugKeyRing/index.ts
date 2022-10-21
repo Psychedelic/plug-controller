@@ -36,6 +36,7 @@ import {
   ImportMnemonicOptions,
   ImportFromPemOptions,
   ImportFromLedgerOptions,
+  GetPrincipalFromPem
 } from './interfaces';
 import { WALLET_METHODS, MAIN_WALLET_METHODS } from './constants';
 import { getIdentityFromPem } from './../utils/identity/parsePem'
@@ -274,6 +275,18 @@ class PlugKeyRing {
     return wallet;
   };
 
+  public getPrincipalFromPem = async ({
+    pem,
+  }: GetPrincipalFromPem
+  ): Promise<string> => {
+    await this.checkInitialized();
+    this.checkUnlocked();
+    const { identity, type } = getIdentityFromPem(pem);
+    const principal = identity.getPrincipal().toText();
+
+    return principal;
+  };
+
   public deleteImportedAccount = async (walletId: string): Promise<void> => {
     await this.checkInitialized();
     this.checkUnlocked();
@@ -285,6 +298,13 @@ class PlugKeyRing {
 
     const { [walletId]: deletedWallet, ...maintainedWallets } = wallets
 
+    if (walletId == this.currentWalletId) {
+
+      const currentWalletId = this.getMainAccountId();
+      this.currentWalletId = currentWalletId;
+
+      await this.storage.set({ currentWalletId });
+    }
     await this.saveEncryptedState({ wallets: maintainedWallets }, this.state.password);
     this.state.wallets = maintainedWallets;
   };

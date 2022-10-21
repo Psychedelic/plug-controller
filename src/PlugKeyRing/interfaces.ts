@@ -31,3 +31,6 @@ export interface ImportFromPemOptions extends CreatePrincipalOptions {
 export interface ImportFromLedgerOptions extends CreatePrincipalOptions {
   path: string;
 }
+export interface GetPrincipalFromPem {
+  pem: string;
+}
