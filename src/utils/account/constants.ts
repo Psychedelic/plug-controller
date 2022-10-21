@@ -13,5 +13,8 @@ export enum IDENTITY_TYPES {
   mnemonic = 'MNEMONIC',
   pem256k1 = 'PEM_256k1',
   pem25519 = 'PEM_25519',
-  ledger = 'LEDGER',
+  ledgerUSB = 'LEDGER_USB',
+  ledgerUSBRN = 'LEDGER_USB_RN',
+  ledgerBLERN = 'LEDGER_BLE_RN',
+
 }

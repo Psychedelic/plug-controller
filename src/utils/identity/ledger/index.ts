@@ -1,24 +1,57 @@
-import { SignIdentity, PublicKey, HttpAgentRequest } from '@dfinity/agent';
-import { BinaryBlob } from '@dfinity/candid';
-import { LedgerIdentity as BaseIdentity} from '@dfinity/identity-ledgerhq'
+import { SignIdentity, PublicKey, HttpAgentRequest, ReadRequest, CallRequest, Cbor } from '@dfinity/agent';
+import { BinaryBlob, blobFromBuffer} from '@dfinity/candid';
+import { Principal } from '@dfinity/principal';
+import DfinityApp, { ResponseSign } from '@zondax/ledger-dfinity';
+
 import { JsonnableKeyPair } from '../../../interfaces/identity';
+import { base64ToBytes, bytesToBase64 } from '../../encoding';
 import { GenericSignIdentity } from '../genericSignIdentity';
+import Secp256k1PublicKey from '../secpk256k1/publicKey';
+import { Buffer } from '../../../../node_modules/buffer';
+
+/**
+ * Convert the HttpAgentRequest body into cbor which can be signed by the Ledger Hardware Wallet.
+ * @param request - body of the HttpAgentRequest
+ */
+ function _prepareCborForLedger(request: ReadRequest | CallRequest): ArrayBuffer {
+  return Cbor.encode({ content: request });
+}
+
+const CONNECTED_METHODS = ['showAddressAndPubKeyOnDevice', 'sign', 'transformRequest'];
+
+
 
 class LedgerIdentity extends SignIdentity implements GenericSignIdentity {
 
-  protected baseIdentity: BaseIdentity;
   protected derivePath: string;
+  protected publicKey: PublicKey;
+  protected TransportClass: any;
+  protected app: DfinityApp | null;
 
   public static async create(derivePath = `m/44'/223'/0'/0/0`): Promise<LedgerIdentity> {
-      const baseIdentity = await BaseIdentity.create(derivePath);
-      return new LedgerIdentity(baseIdentity, derivePath);
+    const TransportClass = (await import('@ledgerhq/hw-transport-webhid')).default;
+    const transport = await TransportClass.create();
+    const app = new DfinityApp(transport);
+
+    const resp = await app.getAddressAndPubKey(derivePath);
+    // This type doesn't have the right fields in it, so we have to manually type it.
+    const principal = (resp as unknown as { principalText: string }).principalText;
+    const publicKey = Secp256k1PublicKey.fromRaw(blobFromBuffer(new Buffer(resp.publicKey)));
+
+    if (principal !== Principal.selfAuthenticating(new Uint8Array(publicKey.toDer())).toText()) {
+      throw new Error('Principal returned by device does not match public key.');
     }
 
-  public static fromJSON(json: string): Promise<LedgerIdentity> {
+    return new this(derivePath, publicKey, TransportClass);
+  }
+
+  public static async fromJSON(json: string, TransportClass: any): Promise<LedgerIdentity> {
     const parsed = JSON.parse(json);
     if (Array.isArray(parsed)) {
       if (typeof parsed[0] === 'string' && typeof parsed[1] === 'string') {
-        return this.create(parsed[0]);
+        const derPublicKey = base64ToBytes(parsed[1]);
+        const publicKey = Secp256k1PublicKey.fromDer(blobFromBuffer(new Buffer(derPublicKey)));
+        return new LedgerIdentity(parsed[0], publicKey, TransportClass);
       }
     }
     throw new Error(
@@ -26,31 +59,81 @@ class LedgerIdentity extends SignIdentity implements GenericSignIdentity {
     );
   }
   
-  constructor(baseIdentity: BaseIdentity, derivePath = `m/44'/223'/0'/0/0`) {
+  constructor(derivePath = `m/44'/223'/0'/0/0`, publicKey: PublicKey, TransportClass: any) {
       super();
-      this.baseIdentity = baseIdentity;
       this.derivePath = derivePath;
+      this.publicKey = publicKey;
+      this.TransportClass = TransportClass;
+
+      this.exposeConnectedMethods();
   }
 
+  private exposeConnectedMethods(): void {
+    CONNECTED_METHODS.forEach((method) => {
+      this[method] = async (...args: any) => {
+        const transport = await this.openConnection()
+        this[method](...args);
+        await this.closeConnection(transport);
+      }
+    });
+  }
+
+  private async openConnection(): Promise<void> {
+    const transport = await this.TransportClass.openConnected();
+    this.app = new DfinityApp(transport);
+    return transport
+  }
+
+  private async closeConnection(transport): Promise<void> {
+    await transport.close();
+
+    if (this.app) {
+      this.app = null;
+    }
+  }
 
   /**
    * Required by Ledger.com that the user should be able to press a Button in UI
    * and verify the address/pubkey are the same as on the device screen.
    */
-  public async showAddressAndPubKeyOnDevice(): Promise<void> {
-    await this.baseIdentity.showAddressAndPubKeyOnDevice;
-  } 
-
-  public getPublicKey(): PublicKey {
-    return this.baseIdentity.getPublicKey();
+   public async showAddressAndPubKeyOnDevice(): Promise<void> {
+    await this.app?.showAddressAndPubKey(this.derivePath);
   }
 
   public async sign(blob: ArrayBuffer): Promise<BinaryBlob> {
-    return this.baseIdentity.sign(blob);
+    // Force an `as any` because the types are compatible but TypeScript cannot figure it out.
+    const resp: ResponseSign = await this.app?.sign(this.derivePath, Buffer.from(blob) as any);
+    const signatureRS = resp.signatureRS;
+    if (!signatureRS) {
+      throw new Error(
+        `A ledger error happened during signature:\n` +
+          `Code: ${resp.returnCode}\n` +
+          `Message: ${JSON.stringify(resp.errorMessage)}\n`,
+      );
+    }
+
+    if (signatureRS?.byteLength !== 64) {
+      throw new Error(`Signature must be 64 bytes long (is ${signatureRS.length})`);
+    }
+
+    return blobFromBuffer(new Buffer(signatureRS));
   }
 
   public async transformRequest(request: HttpAgentRequest): Promise<unknown> {
-    return this.baseIdentity.transformRequest(request);
+    const { body, ...fields } = request;
+    const signature = await this.sign(_prepareCborForLedger(body));
+    return {
+      ...fields,
+      body: {
+        content: body,
+        sender_pubkey: this.publicKey.toDer(),
+        sender_sig: signature,
+      },
+    };
+  }
+
+  public getPublicKey(): PublicKey {
+    return this.publicKey;
   }
 
   public getPem(): string {
@@ -58,7 +141,13 @@ class LedgerIdentity extends SignIdentity implements GenericSignIdentity {
   }
 
   public toJSON(): JsonnableKeyPair {
-      return [this.derivePath, this.getPublicKey().toDer().toString()];
+    const publicKey = new Uint8Array(this.publicKey.toDer());
+    const publicKeyStr = bytesToBase64(publicKey);
+    return [this.derivePath, publicKeyStr];
+  }
+
+  public getPrincipal(): Principal {
+    return Principal.selfAuthenticating(this.publicKey.toDer())
   }
 }
 
