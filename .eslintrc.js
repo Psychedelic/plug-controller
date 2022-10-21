@@ -34,11 +34,11 @@ module.exports = {
     'no-empty-function': 'off',
     'import/prefer-default-export': 'off',
     'no-underscore-dangle': 'off',
-    "no-unused-vars": "off",
-    "no-shadow": "off",
-    "camelcase": "off",
-    "@typescript-eslint/camelcase": "off",
-    "@typescript-eslint/no-unused-vars": "off"
+    'no-unused-vars': 'off',
+    'no-shadow': 'off',
+    'camelcase': 'off',
+    '@typescript-eslint/camelcase': 'off',
+    '@typescript-eslint/no-unused-vars': 'off'
   },
   env: {
     node: true,
