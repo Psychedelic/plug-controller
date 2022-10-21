@@ -292,6 +292,13 @@ class PlugKeyRing {
 
     const { [walletId]: deletedWallet, ...maintainedWallets } = wallets
 
+    const mainWalletId = this.getMainAccountId()
+
+    const currentWalletId = maintainedWallets[mainWalletId].walletId;
+
+    this.currentWalletId = currentWalletId;
+
+    await this.storage.set({ currentWalletId });
     await this.saveEncryptedState({ wallets: maintainedWallets }, this.state.password);
     this.state.wallets = maintainedWallets;
   };
