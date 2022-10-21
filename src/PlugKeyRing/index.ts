@@ -141,7 +141,7 @@ class PlugKeyRing {
 
   private updateWallet = async (wallet: PlugWallet): Promise<void> => {
     await this.checkUnlocked();
-    const {wallets} = this.state;
+    const { wallets } = this.state;
     wallets[wallet.walletId] = wallet;
     this.state.wallets = wallets;
     await this.saveEncryptedState({ wallets }, this.state.password);
@@ -287,7 +287,7 @@ class PlugKeyRing {
   public deleteImportedAccount = async (walletId: string): Promise<void> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    const {wallets} = this.state
+    const { wallets } = this.state
 
     if (wallets[walletId] && wallets[walletId].type === Types.mnemonic) {
       throw new Error(ERRORS.DELETE_ACCOUNT_ERROR);
@@ -462,7 +462,7 @@ class PlugKeyRing {
     });
 
     const data = {
-      wallets: {[walletId]: wallet.toJSON()},
+      wallets: { [walletId]: wallet.toJSON() },
       password,
       mnemonic,
       mnemonicWalletCount: 1,

@@ -38,7 +38,8 @@ module.exports = {
     'no-shadow': 'off',
     'camelcase': 'off',
     '@typescript-eslint/camelcase': 'off',
-    '@typescript-eslint/no-unused-vars': 'off'
+    '@typescript-eslint/no-unused-vars': 'off',
+    'object-curly-spacing': ['error', 'always'],
   },
   env: {
     node: true,
