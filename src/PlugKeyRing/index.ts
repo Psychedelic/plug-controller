@@ -293,10 +293,8 @@ class PlugKeyRing {
     const { [walletId]: deletedWallet, ...maintainedWallets } = wallets
 
     if (walletId == this.currentWalletId) {
-      const mainWalletId = this.getMainAccountId()
 
-      const currentWalletId = maintainedWallets[mainWalletId].walletId;
-
+      const currentWalletId = this.getMainAccountId();
       this.currentWalletId = currentWalletId;
 
       await this.storage.set({ currentWalletId });
