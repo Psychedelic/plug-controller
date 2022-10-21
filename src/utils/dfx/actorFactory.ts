@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { HttpAgent, Actor, ActorMethod, ActorSubclass } from '@dfinity/agent';
 import { IDL } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';

@@ -1,9 +1,8 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable camelcase */
-import { AnonymousIdentity, HttpAgent } from '@dfinity/agent';
+import { AnonymousIdentity, HttpAgent, SignIdentity } from '@dfinity/agent';
 import { BinaryBlob, blobFromUint8Array } from '@dfinity/candid';
-import { SignIdentity } from '@dfinity/agent';
 import crossFetch from 'cross-fetch';
 
 import Secp256k1KeyIdentity from '../identity/secpk256k1/identity';
@@ -16,7 +15,7 @@ export interface CreateAgentArgs {
   defaultIdentity?: SignIdentity;
   fetch?: any;
   host?: string;
-  wrapped?: boolean,
+  wrapped?: boolean;
 }
 
 export const createIdentity = (secretKey: BinaryBlob): Secp256k1KeyIdentity =>
@@ -29,12 +28,16 @@ export const createAgent = ({
   host,
   wrapped = true,
 }: CreateAgentArgs): HttpAgent => {
-  if (!defaultIdentity && !secretKey) throw new Error(ERRORS.EMPTY_IDENTITY_ERROR);
+  if (!defaultIdentity && !secretKey)
+    throw new Error(ERRORS.EMPTY_IDENTITY_ERROR);
   const identity =
-    defaultIdentity || (secretKey ? createIdentity(blobFromUint8Array(secretKey)) : new AnonymousIdentity() );
+    defaultIdentity ||
+    (secretKey
+      ? createIdentity(blobFromUint8Array(secretKey))
+      : new AnonymousIdentity());
   const agent = new HttpAgent({
-    host: (wrapped ? PLUG_PROXY_HOST : host)|| PLUG_PROXY_HOST,
-    fetch: wrapped ?  wrappedFetch(fetch) : fetch,
+    host: (wrapped ? PLUG_PROXY_HOST : host) || PLUG_PROXY_HOST,
+    fetch: wrapped ? wrappedFetch(fetch) : fetch,
     identity,
   });
   if (host && !IC_MAINNET_URLS.includes(host)) {

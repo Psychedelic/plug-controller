@@ -27,26 +27,26 @@ export default ({ IDL }) => {
     exportOwnerDomains: IDL.Func(
       [],
       [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(IDL.Text)))],
-      ['query'],
+      ['query']
     ),
     getApproved: IDL.Func([IDL.Text], [IDL.Opt(IDL.Principal)], ['query']),
     getControllerDomains: IDL.Func(
       [IDL.Principal],
       [IDL.Opt(IDL.Vec(RecordExt))],
-      ['query'],
+      ['query']
     ),
     getInfo: IDL.Func([], [Info], ['query']),
     getRecord: IDL.Func([IDL.Text], [IDL.Opt(RecordExt)], ['query']),
     getUserDomains: IDL.Func(
       [IDL.Principal],
       [IDL.Opt(IDL.Vec(RecordExt))],
-      ['query'],
+      ['query']
     ),
     isApproved: IDL.Func([IDL.Text, IDL.Principal], [IDL.Bool], ['query']),
     isApprovedForAll: IDL.Func(
       [IDL.Principal, IDL.Principal],
       [IDL.Bool],
-      ['query'],
+      ['query']
     ),
     isWhitelisted: IDL.Func([IDL.Text], [IDL.Bool], []),
     owner: IDL.Func([IDL.Text], [IDL.Opt(IDL.Principal)], ['query']),
@@ -59,26 +59,26 @@ export default ({ IDL }) => {
     setRecord: IDL.Func(
       [IDL.Text, IDL.Principal, IDL.Principal, IDL.Nat64, Time],
       [TxReceipt],
-      [],
+      []
     ),
     setResolver: IDL.Func([IDL.Text, IDL.Principal], [TxReceipt], []),
     setSubnodeExpiry: IDL.Func([IDL.Text, IDL.Text, Time], [TxReceipt], []),
     setSubnodeOwner: IDL.Func(
       [IDL.Text, IDL.Text, IDL.Principal],
       [TxReceipt],
-      [],
+      []
     ),
     setSubnodeRecord: IDL.Func(
       [IDL.Text, IDL.Text, IDL.Principal, IDL.Principal, IDL.Nat64, Time],
       [TxReceipt],
-      [],
+      []
     ),
     setTTL: IDL.Func([IDL.Text, IDL.Nat64], [TxReceipt], []),
     transfer: IDL.Func([IDL.Principal, IDL.Text], [TxReceipt], []),
     transferFrom: IDL.Func(
       [IDL.Principal, IDL.Principal, IDL.Text],
       [TxReceipt],
-      [],
+      []
     ),
     ttl: IDL.Func([IDL.Text], [IDL.Opt(IDL.Nat64)], ['query']),
   });

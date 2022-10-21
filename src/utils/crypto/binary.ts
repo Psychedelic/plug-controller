@@ -1,3 +1,5 @@
+/* eslint-disable prefer-spread */
+/* eslint-disable no-param-reassign */
 /* eslint-disable no-prototype-builtins */
 /* eslint-disable no-bitwise */
 import crc32 from 'buffer-crc32';
@@ -47,7 +49,7 @@ export const wordArrayToByteArray = (wordArray, length) => {
     bytes = wordToByteArray(wordArray[i], Math.min(4, length));
     length -= bytes.length;
     result = [...result, bytes];
-    i++;
+    i += 1;
   }
   return [].concat.apply([], result);
 };
@@ -70,7 +72,7 @@ export const lebDecode = pipe => {
     if (pipe.length < 1) {
       throw new Error('unexpected end of buffer');
     }
-    byte = pipe[0];
+    [byte] = pipe;
     pipe = pipe.slice(1);
     value += BigInt(byte & 0x7f).valueOf() * weight;
     weight *= BigInt(128);

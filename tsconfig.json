@@ -18,7 +18,8 @@
       "noFallthroughCasesInSwitch": true,
       "noImplicitReturns": true,
       "skipLibCheck": true,
-      "types": ["node", "jest"]
+      "types": ["node", "jest"],
+      "noUnusedLocals": true,
   },
   "compileOnSave": true,
   "exclude": [
@@ -26,6 +27,7 @@
       "dist",
       "tests",
       "jest.config.cjs",
-      ".vscode"
+      ".vscode",
+      "src/manual.ts"
   ]
 }

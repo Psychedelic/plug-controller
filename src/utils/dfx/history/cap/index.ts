@@ -1,13 +1,15 @@
+/* eslint-disable @typescript-eslint/camelcase */
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-nested-ternary */
 /* eslint-disable camelcase */
 /* eslint-disable no-underscore-dangle */
-import axios, { AxiosResponse, Method } from 'axios';
-import { Principal } from '@dfinity/principal';
+import axios, { Method } from 'axios';
 import {
   prettifyCapTransactions,
   TransactionPrettified,
 } from '@psychedelic/cap-js';
-import { getTokens, getAllNFTS, TokenRegistry } from '@psychedelic/dab-js';
-import crossFetch from 'cross-fetch';
+import { getTokens, getAllNFTS } from '@psychedelic/dab-js';
+import { HttpAgent } from '@dfinity/agent';
 
 import { getCanisterInfo } from '../../../dab';
 import { parsePrincipal, recursiveParseBigint } from '../../../object';
@@ -18,11 +20,8 @@ import {
   GetCapTransactionsParams,
   GetUserTransactionResponse,
   LastEvaluatedKey,
-  KyashuItem,
 } from '../../../../interfaces/cap';
-import { uniqueMap } from '../../../array';
 import { buildSonicData, SONIC_SWAP_CANISTER_ID } from './sonic';
-import { HttpAgent } from '@dfinity/agent';
 
 const parseUnderscoreNumber = value =>
   value ? Number(value.replace('_', '')) : null;
@@ -94,12 +93,16 @@ const getCanistersInfo = async (
   const dabNFTsInfo = metadataArrayToObject(await getAllNFTS({ agent }));
   const dabInfo = await Promise.all(
     canisterIds.map(async canisterId => {
-      let canisterInfo = { canisterId };
+      let canisterInfo = {
+        canisterId,
+        tokenRegistryInfo: [],
+        nftRegistryInfo: [],
+      };
       // First check if present in nft or token registries
       if (dabTokensInfo[canisterId])
-        canisterInfo['tokenRegistryInfo'] = dabTokensInfo[canisterId];
+        canisterInfo.tokenRegistryInfo = dabTokensInfo[canisterId];
       if (dabNFTsInfo[canisterId])
-        canisterInfo['nftRegistryInfo'] = dabNFTsInfo[canisterId];
+        canisterInfo.nftRegistryInfo = dabNFTsInfo[canisterId];
       try {
         // Fetch extra metadata from canister registry
         const fetchedCanisterInfo = await getCanisterInfo(canisterId, agent);
@@ -144,13 +147,14 @@ const getCanisterIds = (
         return acum
           .concat([canisterId])
           .concat(getCanisterIdsFromSonicTx(prettyEvent.details));
-      } else {
-        return acum.concat([canisterId]);
       }
+      return acum.concat([canisterId]);
     },
     [] as string[]
   );
-  return [...new Set(canisterIds.map((id) => parsePrincipal(id)))].filter(value => value);
+  return [...new Set(canisterIds.map(id => parsePrincipal(id)))].filter(
+    value => value
+  );
 };
 
 export const getCapTransactions = async ({
@@ -158,18 +162,22 @@ export const getCapTransactions = async ({
   lastEvaluatedKey,
   agent,
 }: GetCapTransactionsParams): Promise<GetUserTransactionResponse> => {
-  let total: number = 0;
-  let events: { sk: string, canisterId: string, prettyEvent: TransactionPrettified }[] = [];
-  let LastEvaluatedKey: LastEvaluatedKey | undefined = lastEvaluatedKey;
+  let total = 0;
+  let events: {
+    sk: string;
+    canisterId: string;
+    prettyEvent: TransactionPrettified;
+  }[] = [];
+  let actuallLastEvaluatedKey: LastEvaluatedKey | undefined = lastEvaluatedKey;
   try {
     do {
       const options = {
         method: 'get' as Method,
         url: `https://kyasshu.fleek.co/cap/user/txns/${principalId}`,
-        ...(LastEvaluatedKey
+        ...(actuallLastEvaluatedKey
           ? {
               params: {
-                LastEvaluatedKey,
+                actuallLastEvaluatedKey,
               },
             }
           : {}),
@@ -180,10 +188,10 @@ export const getCapTransactions = async ({
         canisterId: getTransactionCanister(item.contractId),
         prettyEvent: prettifyCapTransactions(item.event),
       }));
-      LastEvaluatedKey = response.data.LastEvaluatedKey;
+      actuallLastEvaluatedKey = response.data.LastEvaluatedKey;
       total += response.data.Count;
       events = [...events, ...prettifyEvents];
-    } while (LastEvaluatedKey);
+    } while (actuallLastEvaluatedKey);
   } catch (e) {
     console.error('CAP transactions error:', e);
     return {
@@ -192,20 +200,24 @@ export const getCapTransactions = async ({
     };
   }
   // Keep only last 50 txs by timestamp
-  const lastEvents = events.sort(
-    (a, b) => (a.prettyEvent.time < b.prettyEvent.time)
-      ? -1
-      : ((a.prettyEvent.time > b.prettyEvent.time)
-          ? 1
-          : 0
-        ),
-    ).slice(-50);
-  const canistersInfo = await getCanistersInfo(getCanisterIds(lastEvents), agent);
+  const lastEvents = events
+    .sort((a, b) =>
+      a.prettyEvent.time < b.prettyEvent.time
+        ? -1
+        : a.prettyEvent.time > b.prettyEvent.time
+        ? 1
+        : 0
+    )
+    .slice(-50);
+  const canistersInfo = await getCanistersInfo(
+    getCanisterIds(lastEvents),
+    agent
+  );
   const transactions = await Promise.all(
-      lastEvents.map(async prettyEvent =>
-        formatTransaction(prettyEvent, canistersInfo)
-      )
-    );
+    lastEvents.map(async prettyEvent =>
+      formatTransaction(prettyEvent, canistersInfo)
+    )
+  );
   return {
     total: total >= 50 ? 50 : total,
     transactions,

@@ -18,7 +18,8 @@ export const ERRORS = {
   TRANSFER_NFT_ERROR:
     'Error while trying to transfer the NFT.\n Please verify that the NFT you are trying to transfer is not locked or listed for sale',
   INVALID_APP: 'Invalid app',
-  ICNS_REVERSE_RESOLVER_ERROR: 'Error while interacting with ICNS reverse resolver',
+  ICNS_REVERSE_RESOLVER_ERROR:
+    'Error while interacting with ICNS reverse resolver',
   ICNS_REGISTRY_ERROR: 'Error while interacting with ICNS registry',
   ICNS_RESOLVER_ERROR: 'Error while interacting with ICNS resolver',
   INVALID_NETWORK_ID: 'Invalid network id',

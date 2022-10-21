@@ -9,9 +9,9 @@ import {
   BinaryBlob,
 } from '@dfinity/candid';
 import { PublicKey } from '@dfinity/agent';
-import { GenericSignIdentity } from '../genericSignIdentity'
+import { GenericSignIdentity } from '../genericSignIdentity';
 import Secp256k1PublicKey from './publicKey';
-import { JsonnableKeyPair } from './../../../interfaces/identity'
+import { JsonnableKeyPair } from '../../../interfaces/identity';
 
 const PEM_BEGIN = `-----BEGIN EC PARAMETERS-----
 BgUrgQQACg==

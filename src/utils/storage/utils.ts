@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/camelcase */
+/* eslint-disable camelcase */
+/* eslint-disable no-unused-vars */
+
 import extension from 'extensionizer';
 
 import handler14_5 from './update_handlers/v0.14.5';
@@ -56,11 +62,11 @@ const compareVersion = (a: string, b: string): number => {
   const arrB = b.split('.');
   if (arrA.length !== 3 || arrB.length !== 3)
     throw Error('Storage Hande Update: invalid version');
-  for (let index = 0; index < 3; index++) {
-    const numbA = parseInt(arrA[index]);
-    const numbB = parseInt(arrB[index]);
+  for (let index = 0; index < 3; index += 1) {
+    const numbA = parseInt(arrA[index], 10);
+    const numbB = parseInt(arrB[index], 10);
     if (numbA > numbB) return -1;
-    else if (numbA < numbB) return 1;
+    if (numbA < numbB) return 1;
   }
   return 0;
 };
@@ -68,7 +74,7 @@ const compareVersion = (a: string, b: string): number => {
 const getVersionIndex = (version: string | undefined): number => {
   if (!version) return 0;
 
-  for (let index = 0; index < VERSION_PATH.length; index++) {
+  for (let index = 0; index < VERSION_PATH.length; index += 1) {
     const comparison = compareVersion(version, VERSION_PATH[index]);
     if (comparison === 1) return index;
     if (comparison === 0) return index + 1;

@@ -8,7 +8,7 @@ import NNSService, {
 } from '../../../interfaces/nns_uid';
 import { BaseMethodsExtendedActor } from '../actorFactory';
 
-type BaseNNSService = BaseMethodsExtendedActor<NNSService>
+type BaseNNSService = BaseMethodsExtendedActor<NNSService>;
 export interface NNSServiceExtended extends BaseNNSService {
   getTransactions: (accountId: string) => Promise<GetTransactionsResponse>;
 }

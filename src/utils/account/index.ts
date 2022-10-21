@@ -12,12 +12,6 @@ import {
   wordArrayToByteArray,
 } from '../crypto/binary';
 import { createSecp256K1KeyPair } from '../crypto/keys';
-
-interface DerivedKey {
-  key: Buffer;
-  chainCode: Buffer;
-}
-
 /*
     Used dfinity/keysmith/account/account.go as a base for the ID generation
 */

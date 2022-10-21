@@ -1,6 +1,5 @@
 import { HttpAgent } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
-import crossFetch from 'cross-fetch';
 import { InferredTransaction } from './transactions';
 
 export interface LastEvaluatedKey {

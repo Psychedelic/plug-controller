@@ -1,3 +1,7 @@
+/* eslint-disable import/named */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable prettier/prettier */
+/* eslint-disable lines-between-class-members */
 import CryptoJS from 'crypto-js';
 import { HttpAgent, PublicKey } from '@dfinity/agent';
 import { BinaryBlob } from '@dfinity/candid';
@@ -10,19 +14,18 @@ import JsonBigInt from 'json-bigint';
 import { v4 as uuid } from "uuid";
 
 import PlugWallet from '../PlugWallet';
-import { PlugStateStorage, PlugStateInstance } from '../interfaces/plug_keyring';
+import { PlugStateStorage, PlugStateInstance, KeyringStorage } from '../interfaces/plug_keyring';
 import { GetTransactionsResponse } from '../interfaces/transactions';
-import { KeyringStorage, StorageData } from '../interfaces/storage';
+import { StorageData } from '../interfaces/storage';
 import { TokenBalance, StandardToken } from '../interfaces/token';
 import { WalletNFTCollection } from '../interfaces/plug_wallet';
 import { Address } from '../interfaces/contact_registry';
 import { ERRORS } from '../errors';
-import { IdentityFactory } from './../utils/identity/identityFactory'
+import { IdentityFactory } from "../utils/identity/identityFactory"
 import { handleStorageUpdate } from '../utils/storage/utils';
-import { createAccountFromMnemonic } from '../utils/account';
+import { createAccountFromMnemonic , createAccount } from '../utils/account';
 import { recursiveParseBigint } from '../utils/object';
 import { Types } from '../utils/account/constants';
-import { createAccount } from '../utils/account';
 import { getVersion } from '../utils/version';
 import Storage from '../utils/storage';
 
@@ -37,7 +40,7 @@ import {
   GetPrincipalFromPem
 } from './interfaces';
 import { WALLET_METHODS, MAIN_WALLET_METHODS } from './constants';
-import { getIdentityFromPem } from './../utils/identity/parsePem'
+import { getIdentityFromPem } from "../utils/identity/parsePem"
 
 class PlugKeyRing {
   // state
@@ -138,13 +141,13 @@ class PlugKeyRing {
 
   private updateWallet = async (wallet: PlugWallet): Promise<void> => {
     await this.checkUnlocked();
-    const wallets = this.state.wallets;
+    const {wallets} = this.state;
     wallets[wallet.walletId] = wallet;
     this.state.wallets = wallets;
     await this.saveEncryptedState({ wallets }, this.state.password);
   };
 
-  public getWalletIdFromIndex = async (index: number): Promise<String> => {
+  public getWalletIdFromIndex = async (index: number): Promise<string> => {
     if (
       index < 0 ||
       !Number.isInteger(index) ||
@@ -275,7 +278,7 @@ class PlugKeyRing {
   ): Promise<string> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    const { identity, type } = getIdentityFromPem(pem);
+    const { identity } = getIdentityFromPem(pem);
     const principal = identity.getPrincipal().toText();
 
     return principal;
@@ -284,15 +287,15 @@ class PlugKeyRing {
   public deleteImportedAccount = async (walletId: string): Promise<void> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    const wallets = this.state.wallets
+    const {wallets} = this.state
 
-    if (wallets[walletId] && wallets[walletId].type == Types.mnemonic) {
+    if (wallets[walletId] && wallets[walletId].type === Types.mnemonic) {
       throw new Error(ERRORS.DELETE_ACCOUNT_ERROR);
     }
 
     const { [walletId]: deletedWallet, ...maintainedWallets } = wallets
 
-    if (walletId == this.currentWalletId) {
+    if (walletId === this.currentWalletId) {
 
       const currentWalletId = this.getMainAccountId();
       this.currentWalletId = currentWalletId;
@@ -309,7 +312,7 @@ class PlugKeyRing {
   ): Promise<boolean> => {
     try {
       const { identity } = getIdentityFromPem(pem);
-      const validIdentity = (identity) ? true : false;
+      const validIdentity = !!(identity);
 
       return validIdentity;
     } catch {
@@ -322,7 +325,7 @@ class PlugKeyRing {
   // to avoid throwing when deriving an account that had been previously imported
   private checkRepeatedAccount(principal: string): void {
     const wallets = Object.values(this.state.wallets)
-    if (wallets.find((wallet)=> wallet.principal == principal)) {
+    if (wallets.find((wallet)=> wallet.principal === principal)) {
       throw new Error(ERRORS.INVALID_ACCOUNT);
     }
   }
@@ -454,7 +457,7 @@ class PlugKeyRing {
       orderNumber: 0,
       fetch: this.fetch,
       network: this.networkModule.network,
-      identity: identity,
+      identity,
       type: Types.mnemonic,
     });
 

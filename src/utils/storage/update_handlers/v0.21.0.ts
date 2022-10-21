@@ -1,43 +1,52 @@
-import { v4 as uuid } from "uuid";
-import { Network } from '../../../PlugKeyRing/modules/NetworkModule/Network'
+import { v4 as uuid } from 'uuid';
+import { Network } from '../../../PlugKeyRing/modules/NetworkModule/Network';
 
 export default (storage: any) => {
-    const walletIds = storage.wallets.map(()=> uuid())
-    const networkModule = storage.networkModuleBis || storage.networkModule; 
-    const networks: { [networkId: string]: Network } = networkModule && networkModule.networks;
+  const walletIds = storage.wallets.map(() => uuid());
+  const networkModule = storage.networkModuleBis || storage.networkModule;
+  const networks: { [networkId: string]: Network } =
+    networkModule && networkModule.networks;
 
-    const editedNetworks = ((networks && Object.values(networks)) || []).map((network) => ({
+  const editedNetworks = ((networks && Object.values(networks)) || []).map(
+    network => ({
       ...network,
-      registeredTokens: network.registeredTokens.map((token)=> {
-        const registeredBy = token.registeredBy.map((walletNumber) => walletIds[walletNumber]);
-        return ({
+      registeredTokens: network.registeredTokens.map(token => {
+        const registeredBy = token.registeredBy.map(
+          walletNumber => walletIds[walletNumber]
+        );
+        return {
           ...token,
           registeredBy,
-        })
-      })
-    }))
+        };
+      }),
+    })
+  );
 
-    const finalNetwork = editedNetworks.reduce((accum, network)=> ({
+  const finalNetwork = editedNetworks.reduce(
+    (accum, network) => ({
       ...accum,
       [network.id]: network,
-    }), {})
-    
-    return {
-        ...storage, 
-        wallets: storage.wallets.reduce(
-          (walletsAccum, wallet, index) => {
-            const walletId = walletIds[index];
-            return ({
-              ...walletsAccum,
-              [walletId]: { ...wallet, walletId, orderNumber: index }
-            })
-          }, {}),
-        walletIds,
-        mnemonicWalletCount: walletIds.length,
-        currentWalletId: walletIds[0],
-        ...(networks &&  { networkModule: {
-          ...storage.networkModule,
-          networks: finalNetwork
-        } } ),
-    }
+    }),
+    {}
+  );
+
+  return {
+    ...storage,
+    wallets: storage.wallets.reduce((walletsAccum, wallet, index) => {
+      const walletId = walletIds[index];
+      return {
+        ...walletsAccum,
+        [walletId]: { ...wallet, walletId, orderNumber: index },
+      };
+    }, {}),
+    walletIds,
+    mnemonicWalletCount: walletIds.length,
+    currentWalletId: walletIds[0],
+    ...(networks && {
+      networkModule: {
+        ...storage.networkModule,
+        networks: finalNetwork,
+      },
+    }),
+  };
 };

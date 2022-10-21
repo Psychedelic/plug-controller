@@ -1,4 +1,5 @@
-// tslint:disable:max-classes-per-file
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable max-classes-per-file */
 import Pipe from 'buffer-pipe';
 import { Buffer } from 'buffer/';
 import { Principal as PrincipalId } from '@dfinity/principal';
@@ -61,6 +62,7 @@ function zipWith<TX, TY, TR>(
 class TypeTable {
   // List of types. Needs to be an array as the index needs to be stable.
   private _typs: Buffer[] = [];
+
   private _idx = new Map<string, number>();
 
   public has(obj: ConstructType) {
@@ -77,10 +79,10 @@ class TypeTable {
     const idx = this._idx.get(obj.name);
     const knotIdx = this._idx.get(knot);
     if (idx === undefined) {
-      throw new Error('Missing type index for ' + obj);
+      throw new Error(`Missing type index for ${obj}`);
     }
     if (knotIdx === undefined) {
-      throw new Error('Missing type index for ' + knot);
+      throw new Error(`Missing type index for ${knot}`);
     }
     this._typs[idx] = this._typs[knotIdx];
 
@@ -97,7 +99,7 @@ class TypeTable {
 
   public indexOf(typeName: string) {
     if (!this._idx.has(typeName)) {
-      throw new Error('Missing type index for ' + typeName);
+      throw new Error(`Missing type index for ${typeName}`);
     }
     return slebEncode(this._idx.get(typeName) || 0);
   }
@@ -107,42 +109,55 @@ export abstract class Visitor<D, R> {
   public visitType<T>(_t: Type<T>, _data: D): R {
     throw new Error('Not implemented');
   }
+
   public visitPrimitive<T>(t: PrimitiveType<T>, data: D): R {
     return this.visitType(t, data);
   }
+
   public visitEmpty(t: EmptyClass, data: D): R {
     return this.visitPrimitive(t, data);
   }
+
   public visitBool(t: BoolClass, data: D): R {
     return this.visitPrimitive(t, data);
   }
+
   public visitNull(t: NullClass, data: D): R {
     return this.visitPrimitive(t, data);
   }
+
   public visitReserved(t: ReservedClass, data: D): R {
     return this.visitPrimitive(t, data);
   }
+
   public visitText(t: TextClass, data: D): R {
     return this.visitPrimitive(t, data);
   }
+
   public visitNumber<T>(t: PrimitiveType<T>, data: D): R {
     return this.visitPrimitive(t, data);
   }
+
   public visitInt(t: IntClass, data: D): R {
     return this.visitNumber(t, data);
   }
+
   public visitNat(t: NatClass, data: D): R {
     return this.visitNumber(t, data);
   }
+
   public visitFloat(t: FloatClass, data: D): R {
     return this.visitPrimitive(t, data);
   }
+
   public visitFixedInt(t: FixedIntClass, data: D): R {
     return this.visitNumber(t, data);
   }
+
   public visitFixedNat(t: FixedNatClass, data: D): R {
     return this.visitNumber(t, data);
   }
+
   public visitPrincipal(t: PrincipalClass, data: D): R {
     return this.visitPrimitive(t, data);
   }
@@ -150,12 +165,15 @@ export abstract class Visitor<D, R> {
   public visitConstruct<T>(t: ConstructType<T>, data: D): R {
     return this.visitType(t, data);
   }
+
   public visitVec<T>(t: VecClass<T>, _ty: Type<T>, data: D): R {
     return this.visitConstruct(t, data);
   }
+
   public visitOpt<T>(t: OptClass<T>, _ty: Type<T>, data: D): R {
     return this.visitConstruct(t, data);
   }
+
   public visitRecord(
     t: RecordClass,
     _fields: Array<[string, Type]>,
@@ -163,6 +181,7 @@ export abstract class Visitor<D, R> {
   ): R {
     return this.visitConstruct(t, data);
   }
+
   public visitTuple<T extends any[]>(
     t: TupleClass<T>,
     components: Type[],
@@ -174,6 +193,7 @@ export abstract class Visitor<D, R> {
     ]);
     return this.visitRecord(t, fields, data);
   }
+
   public visitVariant(
     t: VariantClass,
     _fields: Array<[string, Type]>,
@@ -181,12 +201,15 @@ export abstract class Visitor<D, R> {
   ): R {
     return this.visitConstruct(t, data);
   }
+
   public visitRec<T>(_t: RecClass<T>, ty: ConstructType<T>, data: D): R {
     return this.visitConstruct(ty, data);
   }
+
   public visitFunc(t: FuncClass, data: D): R {
     return this.visitConstruct(t, data);
   }
+
   public visitService(t: ServiceClass, data: D): R {
     return this.visitConstruct(t, data);
   }
@@ -197,6 +220,7 @@ export abstract class Visitor<D, R> {
  */
 export abstract class Type<T = any> {
   public abstract readonly name: string;
+
   public abstract accept<D, R>(v: Visitor<D, R>, d: D): R;
 
   /* Display type name */
@@ -235,6 +259,7 @@ export abstract class Type<T = any> {
   public abstract encodeType(typeTable: TypeTable): Buffer;
 
   public abstract checkType(t: Type): Type;
+
   public abstract decodeValue(x: Pipe, t: Type): T;
 
   protected abstract _buildTypeTableImpl(typeTable: TypeTable): void;
@@ -249,9 +274,9 @@ export abstract class PrimitiveType<T = any> extends Type<T> {
     }
     return t;
   }
+
   public _buildTypeTableImpl(_typeTable: TypeTable): void {
     // No type table encoding for Primitive types.
-    return;
   }
 }
 
@@ -268,6 +293,7 @@ export abstract class ConstructType<T = any> extends Type<T> {
       `type mismatch: type on the wire ${t.name}, expect type ${this.name}`
     );
   }
+
   public encodeType(typeTable: TypeTable) {
     return typeTable.indexOf(this.name);
   }
@@ -335,11 +361,11 @@ export class BoolClass extends PrimitiveType<boolean> {
     const x = safeRead(b, 1).toString('hex');
     if (x === '00') {
       return false;
-    } else if (x === '01') {
-      return true;
-    } else {
-      throw new Error('Boolean value out of range');
     }
+    if (x === '01') {
+      return true;
+    }
+    throw new Error('Boolean value out of range');
   }
 
   get name() {
@@ -450,7 +476,7 @@ export class TextClass extends PrimitiveType<string> {
   }
 
   public valueToString(x: string) {
-    return '"' + x + '"';
+    return `"${x}"`;
   }
 }
 
@@ -539,6 +565,7 @@ export class FloatClass extends PrimitiveType<number> {
       throw new Error('not a valid float type');
     }
   }
+
   public accept<D, R>(v: Visitor<D, R>, d: D): R {
     return v.visitFloat(this, d);
   }
@@ -567,13 +594,12 @@ export class FloatClass extends PrimitiveType<number> {
     const x = safeRead(b, this._bits / 8);
     if (this._bits === 32) {
       return x.readFloatLE(0);
-    } else {
-      return x.readDoubleLE(0);
     }
+    return x.readDoubleLE(0);
   }
 
   get name() {
-    return 'float' + this._bits;
+    return `float${this._bits}`;
   }
 
   public valueToString(x: number) {
@@ -598,12 +624,12 @@ export class FixedIntClass extends PrimitiveType<bigint | number> {
     const max = BigInt(2) ** BigInt(this._bits - 1) - BigInt(1);
     if (typeof x === 'bigint') {
       return x >= min && x <= max;
-    } else if (Number.isInteger(x)) {
+    }
+    if (Number.isInteger(x)) {
       const v = BigInt(x);
       return v >= min && v <= max;
-    } else {
-      return false;
     }
+    return false;
   }
 
   public encodeValue(x: bigint | number) {
@@ -620,9 +646,8 @@ export class FixedIntClass extends PrimitiveType<bigint | number> {
     const num = readIntLE(b, this._bits / 8);
     if (this._bits <= 32) {
       return Number(num);
-    } else {
-      return num;
     }
+    return num;
   }
 
   get name() {
@@ -650,12 +675,12 @@ export class FixedNatClass extends PrimitiveType<bigint | number> {
     const max = BigInt(2) ** BigInt(this.bits);
     if (typeof x === 'bigint' && x >= BigInt(0)) {
       return x < max;
-    } else if (Number.isInteger(x) && x >= 0) {
+    }
+    if (Number.isInteger(x) && x >= 0) {
       const v = BigInt(x);
       return v < max;
-    } else {
-      return false;
     }
+    return false;
   }
 
   public encodeValue(x: bigint | number) {
@@ -672,9 +697,8 @@ export class FixedNatClass extends PrimitiveType<bigint | number> {
     const num = readUIntLE(b, this.bits / 8);
     if (this.bits <= 32) {
       return Number(num);
-    } else {
-      return num;
     }
+    return num;
   }
 
   get name() {
@@ -753,7 +777,7 @@ export class VecClass<T> extends ConstructType<T[]> {
 
   public valueToString(x: T[]) {
     const elements = x.map(e => this._type.valueToString(e));
-    return 'vec {' + elements.join('; ') + '}';
+    return `vec {${elements.join('; ')}}`;
   }
 }
 
@@ -780,9 +804,8 @@ export class OptClass<T> extends ConstructType<[T] | []> {
   public encodeValue(x: [T] | []) {
     if (x.length === 0) {
       return Buffer.from([0]);
-    } else {
-      return Buffer.concat([Buffer.from([1]), this._type.encodeValue(x[0])]);
     }
+    return Buffer.concat([Buffer.from([1]), this._type.encodeValue(x[0])]);
   }
 
   public _buildTypeTableImpl(typeTable: TypeTable) {
@@ -801,11 +824,11 @@ export class OptClass<T> extends ConstructType<[T] | []> {
     const len = safeRead(b, 1).toString('hex');
     if (len === '00') {
       return [];
-    } else if (len === '01') {
-      return [this._type.decodeValue(b, opt._type)];
-    } else {
-      throw new Error('Not an option value');
     }
+    if (len === '01') {
+      return [this._type.decodeValue(b, opt._type)];
+    }
+    throw new Error('Not an option value');
   }
 
   get name() {
@@ -819,9 +842,8 @@ export class OptClass<T> extends ConstructType<[T] | []> {
   public valueToString(x: [T] | []) {
     if (x.length === 0) {
       return 'null';
-    } else {
-      return `opt ${this._type.valueToString(x[0])}`;
     }
+    return `opt ${this._type.valueToString(x[0])}`;
   }
 }
 
@@ -906,19 +928,19 @@ export class RecordClass extends ConstructType<Record<string, any>> {
       idx++;
     }
     if (idx < this._fields.length) {
-      throw new Error('Cannot find field ' + this._fields[idx][0]);
+      throw new Error(`Cannot find field ${this._fields[idx][0]}`);
     }
     return x;
   }
 
   get name() {
-    const fields = this._fields.map(([key, value]) => key + ':' + value.name);
+    const fields = this._fields.map(([key, value]) => `${key}:${value.name}`);
     return `record {${fields.join('; ')}}`;
   }
 
   public display() {
     const fields = this._fields.map(
-      ([key, value]) => key + ':' + value.display()
+      ([key, value]) => `${key}:${value.display()}`
     );
     return `record {${fields.join('; ')}}`;
   }
@@ -928,7 +950,7 @@ export class RecordClass extends ConstructType<Record<string, any>> {
     const fields = zipWith(
       this._fields,
       values,
-      ([k, c], d) => k + '=' + c.valueToString(d)
+      ([k, c], d) => `${k}=${c.valueToString(d)}`
     );
     return `record {${fields.join('; ')}}`;
   }
@@ -943,7 +965,7 @@ export class TupleClass<T extends any[]> extends RecordClass {
 
   constructor(_components: Type[]) {
     const x: Record<string, any> = {};
-    _components.forEach((e, i) => (x['_' + i + '_'] = e));
+    _components.forEach((e, i) => (x[`_${i}_`] = e));
     super(x);
     this._components = _components;
   }
@@ -1039,7 +1061,7 @@ export class VariantClass extends ConstructType<Record<string, any>> {
         return Buffer.concat([idx, buf]);
       }
     }
-    throw Error('Variant has no data: ' + x);
+    throw Error(`Variant has no data: ${x}`);
   }
 
   public _buildTypeTableImpl(typeTable: TypeTable) {
@@ -1061,7 +1083,7 @@ export class VariantClass extends ConstructType<Record<string, any>> {
     }
     const idx = Number(lebDecode(b));
     if (idx >= variant._fields.length) {
-      throw Error('Invalid variant index: ' + idx);
+      throw Error(`Invalid variant index: ${idx}`);
     }
     const [wireHash, wireType] = variant._fields[idx];
     for (const [key, expectType] of this._fields) {
@@ -1070,11 +1092,11 @@ export class VariantClass extends ConstructType<Record<string, any>> {
         return { [key]: value };
       }
     }
-    throw new Error('Cannot find field hash ' + wireHash);
+    throw new Error(`Cannot find field hash ${wireHash}`);
   }
 
   get name() {
-    const fields = this._fields.map(([key, type]) => key + ':' + type.name);
+    const fields = this._fields.map(([key, type]) => `${key}:${type.name}`);
     return `variant {${fields.join('; ')}}`;
   }
 
@@ -1092,12 +1114,11 @@ export class VariantClass extends ConstructType<Record<string, any>> {
         const value = type.valueToString(x[name]);
         if (value === 'null') {
           return `variant {${name}}`;
-        } else {
-          return `variant {${name}=${value}}`;
         }
+        return `variant {${name}=${value}}`;
       }
     }
-    throw new Error('Variant has no data: ' + x);
+    throw new Error(`Variant has no data: ${x}`);
   }
 }
 
@@ -1107,7 +1128,9 @@ export class VariantClass extends ConstructType<Record<string, any>> {
  */
 export class RecClass<T = any> extends ConstructType<T> {
   private static _counter = 0;
+
   private _id = RecClass._counter++;
+
   private _type: ConstructType<T> | undefined = undefined;
 
   public accept<D, R>(v: Visitor<D, R>, d: D): R {
@@ -1214,6 +1237,7 @@ export class PrincipalClass extends PrimitiveType<PrincipalId> {
   get name() {
     return 'principal';
   }
+
   public valueToString(x: PrincipalId) {
     return `${this.name} "${x.toText()}"`;
   }
@@ -1230,7 +1254,7 @@ export class FuncClass extends ConstructType<[PrincipalId, string]> {
     if (types.length !== v.length) {
       throw new Error('arity mismatch');
     }
-    return '(' + types.map((t, i) => t.valueToString(v[i])).join(', ') + ')';
+    return `(${types.map((t, i) => t.valueToString(v[i])).join(', ')})`;
   }
 
   constructor(
@@ -1244,6 +1268,7 @@ export class FuncClass extends ConstructType<[PrincipalId, string]> {
   public accept<D, R>(v: Visitor<D, R>, d: D): R {
     return v.visitFunc(this, d);
   }
+
   public covariant(x: any): x is [PrincipalId, string] {
     return (
       Array.isArray(x) &&
@@ -1304,7 +1329,7 @@ export class FuncClass extends ConstructType<[PrincipalId, string]> {
   get name() {
     const args = this.argTypes.map(arg => arg.name).join(', ');
     const rets = this.retTypes.map(arg => arg.name).join(', ');
-    const annon = ' ' + this.annotations.join(' ');
+    const annon = ` ${this.annotations.join(' ')}`;
     return `(${args}) -> (${rets})${annon}`;
   }
 
@@ -1315,32 +1340,35 @@ export class FuncClass extends ConstructType<[PrincipalId, string]> {
   public display(): string {
     const args = this.argTypes.map(arg => arg.display()).join(', ');
     const rets = this.retTypes.map(arg => arg.display()).join(', ');
-    const annon = ' ' + this.annotations.join(' ');
+    const annon = ` ${this.annotations.join(' ')}`;
     return `(${args}) → (${rets})${annon}`;
   }
 
   private encodeAnnotation(ann: string): Buffer {
     if (ann === 'query') {
       return Buffer.from([1]);
-    } else if (ann === 'oneway') {
-      return Buffer.from([2]);
-    } else {
-      throw new Error('Illeagal function annotation');
     }
+    if (ann === 'oneway') {
+      return Buffer.from([2]);
+    }
+    throw new Error('Illeagal function annotation');
   }
 }
 
 export class ServiceClass extends ConstructType<PrincipalId> {
   public readonly _fields: Array<[string, FuncClass]>;
+
   constructor(fields: Record<string, FuncClass>) {
     super();
     this._fields = Object.entries(fields).sort(
       (a, b) => idlLabelToId(a[0]) - idlLabelToId(b[0])
     );
   }
+
   public accept<D, R>(v: Visitor<D, R>, d: D): R {
     return v.visitService(this, d);
   }
+
   public covariant(x: any): x is PrincipalId {
     return x && x._isPrincipal;
   }
@@ -1368,8 +1396,9 @@ export class ServiceClass extends ConstructType<PrincipalId> {
   public decodeValue(b: Pipe): PrincipalId {
     return decodePrincipalId(b);
   }
+
   get name() {
-    const fields = this._fields.map(([key, value]) => key + ':' + value.name);
+    const fields = this._fields.map(([key, value]) => `${key}:${value.name}`);
     return `service {${fields.join('; ')}}`;
   }
 
@@ -1434,7 +1463,7 @@ export function decode(bytes: Buffer): JsonValue[] {
   }
   const magic = safeRead(b, magicNumber.length).toString();
   if (magic !== magicNumber) {
-    throw new Error('Wrong magic number: ' + magic);
+    throw new Error(`Wrong magic number: ${magic}`);
   }
 
   function readTypeTable(pipe: Pipe): [Array<[IDLTypeIds, any]>, number[]] {
@@ -1493,7 +1522,7 @@ export function decode(bytes: Buffer): JsonValue[] {
           break;
         }
         default:
-          throw new Error('Illegal op_code: ' + ty);
+          throw new Error(`Illegal op_code: ${ty}`);
       }
     }
 
@@ -1550,7 +1579,7 @@ export function decode(bytes: Buffer): JsonValue[] {
         case -24:
           return Principal;
         default:
-          throw new Error('Illegal op_code: ' + t);
+          throw new Error(`Illegal op_code: ${t}`);
       }
     }
     if (t >= rawTable.length) {
@@ -1578,9 +1607,8 @@ export function decode(bytes: Buffer): JsonValue[] {
         const tuple = record.tryAsTuple();
         if (Array.isArray(tuple)) {
           return Tuple(...tuple);
-        } else {
-          return record;
         }
+        return record;
       }
       case IDLTypeIds.Variant: {
         const fields: Record<string, Type> = {};
@@ -1597,7 +1625,7 @@ export function decode(bytes: Buffer): JsonValue[] {
         return Service({});
       }
       default:
-        throw new Error('Illegal op_code: ' + entry[0]);
+        throw new Error(`Illegal op_code: ${entry[0]}`);
     }
   }
   rawTable.forEach((entry, i) => {

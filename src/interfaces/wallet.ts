@@ -1,7 +1,10 @@
+/* eslint-disable no-use-before-define */
+/* eslint-disable @typescript-eslint/no-use-before-define */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/camelcase */
-import type { Principal } from '@dfinity/principal';
+import { Principal } from '@dfinity/principal';
 
 export interface AddressEntry {
   id: Principal;

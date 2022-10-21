@@ -1,6 +1,9 @@
-import PlugWallet from "../PlugWallet";
+import PlugWallet from '../PlugWallet';
 
-export interface CreateImportResponse { wallet: PlugWallet; mnemonic: string; }
+export interface CreateImportResponse {
+  wallet: PlugWallet;
+  mnemonic: string;
+}
 
 export interface CreatePrincipalOptions {
   name?: string;

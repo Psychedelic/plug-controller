@@ -5,7 +5,10 @@ import { TOKENS } from '../../../constants/tokens';
 import { ERRORS } from '../../../errors';
 import { NET_ID, ROSETTA_URL } from '../constants';
 
-import { InferredTransaction, GetTransactionsResponse } from '../../../interfaces/transactions';
+import {
+  InferredTransaction,
+  GetTransactionsResponse,
+} from '../../../interfaces/transactions';
 
 export const MILI_PER_SECOND = 1000000;
 
@@ -28,7 +31,7 @@ interface Balance {
   value: string;
   decimals: number;
   error?: string;
-};
+}
 
 interface RosettaTransaction {
   metadata: {
@@ -126,7 +129,11 @@ export const getICPBalance = async (accountId: string): Promise<Balance> => {
     },
   });
   if (!response.ok) {
-    return { value: 'Error', decimals: TOKENS.ICP.decimals, error: response.statusText };
+    return {
+      value: 'Error',
+      decimals: TOKENS.ICP.decimals,
+      error: response.statusText,
+    };
   }
   const { balances } = await response.json();
   const [{ value, currency }] = balances;

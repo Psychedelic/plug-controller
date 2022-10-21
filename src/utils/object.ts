@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import { Principal } from '@dfinity/principal';
 import JsonBigInt from 'json-bigint';
 
@@ -5,8 +6,8 @@ import JsonBigInt from 'json-bigint';
 export const recursiveParseBigint = obj => JsonBigInt.parse(JsonBigInt.stringify(obj));
 
 export const parsePrincipal = pidObj =>
-pidObj?._isPrincipal
-  ? Principal.fromUint8Array(
-      new Uint8Array(Object.values((pidObj as any)._arr))
-    ).toString()
-  : pidObj;
+  pidObj?._isPrincipal
+    ? Principal.fromUint8Array(
+        new Uint8Array(Object.values((pidObj as any)._arr))
+      ).toString()
+    : pidObj;

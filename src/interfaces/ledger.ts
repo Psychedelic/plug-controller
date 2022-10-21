@@ -1,3 +1,6 @@
+/* eslint-disable no-use-before-define */
+/* eslint-disable @typescript-eslint/no-use-before-define */
+/* eslint-disable @typescript-eslint/interface-name-prefix */
 /* eslint-disable @typescript-eslint/class-name-casing */
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/camelcase */

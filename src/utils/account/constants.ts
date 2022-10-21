@@ -10,7 +10,7 @@ export const SUB_ACCOUNT_ZERO = Buffer.alloc(32);
 export const HARDENED_OFFSET = 0x80000000;
 
 export enum Types {
-    mnemonic = "MNEMONIC",
-    pem256k1 = "PEM_256k1",
-    pem25519 = "PEM_25519",
+  mnemonic = 'MNEMONIC',
+  pem256k1 = 'PEM_256k1',
+  pem25519 = 'PEM_25519',
 }

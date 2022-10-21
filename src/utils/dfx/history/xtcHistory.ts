@@ -4,7 +4,10 @@ import { TokenInterfaces } from '@psychedelic/dab-js';
 import axios from 'axios';
 import { TOKENS } from '../../../constants/tokens';
 
-import { InferredTransaction, GetTransactionsResponse } from '../../../interfaces/transactions';
+import {
+  InferredTransaction,
+  GetTransactionsResponse,
+} from '../../../interfaces/transactions';
 
 const KYASHU_URL = 'https://kyasshu.fleek.co';
 const XTC_DECIMALS = 12;
@@ -171,14 +174,14 @@ const formatXTCTransaction = (
         ...formatCanisterCreated(principalId, xtcTransaction, details),
       };
     case 'Approve':
-        return {
-          ...transaction,
-          ...formatApprove(principalId, xtcTransaction, details),
+      return {
+        ...transaction,
+        ...formatApprove(principalId, xtcTransaction, details),
       };
     case 'TransferFrom':
-        return {
-          ...transaction,
-          ...formatTransferFrom(principalId, xtcTransaction, details),
+      return {
+        ...transaction,
+        ...formatTransferFrom(principalId, xtcTransaction, details),
       };
     default:
       throw Error;

@@ -1,11 +1,20 @@
 import { InferredTransaction } from '../../../interfaces/transactions';
 import { PRINCIPAL_REGEX } from '../constants';
 
-interface ICNSMapping { [key: string]: string | undefined }
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
+interface ICNSMapping {
+  [key: string]: string | undefined;
+}
 
-export const getMappingValue = (pid: string, mappings: ICNSMapping) => ({ principal: pid, icns: mappings[pid] });
+export const getMappingValue = (pid: string, mappings: ICNSMapping) => ({
+  principal: pid,
+  icns: mappings[pid],
+});
 
-export const replacePrincipalsForICNS = (tx: InferredTransaction, mappings: ICNSMapping): InferredTransaction => {
+export const replacePrincipalsForICNS = (
+  tx: InferredTransaction,
+  mappings: ICNSMapping
+): InferredTransaction => {
   const parsedTx = { ...tx };
   const { from: detailFrom, to } = parsedTx?.details || {};
   const from = detailFrom || parsedTx?.caller;
@@ -15,9 +24,11 @@ export const replacePrincipalsForICNS = (tx: InferredTransaction, mappings: ICNS
     to: getMappingValue(to, mappings),
   };
   return parsedTx;
-}
+};
 
-export const recursiveFindPrincipals = (transactions: InferredTransaction[]): string[] => {
+export const recursiveFindPrincipals = (
+  transactions: InferredTransaction[]
+): string[] => {
   return transactions.reduce((acc, tx) => {
     const copy: string[] = [...acc];
     const { from, to } = tx.details || {};
@@ -25,4 +36,4 @@ export const recursiveFindPrincipals = (transactions: InferredTransaction[]): st
     if (PRINCIPAL_REGEX.test(to)) copy.push(to);
     return [...new Set(copy)];
   }, []);
-}
+};

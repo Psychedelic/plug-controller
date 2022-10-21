@@ -1,14 +1,15 @@
+/* eslint-disable prettier/prettier */
 import { HttpAgent, Actor, ActorSubclass } from "@dfinity/agent";
 
 
+import { Principal } from "@dfinity/principal";
+import { NFTCollection, standards } from "@psychedelic/dab-js";
 import resolverIDL from '../../../idls/icns_resolver.did';
 import registryIDL from '../../../idls/icns_registry.did';
 import reverseRegistrarIDL from '../../../idls/icns_reverse_registrar.did';
 import Resolver, { DefaultInfoExt } from '../../../interfaces/icns_resolver';
 import Registry, { RecordExt } from '../../../interfaces/icns_registry';
 import ReverseRegistrar from '../../../interfaces/icns_reverse_registrar';
-import { Principal } from "@dfinity/principal";
-import { NFTCollection, standards } from "@psychedelic/dab-js";
 import { ERRORS } from "../../../errors";
 
 const ICNS_REGISTRY_ID = 'e5kvl-zyaaa-aaaan-qabaq-cai';
@@ -19,9 +20,13 @@ const ICNS_LOGO = 'https://icns.id/ICNS-logo.png';
 
 export default class ICNSAdapter {
   #resolver: ActorSubclass<Resolver>;
+
   #registry: ActorSubclass<Registry>;
+
   #reverseRegistrar: ActorSubclass<ReverseRegistrar>;
+
   #agent: HttpAgent;
+
   constructor(agent: HttpAgent) {
     this.#agent = agent;
     this.#resolver = Actor.createActor(resolverIDL, {
@@ -61,10 +66,10 @@ export default class ICNSAdapter {
   };
 
   public getICNSCollection = async (): Promise<NFTCollection> => {
-    let icnsNames = await this.getICNSNames();
+    const icnsNames = await this.getICNSNames();
     const formattedNames = icnsNames?.map(
       (name, index) => ({
-        name: name,
+        name,
         url: ICNS_IMG,
         collection: 'ICNS',
         desc: 'ICNS Name Record',
@@ -124,4 +129,4 @@ export default class ICNSAdapter {
       console.log('Error when reseting your name data', e);
     }
   }
-};
+}

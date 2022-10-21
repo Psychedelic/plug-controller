@@ -1,19 +1,7 @@
-import { TokenRegistry } from '@psychedelic/dab-js';
-import { parsePrincipal } from '../../../object';
-
+/* eslint-disable no-unused-vars */
+/* eslint-disable consistent-return */
+/* eslint-disable camelcase */
 export const SONIC_SWAP_CANISTER_ID = '3xwpq-ziaaa-aaaah-qcn4a-cai';
-
-const getHandledTokenInfo = async (principal, canistersInfo) => {
-  if (!principal) return;
-  const canisterId = parsePrincipal(principal);
-  if (canistersInfo[canisterId]?.tokenRegistryInfo)
-    return canistersInfo[canisterId]?.tokenRegistryInfo;
-  else {
-    const registry = new TokenRegistry();
-    const data = await registry.get(canisterId);
-    return data;
-  }
-};
 
 export const buildSonicData = async ({
   canisterId,
@@ -27,17 +15,18 @@ export const buildSonicData = async ({
   const isSwap = operation?.toLowerCase?.()?.includes?.('swap');
   const isLiquidity = operation?.toLowerCase?.()?.includes?.('liquidity');
 
-  let data: any = {
+  const data: any = {
     token: canistersInfo[tokenId]?.tokenRegistryInfo,
     amount,
   };
-  
-  const formatSwapData = (data) => (data?.tokenRegistryInfo || {
-    name: data?.name,
-    thumbnail: data?.logo_url,
-    logo: data?.logo_url,
-    description: data?.description,
-  });
+
+  const formatSwapData = (swapData: any) =>
+    swapData?.tokenRegistryInfo || {
+      name: swapData?.name,
+      thumbnail: swapData?.logo_url,
+      logo: swapData?.logo_url,
+      description: swapData?.description,
+    };
 
   const from = formatSwapData(canistersInfo[details?.from]);
   const to = formatSwapData(canistersInfo[details?.to]);

@@ -1,7 +1,6 @@
+/* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable camelcase */
-jest.mock('@psychedelic/dab-js');
-
 import * as bip39 from 'bip39';
 import CryptoJS from 'crypto-js';
 import { Principal } from '@dfinity/principal';
@@ -18,12 +17,13 @@ import { ERRORS } from '../errors';
 import PlugWallet from '../PlugWallet';
 import { createAgent } from '../utils/dfx';
 import store from '../utils/storage/mock';
-import { getAccountId } from '../utils/account';
-import { DEFAULT_MAINNET_ASSETS, TOKENS } from '../constants/tokens';
+import { getAccountId, createAccountFromMnemonic } from '../utils/account';
+import { TOKENS } from '../constants/tokens';
 import { GetTransactionsResponse } from '../interfaces/transactions';
 import { Mainnet } from './modules/NetworkModule/Network';
 import { Types } from '../utils/account/constants';
-import { createAccountFromMnemonic } from '../utils/account';
+
+jest.mock('@psychedelic/dab-js');
 
 const mockSendICP = jest.fn();
 
@@ -143,7 +143,7 @@ const createManyTransactions = (): GetTransactionsResponse => {
 };
 
 describe('Plug KeyRing', () => {
-  const { identity } = createAccountFromMnemonic(TEST_MNEMONIC,0);
+  const { identity } = createAccountFromMnemonic(TEST_MNEMONIC, 0);
   const testWallet = new PlugWallet({
     name: 'test',
     walletId: '0',
@@ -610,7 +610,7 @@ describe('Plug KeyRing', () => {
 
     test('get specific balance', async () => {
       let ind = Math.round(Math.random() * (walletsCreated - 1));
-      if (ind === 0) ind++;
+      if (ind === 0) ind += 1;
 
       expect(await keyRing.getBalances({ subaccount: 'ind' })).toBe(
         balances[ind]
@@ -658,9 +658,9 @@ describe('Plug KeyRing', () => {
     });
 
     test('get error with invalid wallet numbers', async () => {
-      await expect(keyRing.getTransactions({ subaccount: '-2' })).rejects.toThrow(
-        ERRORS.INVALID_WALLET_NUMBER
-      );
+      await expect(
+        keyRing.getTransactions({ subaccount: '-2' })
+      ).rejects.toThrow(ERRORS.INVALID_WALLET_NUMBER);
       await expect(
         keyRing.getTransactions({ subaccount: 'walletsCreated + 2' })
       ).rejects.toThrow(ERRORS.INVALID_WALLET_NUMBER);
