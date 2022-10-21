@@ -11,7 +11,7 @@ import { v4 as uuid } from "uuid";
 
 import PlugWallet from '../PlugWallet';
 import { PlugStateStorage, PlugStateInstance } from '../interfaces/plug_keyring';
-import { GetTransactionsResponse } from '../interfaces/transactions';
+import { GetTransactionsResponse, FormattedTransactions} from '../interfaces/transactions';
 import { KeyringStorage, StorageData } from '../interfaces/storage';
 import { TokenBalance, StandardToken } from '../interfaces/token';
 import { WalletNFTCollection } from '../interfaces/plug_wallet';
@@ -68,7 +68,7 @@ class PlugKeyRing {
   public deleteContact: (args: { addressName: string, subaccount?: string }) => Promise<boolean>;
   public getAgent: (args?: { subaccount ?: string, host?: string }) => HttpAgent;
   public getBalance: (args: { token: StandardToken, subaccount?: string }) => Promise<TokenBalance>;
-  public getTransactions: (args: { subaccount?: string }) => Promise<GetTransactionsResponse>;
+  public getTransactions: (args: { subaccount?: string }) => Promise<FormattedTransactions>;
   public send: (args: { subaccount?: string, to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
   public delegateIdentity: (args: { to: Buffer, targets: string[], subaccount?: string }) => Promise<string>;
 
@@ -400,8 +400,8 @@ class PlugKeyRing {
     if (!this.isInitialized) throw new Error(ERRORS.NOT_INITIALIZED);
   };
 
-  public getPemFile = async (walleId?: string): Promise<string> => {
-    const wallet = await this.getWallet(walleId);
+  public getPemFile = async (walletId?: string): Promise<string> => {
+    const wallet = await this.getWallet(walletId);
     return wallet.pemFile;
   };
 

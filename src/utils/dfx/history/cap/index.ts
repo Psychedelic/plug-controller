@@ -1,84 +1,29 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-underscore-dangle */
 import axios, { AxiosResponse, Method } from 'axios';
-import { Principal } from '@dfinity/principal';
 import {
   prettifyCapTransactions,
   TransactionPrettified,
 } from '@psychedelic/cap-js';
 import { getTokens, getAllNFTS, TokenRegistry } from '@psychedelic/dab-js';
-import crossFetch from 'cross-fetch';
 
 import { getCanisterInfo } from '../../../dab';
-import { parsePrincipal, recursiveParseBigint } from '../../../object';
-import { lebDecode } from '../../../crypto/binary';
-
-import { InferredTransaction } from '../../../../interfaces/transactions';
+import { parsePrincipal } from '../../../object';
 import {
   GetCapTransactionsParams,
   GetUserTransactionResponse,
   LastEvaluatedKey,
-  KyashuItem,
 } from '../../../../interfaces/cap';
-import { uniqueMap } from '../../../array';
-import { buildSonicData, SONIC_SWAP_CANISTER_ID } from './sonic';
+import { SONIC_SWAP_CANISTER_ID } from './sonic';
 import { HttpAgent } from '@dfinity/agent';
+import { formatCapTransaction } from '../../../formatter/transaction/capTransactionFormatter';
+
 
 const parseUnderscoreNumber = value =>
   value ? Number(value.replace('_', '')) : null;
 
 const getTransactionCanister = (contract: string): string | undefined =>
   contract?.split('#')?.[1];
-
-const formatTransaction = async (
-  event,
-  canistersInfo
-): Promise<InferredTransaction> => {
-  const { canisterId } = event;
-  const prettifyEvent = event.prettyEvent;
-  if (canisterId) {
-    prettifyEvent.details = {
-      ...prettifyEvent.details,
-      canisterInfo: canistersInfo[canisterId],
-    };
-  }
-  const { details, operation, time, caller } = prettifyEvent || {};
-  const { amount, token, token_id, token_identifier } = details || {};
-  const parsedAmount =
-    amount instanceof Array && !amount.some(value => typeof value !== 'number')
-      ? lebDecode(Uint8Array.from(amount as Array<number>))
-      : amount;
-  const tokenId =
-    details?.tokenId ||
-    token ||
-    token_id ||
-    parseUnderscoreNumber(token_identifier) ||
-    '';
-  const formattedTransaction = {
-    hash: event.sk,
-    timestamp: time,
-    type: operation,
-    details: {
-      ...details,
-      amount: parsedAmount,
-      canisterId,
-      tokenId,
-      to: parsePrincipal(details?.to),
-      from: parsePrincipal(details?.from),
-      sonicData: await buildSonicData({
-        canisterId,
-        details,
-        operation,
-        canistersInfo,
-        tokenId,
-      }),
-      // mkpData: await buildMKPData(),
-    },
-    caller: parsePrincipal(caller) || '',
-  };
-
-  return recursiveParseBigint(formattedTransaction);
-};
 
 const metadataArrayToObject = metadata =>
   metadata.reduce(
@@ -203,7 +148,7 @@ export const getCapTransactions = async ({
   const canistersInfo = await getCanistersInfo(getCanisterIds(lastEvents), agent);
   const transactions = await Promise.all(
       lastEvents.map(async prettyEvent =>
-        formatTransaction(prettyEvent, canistersInfo)
+        formatCapTransaction(prettyEvent, canistersInfo)
       )
     );
   return {
