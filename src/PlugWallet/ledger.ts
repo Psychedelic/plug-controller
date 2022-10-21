@@ -1,6 +1,6 @@
-import { AnonymousIdentity, SignIdentity } from "@dfinity/agent";
+import { PublicKey } from "@dfinity/agent";
 import { BinaryBlob } from "@dfinity/candid";
-import { Delegation, DelegationChain, DelegationIdentity, Ed25519PublicKey } from "@dfinity/identity";
+import { DelegationChain, DelegationIdentity } from "@dfinity/identity";
 import { Principal } from "@dfinity/principal";
 import { NFTDetails, TokenInterfaces } from "@psychedelic/dab-js";
 import { Address } from "../interfaces/contact_registry";
@@ -73,15 +73,14 @@ class PlugWalletLedger extends PlugWallet {
     }
   
     private async createDelegatedIdentity(targets?: string[]) {
-      const ephimeralPublic = this.identity.getPublicKey().toDer();
+      const ephimeralPublic = this.identity.getPublicKey();
       const delegation = await this.delegateIdentityFromLedger({to: ephimeralPublic, targets});
       return DelegationIdentity.fromDelegation(this.identity, delegation);
     }
     
-    private async delegateIdentityFromLedger({to, targets}: {to: BinaryBlob, targets?: string[]}) {
+    private async delegateIdentityFromLedger({to, targets}: {to: PublicKey, targets?: string[]}) {
       const pidTargets = targets?.map(target => Principal.fromText(target));
-      const publicKey = Ed25519PublicKey.fromDer(to);
-      return DelegationChain.create(this.ledgerIdentity,publicKey, undefined, {targets: pidTargets});
+      return DelegationChain.create(this.ledgerIdentity, to, undefined, {targets: pidTargets});
     }
 
     public toJSON(): JSONWallet{

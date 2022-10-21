@@ -189,15 +189,18 @@ class PlugKeyRing {
         storage: this.storage,
         onNetworkChange: this.exposeWalletMethods.bind(this),
       });
-      const walletsArray = Object.values(_decrypted.wallets);
+      const walletsArray = await Promise.all(
+        Object.values(_decrypted.wallets)
+        .map(async wallet => ({ id: wallet.walletId, identity: await IdentityFactory.createIdentity(wallet.type, wallet.keyPair), wallet }))
+      );
       const wallets = walletsArray.reduce(
-        async (walletsAccum, wallet) => ({
+        (walletsAccum, walletObj) => ({
           ...walletsAccum,
-          [wallet.walletId]: createWallet({
-            ...wallet,
+          [walletObj.id]: createWallet({
+            ...walletObj.wallet,
             fetch: this.fetch,
             network: this.networkModule.network,
-            identity: await IdentityFactory.createIdentity(wallet.type, wallet.keyPair)
+            identity: walletObj.identity
           })
         }),
         {}
@@ -292,7 +295,7 @@ class PlugKeyRing {
     const walletId = uuid(); 
     const orderNumber = Object.keys(this.state.wallets).length;
     const identity = await LedgerIdentity.create(path);
-    const type = IDENTITY_TYPES.ledger;
+    const type = IDENTITY_TYPES.ledgerUSB;  //TODO: add type definition function between usb/usbRN/bleRN
     const wallet = createWallet({
       icon,
       name,
@@ -309,7 +312,7 @@ class PlugKeyRing {
     this.state.wallets = wallets;
     return wallet;
   };
-  
+
   public validatePem = async ({
     pem,
   }: ImportFromPemOptions
@@ -416,7 +419,6 @@ class PlugKeyRing {
   };
 
   private validateSubaccount(subaccount: string): void {
-    
     if (
       !this.state.wallets[subaccount]
     ) {

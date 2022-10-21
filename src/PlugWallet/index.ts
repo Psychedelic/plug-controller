@@ -12,8 +12,10 @@ export const createWallet = (
     case IDENTITY_TYPES.pem256k1:
     case IDENTITY_TYPES.pem25519:
       return new PlugWallet(walletArgs);
-    case IDENTITY_TYPES.ledger:
-      throw new PlugWalletLedger(walletArgs);
+    case IDENTITY_TYPES.ledgerUSB:
+    case IDENTITY_TYPES.ledgerUSBRN:
+    case IDENTITY_TYPES.ledgerBLERN:
+      return new PlugWalletLedger(walletArgs);
     default:
       throw new Error('Invalid wallet type');
   }
