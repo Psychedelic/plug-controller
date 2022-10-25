@@ -16,7 +16,7 @@ import { KeyringStorage, StorageData } from '../interfaces/storage';
 import { TokenBalance, StandardToken } from '../interfaces/token';
 import { WalletNFTCollection } from '../interfaces/plug_wallet';
 import { Address } from '../interfaces/contact_registry';
-import { ERRORS } from '../errors';
+import { ERRORS, ERROR_CODES } from '../errors';
 import { IdentityFactory } from './../utils/identity/identityFactory'
 import { handleStorageUpdate } from '../utils/storage/utils';
 import { createAccountFromMnemonic } from '../utils/account';
@@ -314,11 +314,11 @@ class PlugKeyRing {
       const principal = identity?.getPrincipal().toText();
       
       if (this.checkRepeatedAccount(principal)) {
-        return { isValid: false, errorType: ERRORS.ADDED_ACCOUNT }
+        return { isValid: false, errorType: ERROR_CODES.ADDED_ACCOUNT }
       }
       return { isValid: true }
     } catch {
-      return { isValid: false, errorType: ERRORS.INVALID_KEY };
+      return { isValid: false, errorType: ERROR_CODES.INVALID_KEY };
     } 
   };
 

@@ -2,7 +2,7 @@
 import Secp256k1KeyIdentity from './secpk256k1/identity';
 import Ed25519KeyIdentity from './ed25519/ed25519Identity';
 import { Types } from '../account/constants';
-import { ERRORS } from '../../errors';
+import { ERRORS, ERROR_CODES } from '../../errors';
 
 const ED25519_KEY_INIT = '3053020101300506032b657004220420';
 const ED25519_KEY_SEPARATOR = 'a123032100';
@@ -69,7 +69,7 @@ export const getIdentityFromPem = (pem) => {
 
   const parsedIdentity = parseEd25519(trimedPem) || parseSec256K1(trimedPem);
 
-  if (!parsedIdentity) throw new Error(ERRORS.INVALID_KEY);
+  if (!parsedIdentity) throw new Error(ERROR_CODES.INVALID_KEY);
   
   return parsedIdentity;
 
