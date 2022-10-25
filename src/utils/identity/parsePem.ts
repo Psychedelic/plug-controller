@@ -5,17 +5,19 @@ import { Types } from '../account/constants';
 import { ERRORS } from '../../errors';
 
 const ED25519_KEY_INIT = '3053020101300506032b657004220420';
-const SEC256k1_KEY_INIT = '30740201010420';
-
 const ED25519_KEY_SEPARATOR = 'a123032100';
+const ED25519_OID = '06032b6570';
+
+const SEC256k1_KEY_INIT = '30740201010420';
 const SEC256k1_KEY_SEPARATOR = 'a00706052b8104000aa144034200';
+const SEC256k1_OID = '06052b8104000a'
 
 export const parseEd25519 = (pem: string) => {
 
   const raw = Buffer.from(pem, 'base64')
     .toString('hex')
 
-    if (!raw.substring(0, 32).includes(ED25519_KEY_INIT)) {
+    if (!raw.substring(0, 24).includes(ED25519_OID)) {
       return undefined;
     }
 
@@ -38,7 +40,7 @@ export const parseSec256K1 = (pem: string) => {
   const raw = Buffer.from(pem, 'base64')
     .toString('hex')
 
-  if (!raw.substring(0, 24).includes(SEC256k1_KEY_INIT)) {
+  if (!raw.includes(SEC256k1_OID)) {
     return undefined;
   }
 
