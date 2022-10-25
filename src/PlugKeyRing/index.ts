@@ -314,11 +314,11 @@ class PlugKeyRing {
       const principal = identity?.getPrincipal().toText();
       
       if (this.checkRepeatedAccount(principal)) {
-        return { isValid: false, errorType: 'added_account' }
+        return { isValid: false, errorType: ERRORS.ADDED_ACCOUNT }
       }
       return { isValid: true }
     } catch {
-      return { isValid: false, errorType: 'invalid_key' };
+      return { isValid: false, errorType: ERRORS.INVALID_KEY };
     } 
   };
 
