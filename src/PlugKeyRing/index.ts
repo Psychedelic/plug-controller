@@ -34,7 +34,8 @@ import {
   CreatePrincipalOptions,
   ImportMnemonicOptions,
   ImportFromPemOptions,
-  GetPrincipalFromPem
+  GetPrincipalFromPem,
+  ValidatePemResponse
 } from './interfaces';
 import { WALLET_METHODS, MAIN_WALLET_METHODS } from './constants';
 import { getIdentityFromPem } from './../utils/identity/parsePem'
@@ -308,7 +309,7 @@ class PlugKeyRing {
   public validatePem = async ({
     pem,
   }: ImportFromPemOptions
-  ): Promise<Object> => {
+  ): Promise<ValidatePemResponse> => {
     try {
       const { identity } = getIdentityFromPem(pem);
       const principal = identity?.getPrincipal().toText();
