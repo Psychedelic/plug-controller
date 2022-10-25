@@ -16,7 +16,7 @@ import { KeyringStorage, StorageData } from '../interfaces/storage';
 import { TokenBalance, StandardToken } from '../interfaces/token';
 import { WalletNFTCollection } from '../interfaces/plug_wallet';
 import { Address } from '../interfaces/contact_registry';
-import { ERRORS } from '../errors';
+import { ERRORS, ERROR_CODES } from '../errors';
 import { IdentityFactory } from './../utils/identity/identityFactory'
 import { handleStorageUpdate } from '../utils/storage/utils';
 import { createAccountFromMnemonic } from '../utils/account';
@@ -261,8 +261,10 @@ class PlugKeyRing {
       identity,
     });
 
-    this.checkRepeatedAccount(wallet.principal);
-
+    if (this.checkRepeatedAccount(wallet.principal)) {
+      throw new Error(ERRORS.INVALID_ACCOUNT);
+    }
+    
     const wallets = { ...this.state.wallets, [walletId]: wallet };
     this.state.wallets = wallets;
     await this.saveEncryptedState({ wallets }, this.state.password);
@@ -275,7 +277,7 @@ class PlugKeyRing {
   ): Promise<string> => {
     await this.checkInitialized();
     this.checkUnlocked();
-    const { identity, type } = getIdentityFromPem(pem);
+    const { identity } = getIdentityFromPem(pem);
     const principal = identity.getPrincipal().toText();
 
     return principal;
@@ -306,25 +308,28 @@ class PlugKeyRing {
   public validatePem = async ({
     pem,
   }: ImportFromPemOptions
-  ): Promise<boolean> => {
+  ): Promise<Object> => {
     try {
       const { identity } = getIdentityFromPem(pem);
-      const validIdentity = (identity) ? true : false;
-
-      return validIdentity;
+      const principal = identity?.getPrincipal().toText();
+      
+      if (this.checkRepeatedAccount(principal)) {
+        return { isValid: false, errorType: ERROR_CODES.ADDED_ACCOUNT }
+      }
+      return { isValid: true }
     } catch {
-      return false;
+      return { isValid: false, errorType: ERROR_CODES.INVALID_KEY };
     } 
-
   };
 
   // This should only be used in import, not in derivation
   // to avoid throwing when deriving an account that had been previously imported
-  private checkRepeatedAccount(principal: string): void {
+  private checkRepeatedAccount(principal: string): Object {
     const wallets = Object.values(this.state.wallets)
     if (wallets.find((wallet)=> wallet.principal == principal)) {
-      throw new Error(ERRORS.INVALID_ACCOUNT);
+      return true
     }
+    return false
   }
 
   // Key Management
