@@ -40,7 +40,7 @@ import {
 } from './interfaces';
 import { WALLET_METHODS, MAIN_WALLET_METHODS } from './constants';
 import { getIdentityFromPem } from './../utils/identity/parsePem'
-import LedgerIdentity from '../utils/identity/ledger';
+import USBLedgerIdentity from '../utils/identity/ledger/usbLedger';
 
 class PlugKeyRing {
   // state
@@ -314,7 +314,7 @@ class PlugKeyRing {
     this.checkUnlocked();
     const walletId = uuid(); 
     const orderNumber = Object.keys(this.state.wallets).length;
-    const identity = await LedgerIdentity.create(path);
+    const identity = await USBLedgerIdentity.create(path);
     const type = IDENTITY_TYPES.ledgerUSB;  //TODO: add type definition function between usb/usbRN/bleRN
     const wallet = createWallet({
       icon,

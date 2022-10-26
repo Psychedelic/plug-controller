@@ -1,3 +1,5 @@
+import * as encoding from 'text-encoding';
+
 /*
 MIT License
 
@@ -182,10 +184,10 @@ const base64abc = [
     return result.subarray(0, result.length - missingOctets)
   }
   
-  export function base64encode(str: string, encoder = new TextEncoder()) {
+  export function base64encode(str: string, encoder = new encoding.TextEncoder()) {
     return bytesToBase64(encoder.encode(str))
   }
   
-  export function base64decode(str: string, decoder = new TextDecoder()) {
+  export function base64decode(str: string, decoder = new encoding.TextDecoder()) {
     return decoder.decode(base64ToBytes(str))
   }

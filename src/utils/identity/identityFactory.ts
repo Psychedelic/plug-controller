@@ -21,10 +21,10 @@ export class IdentityFactory {
         return Ed25519KeyIdentity.fromJSON(secretKey);
       case IDENTITY_TYPES.ledgerUSB:
         return USBLedgerIdentity.fromJSON(secretKey);
-      case IDENTITY_TYPES.ledgerUSBRN:
-        return USBRNLedgerIdentity.fromJSON(secretKey);
-      case IDENTITY_TYPES.ledgerBLERN:
-        return BluetoothRNLedgerIdentity.fromJSON(secretKey);
+      // case IDENTITY_TYPES.ledgerUSBRN:
+      //   return USBRNLedgerIdentity.fromJSON(secretKey);
+      // case IDENTITY_TYPES.ledgerBLERN:
+      //   return BluetoothRNLedgerIdentity.fromJSON(secretKey);
       default:
         throw new Error(ERRORS.INVALID_TYPE_ERROR);
     }
