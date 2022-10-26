@@ -35,6 +35,7 @@ import {
   ICNSData,
   PlugWalletArgs,
   WalletNFTCollection,
+  WalletNFTInfo,
 } from '../interfaces/plug_wallet';
 import { StandardToken, TokenBalance } from '../interfaces/token';
 import { GetTransactionsResponse } from '../interfaces/transactions';
@@ -213,7 +214,7 @@ class PlugWallet {
     return balance;
   };
 
-  public getNFTInfo = async ({ canisterId, standard }) => {
+  public getNFTInfo = async ({ canisterId, standard }): Promise<WalletNFTInfo> => {
     const nft = await this.network.getNftInfo({ canisterId, identity: this.identity, standard });
     return nft;
   }

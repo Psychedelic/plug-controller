@@ -14,7 +14,7 @@ import { PlugStateStorage, PlugStateInstance } from '../interfaces/plug_keyring'
 import { GetTransactionsResponse } from '../interfaces/transactions';
 import { KeyringStorage, StorageData } from '../interfaces/storage';
 import { TokenBalance, StandardToken } from '../interfaces/token';
-import { WalletNFTCollection } from '../interfaces/plug_wallet';
+import { WalletNFTCollection, WalletNFTInfo } from '../interfaces/plug_wallet';
 import { Address } from '../interfaces/contact_registry';
 import { ERRORS, ERROR_CODES } from '../errors';
 import { IdentityFactory } from './../utils/identity/identityFactory'
@@ -73,6 +73,8 @@ class PlugKeyRing {
   public getTransactions: (args: { subaccount?: string }) => Promise<GetTransactionsResponse>;
   public send: (args: { subaccount?: string, to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
   public delegateIdentity: (args: { to: Buffer, targets: string[], subaccount?: string }) => Promise<string>;
+  public getNFTInfo: (args: { canisterId: string, standard?: string, subaccount?: string }) => Promise<WalletNFTInfo>;
+
 
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
