@@ -3,16 +3,19 @@ import { BinaryBlob, blobFromBuffer, blobFromUint8Array } from "@dfinity/candid"
 import { Delegation, DelegationChain, DelegationIdentity } from "@dfinity/identity";
 import { Principal } from "@dfinity/principal";
 import { NFTDetails, TokenInterfaces } from "@psychedelic/dab-js";
+
 import { Address } from "../interfaces/contact_registry";
 import { JSONWallet, PlugWalletArgs } from "../interfaces/plug_wallet";
 import { createAgent } from "../utils/dfx";
 import { GenericSignIdentity } from "../utils/identity/genericSignIdentity";
 import Secp256k1KeyIdentity from "../utils/identity/secpk256k1/identity";
 import PlugWallet from "./base";
-import { AccountIdentifier, BlockHeight, Certification, ICPTs, Memo, Payment, SendRequest } from "../utils/proto/ledger_pb.js";
+import proto from "../utils/proto";
 import { LEDGER_CANISTER_ID } from "../utils/dfx/constants";
 import { validateAccountId } from "../PlugKeyRing/utils";
 import { getAccountId } from "../utils/account";
+
+const { AccountIdentifier, BlockHeight, ICPTs, Memo, Payment, SendRequest, Certification } = proto.ic_ledger.pb.v1;
 
 class PlugWalletLedger extends PlugWallet {
     protected ledgerIdentity: GenericSignIdentity;
@@ -50,43 +53,31 @@ class PlugWalletLedger extends PlugWallet {
       if (args.canisterId !== LEDGER_CANISTER_ID) {
         throw new Error(`Token ${args.canisterId} not supported on Ledger`)
       }
-
       const to = validateAccountId(args.to) ? args.to : getAccountId(Principal.fromText(args.to));
 
       if(!validateAccountId(to)) {
         throw new Error('Invalid Account ID')
       }
 
-      console.log('to', to);
-
       const canisterId = Principal.fromText(LEDGER_CANISTER_ID);
-    
+
       const agent = createAgent({defaultIdentity: this.ledgerIdentity});
-      const amount = BigInt(args.amount);
-      const memo = BigInt(args.opts?.memo || 0);
-    
-      const toPb = new AccountIdentifier();
-      toPb.setHash(Uint8Array.from(Buffer.from(to, 'hex')));
-      const request = new SendRequest();
-      request.setTo(toPb);
-    
-      const payment = new Payment();
-      const amountPb = new ICPTs();
-      amountPb.setE8s(amount.toString(10));
-      payment.setReceiverGets(amountPb);
-      request.setPayment(payment);
-    
-      const maxFeePb = new ICPTs();
-      maxFeePb.setE8s(args.opts?.fee?.toString(10) || BigInt(0).toString(10));
-      request.setMaxFee(maxFeePb);
-    
-      const memoPb : Memo = new Memo();
-      memoPb.setMemo(memo.toString(10));
-      request.setMemo(memoPb);
+
+      const amount = args.amount; // 0.1 ICP
+      const memo = args.opts?.memo || BigInt(0);
+      const maxFee = args.opts?.fee || BigInt(10000);
+
+      const toPb = AccountIdentifier.fromObject({ hash: Uint8Array.from(Buffer.from(to, 'hex')) });
+      const amountPb = ICPTs.fromObject({ e8s: amount });
+      const memoPb = Memo.fromObject({ memo: memo.toString(10) });
+      const payment = Payment.fromObject({ receiverGets: amountPb});
+      const maxFeePb = ICPTs.fromObject({ e8s: maxFee.toString(10) });
+
+      const request = SendRequest.fromObject({to: toPb, payment: payment, memo: memoPb, maxFee: maxFeePb});
     
       const submitResponse = await agent.call(canisterId, {
         methodName: 'send_pb',
-        arg: blobFromUint8Array(request.serializeBinary()),
+        arg: blobFromUint8Array(SendRequest.encode(request).finish()),
         effectiveCanisterId: canisterId,
       });
     
@@ -110,9 +101,8 @@ class PlugWalletLedger extends PlugWallet {
         polling.defaultStrategy()
       );
 
-      const height =  BlockHeight.deserializeBinary(blob).getHeight()
+      const { height } =  BlockHeight.decode(blob).toJSON();
     
-      console.log('BLOBK HEIGH', height);
       return {
         height
       }
@@ -156,14 +146,14 @@ class PlugWalletLedger extends PlugWallet {
     }
     
     private async delegateIdentityFromLedger({to, targets}: {to: PublicKey, targets?: string[]}) {
-      const certification = new Certification();
       const pidTargets = targets?.map(target => Principal.fromText(target));
       const expiration = new Date(Date.now() + 15 * 60 * 1000);
       const delegation = new Delegation(to.toDer(), BigInt(+expiration) * BigInt(1000000), pidTargets);
-      certification.setCertification(new Uint8Array(delegation.toCBOR()));
+      const certification = Certification.fromObject(new Uint8Array(delegation.toCBOR()));
 
 
-      const signature = await this.ledgerIdentity.sign(blobFromUint8Array(certification.serializeBinary()));
+
+      const signature = await this.ledgerIdentity.sign(blobFromUint8Array(Certification.encode(certification).finish()));
 
       return DelegationChain.fromDelegations([{delegation, signature}], this.ledgerIdentity.getPublicKey().toDer());
     }

@@ -19,7 +19,7 @@
       "noImplicitReturns": true,
       "skipLibCheck": true,
       "types": ["node", "jest"],
-      "allowJs": true
+      "allowJs": true,
   },
   "compileOnSave": true,
   "include": [
@@ -30,6 +30,6 @@
       "dist",
       "tests",
       "jest.config.cjs",
-      ".vscode"
+      ".vscode",
   ]
 }
