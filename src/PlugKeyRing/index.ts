@@ -27,6 +27,7 @@ import { getVersion } from '../utils/version';
 import Storage from '../utils/storage';
 
 import NetworkModule, { NetworkModuleParams } from './modules/NetworkModule';
+import { RegisteredNFT } from './modules/NetworkModule/Network';
 import {
   CreateAndPersistKeyRingOptions,
   CreateImportResponse,
@@ -74,6 +75,7 @@ class PlugKeyRing {
   public send: (args: { subaccount?: string, to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
   public delegateIdentity: (args: { to: Buffer, targets: string[], subaccount?: string }) => Promise<string>;
   public getNFTInfo: (args: { canisterId: string, standard?: string, subaccount?: string }) => Promise<WalletNFTInfo>;
+  public registerNFT: (args: { canisterId: string, standard?: string, subaccount?: string }) => Promise<RegisteredNFT[]>;
 
 
   public constructor(
