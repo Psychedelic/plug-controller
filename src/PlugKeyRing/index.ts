@@ -41,6 +41,7 @@ import {
 import { WALLET_METHODS, MAIN_WALLET_METHODS } from './constants';
 import { getIdentityFromPem } from './../utils/identity/parsePem'
 import USBLedgerIdentity from '../utils/identity/ledger/usbLedger';
+import { instanceWallets } from '../utils/keyring';
 
 class PlugKeyRing {
   // state
@@ -190,22 +191,8 @@ class PlugKeyRing {
         storage: this.storage,
         onNetworkChange: this.exposeWalletMethods.bind(this),
       });
-      const walletsArray = await Promise.all(
-        Object.values(_decrypted.wallets)
-        .map(async wallet => ({ id: wallet.walletId, identity: await IdentityFactory.createIdentity(wallet.type, wallet.keyPair), wallet }))
-      );
-      const wallets = walletsArray.reduce(
-        (walletsAccum, walletObj) => ({
-          ...walletsAccum,
-          [walletObj.id]: createWallet({
-            ...walletObj.wallet,
-            fetch: this.fetch,
-            network: this.networkModule.network,
-            identity: walletObj.identity
-          })
-        }),
-        {}
-      );
+
+      const wallets = await instanceWallets(_decrypted.wallets, this.fetch, this.networkModule);
 
       this.state = { ...decrypted, wallets, mnemonicWalletCount };
       this.isInitialized = isInitialized;

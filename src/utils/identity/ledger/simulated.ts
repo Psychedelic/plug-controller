@@ -6,6 +6,7 @@ import DfinityApp from '@zondax/ledger-icp';
 import Secp256k1PublicKey from '../secpk256k1/publicKey';
 import { Buffer as BlobBuffer } from '../../../../node_modules/buffer';
 import LedgerIdentity from '.';
+import { DERIVATION_PATH } from '../../account/constants';
 
 class SimulatedLedgerIdentity extends LedgerIdentity {
 
@@ -14,7 +15,7 @@ class SimulatedLedgerIdentity extends LedgerIdentity {
   protected transport: any;
   protected currentTx: { [key: string]: {signatureRs, } } = {};
 
-  public static async create(transport: any, derivePath = `m/44'/223'/0'/0/0`): Promise<SimulatedLedgerIdentity> {
+  public static async create(transport: any, derivePath = DERIVATION_PATH): Promise<SimulatedLedgerIdentity> {
     const app = new DfinityApp(transport);
 
     const resp = await app.getAddressAndPubKey(derivePath);
@@ -31,7 +32,7 @@ class SimulatedLedgerIdentity extends LedgerIdentity {
     return new this(derivePath, publicKey, transport);
   }
   
-  constructor(derivePath = `m/44'/223'/0'/0/0`, publicKey: PublicKey, transport: any) {
+  constructor(derivePath = DERIVATION_PATH, publicKey: PublicKey, transport: any) {
     super(derivePath, publicKey, {});
     this.derivePath = derivePath;
     this.publicKey = publicKey;

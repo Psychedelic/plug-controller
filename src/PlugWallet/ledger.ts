@@ -2,7 +2,7 @@ import { polling, PublicKey } from "@dfinity/agent";
 import { BinaryBlob, blobFromBuffer, blobFromUint8Array } from "@dfinity/candid";
 import { Delegation, DelegationChain, DelegationIdentity } from "@dfinity/identity";
 import { Principal } from "@dfinity/principal";
-import { NFTDetails, TokenInterfaces } from "@psychedelic/dab-js";
+import { BurnResult, NFTDetails, TokenInterfaces } from "@psychedelic/dab-js";
 
 import { Address } from "../interfaces/contact_registry";
 import { JSONWallet, PlugWalletArgs } from "../interfaces/plug_wallet";
@@ -10,14 +10,15 @@ import { createAgent } from "../utils/dfx";
 import { GenericSignIdentity } from "../utils/identity/genericSignIdentity";
 import Secp256k1KeyIdentity from "../utils/identity/secpk256k1/identity";
 import PlugWallet from "./base";
-import proto from "../utils/proto";
 import { LEDGER_CANISTER_ID } from "../utils/dfx/constants";
 import { validateAccountId } from "../PlugKeyRing/utils";
 import { getAccountId } from "../utils/account";
+import proto, { decodeBlockHeight, formatProtoSendRequest } from "../utils/proto";
+import { MINS_15_MS } from "../constants/time";
 
-const { AccountIdentifier, BlockHeight, ICPTs, Memo, Payment, SendRequest, Certification } = proto.ic_ledger.pb.v1;
+const { Certification } = proto.ic_ledger.pb.v1;
 
-class PlugWalletLedger extends PlugWallet {
+class PlugLedgerWallet extends PlugWallet {
     protected ledgerIdentity: GenericSignIdentity;
 
     constructor(args: PlugWalletArgs) {
@@ -36,12 +37,12 @@ class PlugWalletLedger extends PlugWallet {
       to: string;
     }): Promise<boolean> {
       throw new Error('Transfer NFT not supported on Ledger');
-      return this.executeWithDelegation(super.transferNFT, args);
+      // return this.executeWithDelegation(super.transferNFT, args); // TODO: make this if identity delegation is supported later
     };
 
-    public async burnXTC(args: { to: string; amount: string }) {
+    public async burnXTC(args: { to: string; amount: string }): Promise<BurnResult> {
       throw new Error('Burn XTC not supported on Ledger');
-      return this.executeWithDelegation(super.burnXTC, args);
+      // return this.executeWithDelegation(super.burnXTC, args); // TODO: make this if identity delegation is supported later
     };  
     
     public async send(args: {
@@ -61,27 +62,17 @@ class PlugWalletLedger extends PlugWallet {
 
       const canisterId = Principal.fromText(LEDGER_CANISTER_ID);
 
-      const agent = createAgent({defaultIdentity: this.ledgerIdentity});
+      const agent = createAgent({ defaultIdentity: this.ledgerIdentity });
 
-      const amount = args.amount; // 0.1 ICP
-      const memo = args.opts?.memo || BigInt(0);
-      const maxFee = args.opts?.fee || BigInt(10000);
+      const request = formatProtoSendRequest(args, true) as Uint8Array;
 
-      const toPb = AccountIdentifier.fromObject({ hash: Uint8Array.from(Buffer.from(to, 'hex')) });
-      const amountPb = ICPTs.fromObject({ e8s: amount });
-      const memoPb = Memo.fromObject({ memo: memo.toString(10) });
-      const payment = Payment.fromObject({ receiverGets: amountPb});
-      const maxFeePb = ICPTs.fromObject({ e8s: maxFee.toString(10) });
-
-      const request = SendRequest.fromObject({to: toPb, payment: payment, memo: memoPb, maxFee: maxFeePb});
-    
       const submitResponse = await agent.call(canisterId, {
         methodName: 'send_pb',
-        arg: blobFromUint8Array(SendRequest.encode(request).finish()),
+        arg: blobFromUint8Array(request),
         effectiveCanisterId: canisterId,
       });
     
-      if (!submitResponse.response.ok) {
+      if (!submitResponse.response?.ok) {
         throw new Error(
           [
             "Call failed:",
@@ -100,29 +91,25 @@ class PlugWalletLedger extends PlugWallet {
         submitResponse.requestId,
         polling.defaultStrategy()
       );
-
-      const { height } =  BlockHeight.decode(blob).toJSON();
     
-      return {
-        height
-      }
+      return decodeBlockHeight(blob) as { height: string };
     };
 
     public async setReverseResolvedName (args: {
       name: string;
     }): Promise<string> {
       throw new Error('Set reverse resolve name not supported on Ledger');
-      return this.executeWithDelegation(super.setReverseResolvedName, args);
+      // return this.executeWithDelegation(super.setReverseResolvedName, args); // TODO: make this if identity delegation is supported later
     };
 
     public async addContact(args: { contact: Address; }): Promise<boolean> {
       throw new Error('Add contact not supported on Ledger');
-      return this.executeWithDelegation(super.addContact, args);
+      // return this.executeWithDelegation(super.addContact, args); // TODO: make this if identity delegation is supported later
     };
 
     public async deleteContact(args: { addressName: string; }): Promise<boolean> {
       throw new Error('Delete contact not supported on Ledger');
-      return this.executeWithDelegation(super.deleteContact, args);
+      // return this.executeWithDelegation(super.deleteContact, args); // TODO: make this if identity delegation is supported later.
     };
   
     private async executeWithDelegation(methodToRun: any, args: any) {
@@ -147,11 +134,9 @@ class PlugWalletLedger extends PlugWallet {
     
     private async delegateIdentityFromLedger({to, targets}: {to: PublicKey, targets?: string[]}) {
       const pidTargets = targets?.map(target => Principal.fromText(target));
-      const expiration = new Date(Date.now() + 15 * 60 * 1000);
-      const delegation = new Delegation(to.toDer(), BigInt(+expiration) * BigInt(1000000), pidTargets);
+      const expiration = new Date(Date.now() + MINS_15_MS);
+      const delegation = new Delegation(to.toDer(), BigInt(+expiration), pidTargets);
       const certification = Certification.fromObject(new Uint8Array(delegation.toCBOR()));
-
-
 
       const signature = await this.ledgerIdentity.sign(blobFromUint8Array(Certification.encode(certification).finish()));
 
@@ -174,4 +159,4 @@ class PlugWalletLedger extends PlugWallet {
   };
 }
 
-export default PlugWalletLedger;
+export default PlugLedgerWallet;

@@ -8,6 +8,7 @@ import { base64ToBytes, bytesToBase64 } from '../../encoding';
 import { GenericSignIdentity } from '../genericSignIdentity';
 import Secp256k1PublicKey from '../secpk256k1/publicKey';
 import { Buffer as BlobBuffer } from '../../../../node_modules/buffer';
+import { DERIVATION_PATH } from '../../account/constants';
 
 /**
  * Convert the HttpAgentRequest body into cbor which can be signed by the Ledger Hardware Wallet.
@@ -22,18 +23,13 @@ class LedgerIdentity extends SignIdentity implements GenericSignIdentity {
   protected publicKey: PublicKey;
   protected TransportClass: any;
 
-  public static async create(derivePath = `m/44'/223'/0'/0/0`, TransportClass: any): Promise<LedgerIdentity> {
+  public static async create(derivePath = DERIVATION_PATH, TransportClass: any): Promise<LedgerIdentity> {
     const transport = await TransportClass.create();
     const app = new DfinityApp(transport);
 
     const resp = await app.getAddressAndPubKey(derivePath);
     // This type doesn't have the right fields in it, so we have to manually type it.
-    const principal = (resp as unknown as { principalText: string }).principalText;
     const publicKey = Secp256k1PublicKey.fromRaw(blobFromBuffer(new BlobBuffer(resp.publicKey)));
-
-    if (principal !== Principal.selfAuthenticating(new Uint8Array(publicKey.toDer())).toText()) {
-      throw new Error('Principal returned by device does not match public key.');
-    }
 
     transport.close()
 
@@ -54,7 +50,7 @@ class LedgerIdentity extends SignIdentity implements GenericSignIdentity {
     );
   }
   
-  constructor(derivePath = `m/44'/223'/0'/0/0`, publicKey: PublicKey, TransportClass: any) {
+  constructor(derivePath = DERIVATION_PATH, publicKey: PublicKey, TransportClass: any) {
     super();
     this.derivePath = derivePath;
     this.publicKey = publicKey;

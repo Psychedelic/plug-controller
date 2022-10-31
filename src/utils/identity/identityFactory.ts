@@ -21,6 +21,7 @@ export class IdentityFactory {
         return Ed25519KeyIdentity.fromJSON(secretKey);
       case IDENTITY_TYPES.ledgerUSB:
         return USBLedgerIdentity.fromJSON(secretKey);
+      // TODO: add this cases for mobile implementation
       // case IDENTITY_TYPES.ledgerUSBRN:
       //   return USBRNLedgerIdentity.fromJSON(secretKey);
       // case IDENTITY_TYPES.ledgerBLERN:
