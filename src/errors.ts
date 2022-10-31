@@ -27,6 +27,7 @@ export const ERRORS = {
   DELETE_ACCOUNT_ERROR: 'Only imported accounts could be deleted',
   TOKEN_NOT_REGISTERED: 'Token not registered',
   INVALID_ACCOUNT: 'The imported account already exists',
+  NFT_ALREADY_REGISTERED: 'The NFT is already registered',
 };
 
 export const ERROR_CODES = {

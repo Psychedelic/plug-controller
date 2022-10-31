@@ -121,7 +121,6 @@ export class Network {
     const nftActor = getNFTActor({ canisterId, agent, standard });
     const metadata = await nftActor.getMetadata();
     const nft = {...metadata, registeredBy: []};
-    this.registeredNFTS = uniqueTokens([...this.registeredNFTS, nft]) as RegisteredNFT[];
     return nft
   }
 
@@ -129,9 +128,14 @@ export class Network {
     canisterId, standard, walletId, identity,
   }) => {
     const nft = this.registeredNFTS.find(({ canisterId: id }) => id === canisterId);
-    if (!nft) {
-      await this.getNftInfo({canisterId, identity, standard});
+    
+    if (nft) { 
+      throw new Error(ERRORS.NFT_ALREADY_REGISTERED);
     }
+
+    const nftInfo = await this.getNftInfo({ canisterId, identity, standard });
+    this.registeredNFTS = uniqueTokens([...this.registeredNFTS, nftInfo]) as RegisteredNFT[];
+    
     this.registeredNFTS = this.registeredNFTS.map(n => n.canisterId === canisterId ? {...n, registeredBy: [...n?.registeredBy, walletId]} : n);
     await this.onChange?.();
     return this.registeredNFTS;

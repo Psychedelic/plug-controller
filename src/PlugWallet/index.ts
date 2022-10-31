@@ -218,9 +218,12 @@ class PlugWallet {
     return nft;
   }
 
-  public registerNFT = async ({canisterId, standard}): Promise<RegisteredNFT[]> => {
-    const nfts = await this.network.registerNFT({canisterId, standard, walletId: this.walletNumber, identity: this.identity});
-    return nfts;
+  public registerNFT = async ({canisterId, standard}): Promise<RegisteredNFT | undefined> => {
+    const nfts = await this.network.registerNFT({canisterId, standard, walletId: this.walletId, identity: this.identity});
+    const registeredNFT = nfts.find(
+      nft => nft.canisterId === canisterId
+    )
+    return registeredNFT;
   }
 
   public registerToken = async (args: {
