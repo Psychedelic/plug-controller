@@ -124,7 +124,7 @@ export class Network {
       const nft = {...metadata, registeredBy: []};
       return nft
     } catch(e) {
-      throw new Error(ERRORS.CANISTER_INTERFACE_ERROR)
+      throw new Error(ERRORS.CANISTER_INTERFACE_ERROR);
     }
   }
 
