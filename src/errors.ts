@@ -28,6 +28,7 @@ export const ERRORS = {
   TOKEN_NOT_REGISTERED: 'Token not registered',
   INVALID_ACCOUNT: 'The imported account already exists',
   NFT_ALREADY_REGISTERED: 'The NFT is already registered',
+  CANISTER_INTERFACE_ERROR: 'Canister does not implement the selected standard interface',
 };
 
 export const ERROR_CODES = {
