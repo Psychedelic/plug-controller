@@ -14,9 +14,9 @@ import { PlugStateStorage, PlugStateInstance } from '../interfaces/plug_keyring'
 import { GetTransactionsResponse, FormattedTransactions} from '../interfaces/transactions';
 import { KeyringStorage, StorageData } from '../interfaces/storage';
 import { TokenBalance, StandardToken } from '../interfaces/token';
-import { WalletNFTCollection } from '../interfaces/plug_wallet';
+import { WalletNFTCollection, WalletNFTInfo } from '../interfaces/plug_wallet';
 import { Address } from '../interfaces/contact_registry';
-import { ERRORS } from '../errors';
+import { ERRORS, ERROR_CODES } from '../errors';
 import { IdentityFactory } from './../utils/identity/identityFactory'
 import { handleStorageUpdate } from '../utils/storage/utils';
 import { createAccountFromMnemonic } from '../utils/account';
@@ -27,6 +27,7 @@ import { getVersion } from '../utils/version';
 import Storage from '../utils/storage';
 
 import NetworkModule, { NetworkModuleParams } from './modules/NetworkModule';
+import { RegisteredNFT } from './modules/NetworkModule/Network';
 import {
   CreateAndPersistKeyRingOptions,
   CreateImportResponse,
@@ -34,6 +35,8 @@ import {
   CreatePrincipalOptions,
   ImportMnemonicOptions,
   ImportFromPemOptions,
+  GetPrincipalFromPem,
+  ValidatePemResponse
 } from './interfaces';
 import { WALLET_METHODS, MAIN_WALLET_METHODS } from './constants';
 import { getIdentityFromPem } from './../utils/identity/parsePem'
@@ -56,7 +59,7 @@ class PlugKeyRing {
   public getBalances: (args?: { subaccount?: string }) => Promise<Array<TokenBalance>>;
   public getNFTs: (args?: { subaccount?: string, refresh?: boolean }) => Promise<WalletNFTCollection[] | null>;
   public transferNFT: (args: { subaccount?: string; token: NFTDetails; to: string; standard: string; }) => Promise<boolean>;
-  public burnXTC: (args?: { to: string; amount: string; subaccount: string; }) => Promise<TokenInterfaces.BurnResult>;
+  public burnXTC: (args?: { to: string; amount: string; subaccount?: string; }) => Promise<TokenInterfaces.BurnResult>;
   public registerToken: (args: { canisterId: string; standard?: string; subaccount?: string; logo?: string; }) => Promise<TokenBalance>;
   public removeToken: (args: { canisterId: string; subaccount?: string; }) => Promise<Array<StandardToken>>;
   public getTokenInfo: (args: { canisterId: string, standard?: string, subaccount?: string }) => Promise<TokenBalance>;
@@ -71,6 +74,9 @@ class PlugKeyRing {
   public getTransactions: (args: { subaccount?: string }) => Promise<FormattedTransactions>;
   public send: (args: { subaccount?: string, to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
   public delegateIdentity: (args: { to: Buffer, targets: string[], subaccount?: string }) => Promise<string>;
+  public getNFTInfo: (args: { canisterId: string, standard?: string, subaccount?: string }) => Promise<WalletNFTInfo>;
+  public registerNFT: (args: { canisterId: string, standard?: string, subaccount?: string }) => Promise<RegisteredNFT[]>;
+
 
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,
@@ -260,12 +266,26 @@ class PlugKeyRing {
       identity,
     });
 
-    this.checkRepeatedAccount(wallet.principal);
-
+    if (this.checkRepeatedAccount(wallet.principal)) {
+      throw new Error(ERRORS.INVALID_ACCOUNT);
+    }
+    
     const wallets = { ...this.state.wallets, [walletId]: wallet };
-    await this.saveEncryptedState({ wallets }, this.state.password);
     this.state.wallets = wallets;
+    await this.saveEncryptedState({ wallets }, this.state.password);
     return wallet;
+  };
+
+  public getPrincipalFromPem = async ({
+    pem,
+  }: GetPrincipalFromPem
+  ): Promise<string> => {
+    await this.checkInitialized();
+    this.checkUnlocked();
+    const { identity } = getIdentityFromPem(pem);
+    const principal = identity.getPrincipal().toText();
+
+    return principal;
   };
 
   public deleteImportedAccount = async (walletId: string): Promise<void> => {
@@ -279,6 +299,13 @@ class PlugKeyRing {
 
     const { [walletId]: deletedWallet, ...maintainedWallets } = wallets
 
+    if (walletId == this.currentWalletId) {
+
+      const currentWalletId = this.getMainAccountId();
+      this.currentWalletId = currentWalletId;
+
+      await this.storage.set({ currentWalletId });
+    }
     await this.saveEncryptedState({ wallets: maintainedWallets }, this.state.password);
     this.state.wallets = maintainedWallets;
   };
@@ -286,23 +313,28 @@ class PlugKeyRing {
   public validatePem = async ({
     pem,
   }: ImportFromPemOptions
-  ): Promise<boolean> => {
+  ): Promise<ValidatePemResponse> => {
     try {
       const { identity } = getIdentityFromPem(pem);
-      const validIdentity = (identity) ? true : false;
-
-      return validIdentity;
+      const principal = identity?.getPrincipal().toText();
+      
+      if (this.checkRepeatedAccount(principal)) {
+        return { isValid: false, errorType: ERROR_CODES.ADDED_ACCOUNT }
+      }
+      return { isValid: true }
     } catch {
-      return false;
+      return { isValid: false, errorType: ERROR_CODES.INVALID_KEY };
     } 
-
   };
 
-  private checkRepeatedAccount(principal: string): void {
+  // This should only be used in import, not in derivation
+  // to avoid throwing when deriving an account that had been previously imported
+  private checkRepeatedAccount(principal: string): Object {
     const wallets = Object.values(this.state.wallets)
     if (wallets.find((wallet)=> wallet.principal == principal)) {
-      throw new Error(ERRORS.INVALID_ACCOUNT);
+      return true
     }
+    return false
   }
 
   // Key Management

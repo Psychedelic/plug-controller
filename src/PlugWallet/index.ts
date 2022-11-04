@@ -35,6 +35,7 @@ import {
   ICNSData,
   PlugWalletArgs,
   WalletNFTCollection,
+  WalletNFTInfo,
 } from '../interfaces/plug_wallet';
 import { StandardToken, TokenBalance } from '../interfaces/token';
 import { FormattedTransactions } from '../interfaces/transactions';
@@ -213,14 +214,17 @@ class PlugWallet {
     return balance;
   };
 
-  public getNFTInfo = async ({ canisterId, standard }) => {
+  public getNFTInfo = async ({ canisterId, standard }): Promise<WalletNFTInfo> => {
     const nft = await this.network.getNftInfo({ canisterId, identity: this.identity, standard });
     return nft;
   }
 
-  public registerNFT = async ({canisterId, standard}): Promise<RegisteredNFT[]> => {
-    const nfts = await this.network.registerNFT({canisterId, standard, walletId: this.walletNumber, identity: this.identity});
-    return nfts;
+  public registerNFT = async ({canisterId, standard}): Promise<RegisteredNFT | undefined> => {
+    const nfts = await this.network.registerNFT({canisterId, standard, walletId: this.walletId, identity: this.identity});
+    const registeredNFT = nfts.find(
+      nft => nft.canisterId === canisterId
+    )
+    return registeredNFT;
   }
 
   public registerToken = async (args: {
@@ -471,8 +475,11 @@ class PlugWallet {
     contact: Address;
   }): Promise<boolean> => {
     try {
+      if ('PrincipalId' in contact.value) {
+        const principal = contact.value.PrincipalId;
+        contact.value = { PrincipalId: Principal.fromText(principal.toString()) };
+      }
       const contactResponse = await addAddress(this.agent, contact);
-
       return contactResponse.hasOwnProperty('Ok') ? true : false;
     } catch (e) {
       return false;

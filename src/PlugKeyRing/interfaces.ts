@@ -1,4 +1,5 @@
 import PlugWallet from "../PlugWallet";
+import { ERROR_CODES }  from "../errors"
 
 export interface CreateImportResponse { wallet: PlugWallet; mnemonic: string; }
 
@@ -23,4 +24,13 @@ export interface ImportMnemonicOptions {
 
 export interface ImportFromPemOptions extends CreatePrincipalOptions {
   pem: string;
+}
+
+export interface GetPrincipalFromPem {
+  pem: string;
+}
+
+export interface ValidatePemResponse {
+  isValid: boolean;
+  errorType?: string;
 }
