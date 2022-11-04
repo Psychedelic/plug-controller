@@ -23,8 +23,12 @@ export const formatTransaction = (transaction, principalId, accountId, network):
       if (type.toUpperCase() === 'TRANSFER') {
         return isOwnTx ? 'SEND' : 'RECEIVE';
       }
+      if (type.toUpperCase() === 'LIQUIDITY') {
+        return `${type.includes('removeLiquidity') ? 'Remove' : 'Add'} Liquidity`;
+      }
       return type.toUpperCase();
     };
+
     const trx = {
       type: getType(),
       hash,
