@@ -14,7 +14,7 @@ import { PlugStateStorage, PlugStateInstance } from '../interfaces/plug_keyring'
 import { GetTransactionsResponse } from '../interfaces/transactions';
 import { KeyringStorage, StorageData } from '../interfaces/storage';
 import { TokenBalance, StandardToken } from '../interfaces/token';
-import { WalletNFTCollection } from '../interfaces/plug_wallet';
+import { WalletNFTCollection, WalletNFTInfo } from '../interfaces/plug_wallet';
 import { Address } from '../interfaces/contact_registry';
 import { ERRORS, ERROR_CODES } from '../errors';
 import { IdentityFactory } from './../utils/identity/identityFactory'
@@ -27,6 +27,7 @@ import { getVersion } from '../utils/version';
 import Storage from '../utils/storage';
 
 import NetworkModule, { NetworkModuleParams } from './modules/NetworkModule';
+import { RegisteredNFT } from './modules/NetworkModule/Network';
 import {
   CreateAndPersistKeyRingOptions,
   CreateImportResponse,
@@ -58,7 +59,7 @@ class PlugKeyRing {
   public getBalances: (args?: { subaccount?: string }) => Promise<Array<TokenBalance>>;
   public getNFTs: (args?: { subaccount?: string, refresh?: boolean }) => Promise<WalletNFTCollection[] | null>;
   public transferNFT: (args: { subaccount?: string; token: NFTDetails; to: string; standard: string; }) => Promise<boolean>;
-  public burnXTC: (args?: { to: string; amount: string; subaccount: string; }) => Promise<TokenInterfaces.BurnResult>;
+  public burnXTC: (args?: { to: string; amount: string; subaccount?: string; }) => Promise<TokenInterfaces.BurnResult>;
   public registerToken: (args: { canisterId: string; standard?: string; subaccount?: string; logo?: string; }) => Promise<TokenBalance>;
   public removeToken: (args: { canisterId: string; subaccount?: string; }) => Promise<Array<StandardToken>>;
   public getTokenInfo: (args: { canisterId: string, standard?: string, subaccount?: string }) => Promise<TokenBalance>;
@@ -73,6 +74,9 @@ class PlugKeyRing {
   public getTransactions: (args: { subaccount?: string }) => Promise<GetTransactionsResponse>;
   public send: (args: { subaccount?: string, to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
   public delegateIdentity: (args: { to: Buffer, targets: string[], subaccount?: string }) => Promise<string>;
+  public getNFTInfo: (args: { canisterId: string, standard?: string, subaccount?: string }) => Promise<WalletNFTInfo>;
+  public registerNFT: (args: { canisterId: string, standard?: string, subaccount?: string }) => Promise<RegisteredNFT[]>;
+
 
   public constructor(
     StorageAdapter = new Storage() as KeyringStorage,

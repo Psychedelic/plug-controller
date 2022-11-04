@@ -35,6 +35,7 @@ import {
   ICNSData,
   PlugWalletArgs,
   WalletNFTCollection,
+  WalletNFTInfo,
 } from '../interfaces/plug_wallet';
 import { StandardToken, TokenBalance } from '../interfaces/token';
 import { GetTransactionsResponse } from '../interfaces/transactions';
@@ -213,14 +214,17 @@ class PlugWallet {
     return balance;
   };
 
-  public getNFTInfo = async ({ canisterId, standard }) => {
+  public getNFTInfo = async ({ canisterId, standard }): Promise<WalletNFTInfo> => {
     const nft = await this.network.getNftInfo({ canisterId, identity: this.identity, standard });
     return nft;
   }
 
-  public registerNFT = async ({canisterId, standard}): Promise<RegisteredNFT[]> => {
-    const nfts = await this.network.registerNFT({canisterId, standard, walletId: this.walletNumber, identity: this.identity});
-    return nfts;
+  public registerNFT = async ({canisterId, standard}): Promise<RegisteredNFT | undefined> => {
+    const nfts = await this.network.registerNFT({canisterId, standard, walletId: this.walletId, identity: this.identity});
+    const registeredNFT = nfts.find(
+      nft => nft.canisterId === canisterId
+    )
+    return registeredNFT;
   }
 
   public registerToken = async (args: {

@@ -52,3 +52,7 @@ export interface NFTDetailsBase<idT = bigint> {
 export interface WalletNFTCollection extends Omit<NFTCollection, 'tokens'> {
     tokens: NFTDetailsBase<bigint | string>[];
 }
+
+export interface WalletNFTInfo extends NFTCollection {
+    registeredBy: Array<string>;
+}
