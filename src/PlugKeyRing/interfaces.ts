@@ -26,6 +26,10 @@ export interface ImportFromPemOptions extends CreatePrincipalOptions {
   pem: string;
 }
 
+export interface ImportFromSecretKey extends CreatePrincipalOptions {
+  secretKey: string;
+}
+
 export interface GetPrincipalFromPem {
   pem: string;
 }

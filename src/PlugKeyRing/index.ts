@@ -36,10 +36,12 @@ import {
   ImportMnemonicOptions,
   ImportFromPemOptions,
   GetPrincipalFromPem,
-  ValidatePemResponse
+  ValidatePemResponse,
+  ImportFromSecretKey
 } from './interfaces';
 import { WALLET_METHODS, MAIN_WALLET_METHODS } from './constants';
 import { getIdentityFromPem } from './../utils/identity/parsePem'
+import Secp256k1KeyIdentity from '../utils/identity/secpk256k1/identity';
 
 class PlugKeyRing {
   // state
@@ -275,6 +277,41 @@ class PlugKeyRing {
     await this.saveEncryptedState({ wallets }, this.state.password);
     return wallet;
   };
+
+  public importAccountFromPrivateKey = async ({
+    icon,
+    name,
+    secretKey,
+  }: ImportFromSecretKey
+  ): Promise<PlugWallet> => {
+    await this.checkInitialized();
+    this.checkUnlocked();
+    const walletId = uuid(); 
+    const orderNumber = Object.keys(this.state.wallets).length;
+    const buffSecretKey = Buffer.from(secretKey, 'hex');
+    const identity = Secp256k1KeyIdentity.fromSecretKey(buffSecretKey);
+    const wallet = new PlugWallet({
+      icon,
+      name,
+      walletId,
+      orderNumber,
+      fetch: this.fetch,
+      network: this.networkModule.network,
+      type: Types.secretKey256k1,
+      identity,
+    });
+
+    if (this.checkRepeatedAccount(wallet.principal)) {
+      throw new Error(ERRORS.INVALID_ACCOUNT);
+    }
+    
+    const wallets = { ...this.state.wallets, [walletId]: wallet };
+    this.state.wallets = wallets;
+    await this.saveEncryptedState({ wallets }, this.state.password);
+    return wallet;
+  };
+
+
 
   public getPrincipalFromPem = async ({
     pem,
