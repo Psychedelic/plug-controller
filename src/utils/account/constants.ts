@@ -13,4 +13,5 @@ export enum Types {
     mnemonic = "MNEMONIC",
     pem256k1 = "PEM_256k1",
     pem25519 = "PEM_25519",
+    secretKey256k1 = "SECRET_KEY_256k1",
 }
