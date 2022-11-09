@@ -71,7 +71,7 @@ class PlugKeyRing {
   public deleteContact: (args: { addressName: string, subaccount?: string }) => Promise<boolean>;
   public getAgent: (args?: { subaccount ?: string, host?: string }) => HttpAgent;
   public getBalance: (args: { token: StandardToken, subaccount?: string }) => Promise<TokenBalance>;
-  public getTransactions: (args: { subaccount?: string }) => Promise<FormattedTransactions>;
+  public getTransactions: (args: { subaccount?: string, icpPrice: number }) => Promise<FormattedTransactions>;
   public send: (args: { subaccount?: string, to: string, amount: string, canisterId: string, opts?: TokenInterfaces.SendOpts }) => Promise<TokenInterfaces.SendResponse>;
   public delegateIdentity: (args: { to: Buffer, targets: string[], subaccount?: string }) => Promise<string>;
   public getNFTInfo: (args: { canisterId: string, standard?: string, subaccount?: string }) => Promise<WalletNFTInfo>;

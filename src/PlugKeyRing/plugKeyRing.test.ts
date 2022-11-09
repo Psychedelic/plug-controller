@@ -66,6 +66,8 @@ const mockdeNFTCollection = {
   tokens: [mockedICPunk],
 };
 
+const icpPrice = 4.29;
+
 (getTokenActor as jest.Mock).mockReturnValue({
   getMetadata: jest.fn(() => ({
     fungible: { symbol: 'WTC', decimals: 5, name: 'Wrapped Cycles' },
@@ -652,17 +654,17 @@ describe('Plug KeyRing', () => {
     test('get specific transactions', async () => {
       const ind = Math.round(Math.random() * (walletsCreated - 1));
 
-      expect(await keyRing.getTransactions({ subaccount: 'ind' })).toBe(
+      expect(await keyRing.getTransactions({ subaccount: 'ind', icpPrice })).toBe(
         transactions[ind]
       );
     });
 
     test('get error with invalid wallet numbers', async () => {
-      await expect(keyRing.getTransactions({ subaccount: '-2' })).rejects.toThrow(
+      await expect(keyRing.getTransactions({ subaccount: '-2', icpPrice })).rejects.toThrow(
         ERRORS.INVALID_WALLET_NUMBER
       );
       await expect(
-        keyRing.getTransactions({ subaccount: 'walletsCreated + 2' })
+        keyRing.getTransactions({ subaccount: 'walletsCreated + 2', icpPrice })
       ).rejects.toThrow(ERRORS.INVALID_WALLET_NUMBER);
     });
   });

@@ -36,6 +36,47 @@ export const TOKENS = {
   },
 };
 
+
+export const AMOUNT_ERROR = 'Error';
+export const USD_PER_TC = 1.42656;
+export const E8S_PER_ICP = 100_000_000;
+
+export const formatAssetBySymbol = (_amount, symbol, icpPrice) => {
+  const amount = Number.isNaN(_amount) ? NaN : parseFloat(_amount);
+  const icpValue = Number.isNaN(amount) ? NaN : amount * icpPrice;
+  const tcValue = Number.isNaN(amount) ? NaN : amount * USD_PER_TC;
+
+  return (
+    {
+      ICP: {
+        amount,
+        value: icpValue,
+        symbol: 'ICP',
+        decimals: 8,
+      },
+      XTC: {
+        amount,
+        value: tcValue,
+        symbol: 'XTC',
+        decimals: 12,
+      },
+      WTC: {
+        amount,
+        value: tcValue,
+        symbol: 'WTC',
+        decimals: 12,
+      },
+      WICP: {
+        amount,
+        value: icpValue,
+        symbol: 'WICP',
+        decimals: 8,
+      },
+      default: { amount },
+    }[symbol || 'default'] || { amount }
+  );
+};
+
 export const parseToFloatAmount = (amount, decimals) => {
   let amountString = `${amount}`;
   let prefix = '';
@@ -83,11 +124,12 @@ const parseFee = (fee) => {
   
 }
 
-export const formatTransaction = (transaction, principalId, accountId, network): FormattedTransaction  => {
+export const formatTransaction = (transaction, principalId, accountId, network, icpPrice): FormattedTransaction  => {
     const {
       details, hash, canisterInfo, caller, timestamp,
     } = transaction || {};
     const { sonicData, fee } = details || {};
+    const amount = parseAmount(details);
     const getSymbol = () => {
       if ('tokenRegistryInfo' in (details?.canisterInfo || [])) return details?.canisterInfo.tokenRegistryInfo.symbol;
       if ('nftRegistryInfo' in (details?.canisterInfo || [])) return 'NFT';
@@ -106,7 +148,14 @@ export const formatTransaction = (transaction, principalId, accountId, network):
       return type.toUpperCase();
     };
 
+    const asset = formatAssetBySymbol(
+      amount,
+      getSymbol(),
+      icpPrice,
+    );
+
     const trx = {
+      ...asset,
       type: getType(),
       hash,
       to: details?.to?.icns ?? details?.to?.principal,
@@ -119,7 +168,7 @@ export const formatTransaction = (transaction, principalId, accountId, network):
       canisterInfo: canisterInfo || details?.canisterInfo,
       details: { 
         ...details,
-        amount: parseAmount(details),
+        amount,
         fee: parseFee(details.fee),
         caller,
         token:
@@ -131,9 +180,9 @@ export const formatTransaction = (transaction, principalId, accountId, network):
 };
 
 
-export const formatTransactions = (transactions, principalId, accountId, network): FormattedTransactions => {
+export const formatTransactions = (transactions, principalId, accountId, network, icpPrice): FormattedTransactions => {
   
-  const parsedTrx = transactions?.map((trx) => formatTransaction(trx,principalId,accountId,network)) || [];
+  const parsedTrx = transactions?.map((trx) => formatTransaction(trx,principalId,accountId,network,icpPrice)) || [];
 
   const sortedTransactions = {
     total: parsedTrx.length,

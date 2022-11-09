@@ -352,7 +352,7 @@ class PlugWallet {
   };
 
 
-  public getTransactions = async (): Promise<FormattedTransactions> => {
+  public getTransactions = async ({icpPrice}): Promise<FormattedTransactions> => {
     if (this.network.isCustom) return { total: 0, transactions: [] };
     const icnsAdapter = new ICNSAdapter(this.agent);
     const [ icpTrxs, xtcTransactions, capTransactions ] = await Promise.all([getICPTransactions(this.accountId), 
@@ -373,7 +373,7 @@ class PlugWallet {
     transactionsGroup = transactionsGroup.map(tx =>
       replacePrincipalsForICNS(tx, icnsMapping)
     );
-    const formattedTransactions = formatTransactions(transactionsGroup, this.principal, this.accountId, this.network)
+    const formattedTransactions = formatTransactions(transactionsGroup, this.principal, this.accountId, this.network, icpPrice)
 
     return formattedTransactions;
   };
