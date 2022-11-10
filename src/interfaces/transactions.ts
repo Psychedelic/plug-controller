@@ -6,19 +6,24 @@ export interface InferredTransaction {
     caller: string;
 }
 
+export type Nullable<T> = T | null;
+
 export interface FormattedTransaction {
-    hash: string;
-    date: bigint;
     type: string;
     to: string;
     from: string;
+    hash: string;
+    amount: Nullable<number | typeof NaN>; // borrar esto
+    value?: Nullable<number>; // borrar esto
+    decimal?: number;
     status: number;
-    logo: string;
+    date: bigint;
     symbol: string;
+    logo: string;
     canisterId: string;
-    canisterInfo: Object;
     details?: { [key: string]: any };
-}
+    canisterInfo?: Object;
+  }
 
 export interface GetTransactionsResponse {
     total: number;

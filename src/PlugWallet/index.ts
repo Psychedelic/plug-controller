@@ -52,7 +52,7 @@ import { Types } from '../utils/account/constants';
 import { GenericSignIdentity } from '../utils/identity/genericSignIdentity';
 import { getTokensFromCollections } from '../utils/getTokensFromCollection';
 import { Buffer } from '../../node_modules/buffer';
-import { formatTransactions } from './../utils/formatter/transaction/transactionFormatter'
+import { formatTransactions } from '../utils/formatter/transactionFormatter'
 
 class PlugWallet {
   name: string;
