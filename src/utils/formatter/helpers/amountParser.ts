@@ -62,7 +62,6 @@ export const parseAmount = (transactionObject) => {
   } = transactionObject;
 
   const { decimals = TOKENS[sonicData?.token?.details?.symbol]?.decimals } = { ...currency, ...token, ...(sonicData?.token ?? {}) };
-  // TODO: Decimals are currently not in DAB. Remove once they are added.
 
   const parsedAmount = parseToFloatAmount(amount, decimals);
 

@@ -1,5 +1,3 @@
-/* eslint-disable camelcase */
-/* eslint-disable no-underscore-dangle */
 import { TokenInterfaces } from '@psychedelic/dab-js';
 import { TOKENS } from '../../../constants/tokens';
 
@@ -24,7 +22,7 @@ const formatTransfer = (
 ): InferredTransaction => {
   if (!('Transfer' in event.kind)) throw Error();
   const transaction: any = { details };
-  transaction.details.from = event.kind.Transfer.from; // check with @b0xtch how to instance Principal from api answer
+  transaction.details.from = event.kind.Transfer.from;
   transaction.details.to = event.kind.Transfer.to;
   transaction.caller = event.kind.Transfer.from;
   transaction.type =
@@ -40,7 +38,7 @@ const formatTransferFrom = (
 ): InferredTransaction => {
   if (!('TransferFrom' in event.kind)) throw Error();
   const transaction: any = { details };
-  transaction.details.from = event.kind.TransferFrom.from; // check with @b0xtch how to instance Principal from api answer
+  transaction.details.from = event.kind.TransferFrom.from;
   transaction.details.to = event.kind.TransferFrom.to;
   transaction.caller = event.kind.TransferFrom.caller;
   transaction.type =
