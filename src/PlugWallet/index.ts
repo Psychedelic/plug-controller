@@ -38,9 +38,8 @@ import {
   WalletNFTInfo,
 } from '../interfaces/plug_wallet';
 import { StandardToken, TokenBalance } from '../interfaces/token';
-import { GetTransactionsResponse } from '../interfaces/transactions';
+import { FormattedTransactions } from '../interfaces/transactions';
 import ICNSAdapter from '../utils/dfx/icns';
-import { recursiveParseBigint } from '../utils/object';
 import {
   recursiveFindPrincipals,
   replacePrincipalsForICNS,
@@ -53,6 +52,7 @@ import { Types } from '../utils/account/constants';
 import { GenericSignIdentity } from '../utils/identity/genericSignIdentity';
 import { getTokensFromCollections } from '../utils/getTokensFromCollection';
 import { Buffer } from '../../node_modules/buffer';
+import { formatTransactions } from '../utils/formatter/transactionFormatter'
 
 class PlugWallet {
   name: string;
@@ -352,43 +352,30 @@ class PlugWallet {
   };
 
 
-  public getTransactions = async (): Promise<GetTransactionsResponse> => {
+  public getTransactions = async ({icpPrice}): Promise<FormattedTransactions> => {
     if (this.network.isCustom) return { total: 0, transactions: [] };
     const icnsAdapter = new ICNSAdapter(this.agent);
-    const icpTrxs = await getICPTransactions(this.accountId);
-    const xtcTransactions = await getXTCTransactions(this.principal);
-    const capTransactions = await getCapTransactions({
-      principalId: this.principal,
-      agent: this.agent,
-    });
+    const [ icpTrxs, xtcTransactions, capTransactions ] = await Promise.all([getICPTransactions(this.accountId), 
+      getXTCTransactions(this.principal),
+      getCapTransactions({
+        principalId: this.principal,
+        agent: this.agent,
+      })])
+    
     let transactionsGroup = [
       ...capTransactions.transactions,
       ...icpTrxs.transactions,
       ...xtcTransactions.transactions,
     ];
     const principals = recursiveFindPrincipals(transactionsGroup);
+ 
     const icnsMapping = await icnsAdapter.getICNSMappings(principals);
     transactionsGroup = transactionsGroup.map(tx =>
       replacePrincipalsForICNS(tx, icnsMapping)
     );
-    transactionsGroup = transactionsGroup.map(tx => ({
-      ...tx,
-      details: {
-        ...tx.details,
-        token:
-          tx.details?.canisterId && this.network.tokens.find((token) => token.canisterId === tx.details?.canisterId),
-      },
-    }));
+    const formattedTransactions = formatTransactions(transactionsGroup, this.principal, this.accountId, this.network, icpPrice)
 
-    // merge and format all trx. sort by timestamp
-    // TODO: any custom token impelmenting archive should be queried. (0.4.0)
-    const transactions = {
-      total: icpTrxs.total + xtcTransactions.total + capTransactions.total,
-      transactions: transactionsGroup.sort((a, b) =>
-        b.timestamp - a.timestamp < 0 ? -1 : 1
-      ),
-    };
-    return transactions;
+    return formattedTransactions;
   };
 
   public send = async (args: {
