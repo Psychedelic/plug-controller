@@ -27,6 +27,5 @@
       "tests",
       "jest.config.cjs",
       ".vscode",
-      "manual.ts",
   ]
 }
