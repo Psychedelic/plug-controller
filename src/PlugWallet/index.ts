@@ -111,7 +111,7 @@ class PlugWallet {
     this.name = val;
   }
 
-  public async sign(payload: BinaryBlob): Promise<BinaryBlob> {
+  public async sign({ payload } : { payload: BinaryBlob }): Promise<BinaryBlob> {
     return this.identity.sign(payload);
   }
 
@@ -441,9 +441,10 @@ class PlugWallet {
       return { names: [], reverseResolvedName: undefined };
     const icnsAdapter = new ICNSAdapter(this.agent);
     const names = await icnsAdapter.getICNSNames();
+    const stringNames = names.map((name) => name?.name.toString());
     const reverseResolvedName = await icnsAdapter.getICNSReverseResolvedName();
-    this.icnsData = { names, reverseResolvedName };
-    return { names, reverseResolvedName };
+    this.icnsData = { names: stringNames, reverseResolvedName };
+    return { names: stringNames, reverseResolvedName };
   };
 
   public getReverseResolvedName = async (): Promise<string | undefined> => {

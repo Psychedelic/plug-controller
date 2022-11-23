@@ -9,6 +9,7 @@ export default ({ IDL }) => {
     operator: IDL.Principal,
     name: IDL.Text,
     expiry: Time,
+    id: IDL.Nat,
   });
   const Info = IDL.Record({
     memSize: IDL.Nat,
