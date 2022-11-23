@@ -187,7 +187,7 @@ class PlugWallet {
       const NFT = getNFTActor({
         canisterId: token.canister,
         agent: this.agent,
-        standard: token.standard,
+        standard: token.standard.toUpperCase(),
       });
 
       await NFT.transfer(
