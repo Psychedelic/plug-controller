@@ -111,7 +111,7 @@ class PlugWallet {
     this.name = val;
   }
 
-  public async sign(payload: BinaryBlob): Promise<BinaryBlob> {
+  public async sign({ payload } : { payload: BinaryBlob }): Promise<BinaryBlob> {
     return this.identity.sign(payload);
   }
 
