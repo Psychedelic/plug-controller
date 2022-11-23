@@ -74,6 +74,7 @@ export interface RecordExt {
   'operator' : Principal,
   'name' : string,
   'expiry' : Time,
+  'id': bigint,
 }
 export type Time = bigint;
 export type TxReceipt = { 'ok' : bigint } |

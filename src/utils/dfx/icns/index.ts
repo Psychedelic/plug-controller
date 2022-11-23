@@ -55,23 +55,24 @@ export default class ICNSAdapter {
     return principal?.toString?.();
   };
 
-  public getICNSNames = async (): Promise<string[]> => {
-    const names = await this.#registry.getUserDomains(await this.#agent.getPrincipal());
-    return names[0]?.map(({ name }) => name) || [];
+  public getICNSNames = async (): Promise<RecordExt[]> => {
+    const _names = await this.#registry.getUserDomains(await this.#agent.getPrincipal());
+    const names = _names?.[0] || [];
+    return names;
   };
 
   public getICNSCollection = async (): Promise<NFTCollection> => {
     let icnsNames = await this.getICNSNames();
     const formattedNames = icnsNames?.map(
-      (name, index) => ({
-        name: name,
+      (name) => ({
+        name: name?.name?.toString() || '',
+        index: name?.id?.toString(),
         url: ICNS_IMG,
         collection: 'ICNS',
         desc: 'ICNS Name Record',
         canister: ICNS_REGISTRY_ID,
-        index: BigInt(index),
         metadata: {},
-        standard: standards.NFT.dip721
+        standard: standards.NFT.dip721,
       }),
     );
     return {
