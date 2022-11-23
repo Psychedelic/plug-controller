@@ -26,6 +26,6 @@
       "dist",
       "tests",
       "jest.config.cjs",
-      ".vscode",
+      ".vscode"
   ]
 }
